@@ -1,0 +1,700 @@
+{
+  "createdAt": "2025-08-25T13:19:54.540Z",
+  "updatedAt": "2025-08-25T13:19:54.540Z",
+  "id": "VsepN8CyMHygp4GZ",
+  "name": "My workflow 11",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "format": "resolved",
+        "dataPropertyAttachmentsPrefixName": "=attachment_",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2.1,
+      "position": [
+        -1392,
+        432
+      ],
+      "id": "fed2ed6e-5de6-4c0a-9fdf-da8ed0266a14",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "Pc6jkDtMp7GHiqYt",
+          "name": "subco-check"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst inputItems = $input.all();\n\nfor (const item of inputItems) {\n  if (item.binary) {\n    const attachments = [];\n    \n    // Stap 1: Verzamel alle toegestane bestanden met score\n    for (const [key, bin] of Object.entries(item.binary)) {\n      const fileName = bin.fileName?.toLowerCase() || '';\n      const mimeType = bin.mimeType?.toLowerCase() || '';\n      const fileSize = bin.fileSize || 0;\n      \n      const isAttachment = key.startsWith('attachment_') || \n                           key.includes('attachment') || \n                           key.startsWith('data_') ||\n                           bin.fileName;\n      \n      // Bestandstype detectie\n      const isPdf = mimeType === 'application/pdf' || fileName.endsWith('.pdf');\n      const isDoc = mimeType === 'application/msword' || fileName.endsWith('.doc');\n      const isDocx = mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || fileName.endsWith('.docx');\n      const isImage = mimeType.startsWith('image/') || fileName.match(/\\.(jpg|jpeg|png|gif|bmp)$/);\n      const isTxt = mimeType === 'text/plain' || fileName.endsWith('.txt');\n      \n      const isAllowedFile = isPdf || isDoc || isDocx || isImage || isTxt;\n      \n      if (isAttachment && isAllowedFile) {\n        // CV Score berekenen (hoe hoger, hoe waarschijnlijker het een CV is)\n        let cvScore = 0;\n        \n        // 1. Bestandstype prioriteit\n        if (isPdf) cvScore += 50;      // PDF's zijn vaak CV's\n        if (isDocx) cvScore += 40;     // Word documenten ook\n        if (isDoc) cvScore += 35;      // Oude Word formaten\n        if (isTxt) cvScore += 10;      // Tekst bestanden minder waarschijnlijk\n        if (isImage) cvScore += 5;     // Afbeeldingen minst waarschijnlijk\n        \n        // 2. Bestandsnaam analyse (CV gerelateerde woorden)\n        const cvKeywords = ['cv', 'resume', 'curriculum', 'vitae', 'lebenslauf', 'sollicitatie'];\n        const nameMatch = cvKeywords.some(keyword => fileName.includes(keyword));\n        if (nameMatch) cvScore += 30;\n        \n        // 3. Bestandsgrootte (CV's zijn meestal 50KB - 5MB)\n        if (fileSize >= 50000 && fileSize <= 5000000) cvScore += 10;\n        if (fileSize > 5000000) cvScore -= 20; // Te groot voor CV\n        if (fileSize < 10000) cvScore -= 10;   // Te klein voor CV\n        \n        // 4. Afbeeldingen penalties (meestal geen CV)\n        if (isImage && fileSize < 500000) cvScore -= 30; // Kleine afbeeldingen waarschijnlijk geen CV\n        \n        attachments.push({\n          key,\n          bin,\n          fileName: bin.fileName || `attachment_${key}`,\n          mimeType: bin.mimeType || 'unknown',\n          fileSize,\n          cvScore,\n          isPdf,\n          isDoc: isDoc || isDocx,\n          isImage\n        });\n      }\n    }\n    \n    // Stap 2: Sorteer op CV score (hoogste eerst)\n    attachments.sort((a, b) => b.cvScore - a.cvScore);\n    \n    // Stap 3: Neem het meest waarschijnlijke CV bestand\n    if (attachments.length > 0) {\n      const bestCV = attachments[0];\n      \n      // Log voor debugging (optioneel)\n      console.log(`Gevonden ${attachments.length} bestanden:`);\n      attachments.forEach(att => {\n        console.log(`- ${att.fileName}: Score ${att.cvScore} (${att.mimeType})`);\n      });\n      console.log(`Gekozen: ${bestCV.fileName} (Score: ${bestCV.cvScore})`);\n      \n      results.push({\n        binary: {\n          attachment: bestCV.bin,\n        },\n        json: {\n          fileName: bestCV.fileName,\n          mimeType: bestCV.mimeType,\n          originalKey: bestCV.key,\n          cvScore: bestCV.cvScore,\n          totalAttachments: attachments.length,\n          alternativeFiles: attachments.slice(1).map(att => ({\n            fileName: att.fileName,\n            score: att.cvScore,\n            mimeType: att.mimeType\n          }))\n        },\n      });\n    }\n  }\n}\n\nreturn results.length > 0 ? results : [{\n  json: {\n    error: 'Geen toegestane bijlagen gevonden',\n    tip: 'Controleer of er PDF, JPG, PNG, DOC, DOCX of TXT-bijlagen in de e-mail zitten en of de e-mail correct is verwerkt',\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1120,
+        176
+      ],
+      "id": "60e59c5e-6c5c-4dbe-9de4-491b0421af38",
+      "name": "Extract Attachment",
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.mimeType }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "37008694-d30f-49bc-ad9f-2c28f4a43c40"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Word"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "11f55725-1222-428d-8617-87d9c8e895fb",
+                    "leftValue": "={{ $json.mimeType }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PDF"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "aa46259d-e6b3-4744-8fc0-98980e9c680a",
+                    "leftValue": "={{ $json.mimeType }}",
+                    "rightValue": "text/plain",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -896,
+        160
+      ],
+      "id": "2ae3f4b3-a08e-4fdf-b870-ba2ca6d6dc27",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "output.pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        16
+      ],
+      "id": "63e6b4b0-f938-4fab-bd1a-10bad298abf0",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4deb4ae2-c5be-46d9-bc52-65fb839aed6b",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        208
+      ],
+      "id": "087b1a83-e05e-40fe-b1f7-f328ece09af0",
+      "name": "Standardize"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Candidate's Resume: {{ $json.text }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=You are a senior technical recruiter specialized in evaluating candidates for industrial, engineering, and site-based roles. Your task is to proactively find and analyze the best matching job opportunities for a candidate's resume from the Altrad job portal.\n\nYou must:\n- First, search and identify the most suitable job opportunities on the Altrad job portal that align with the candidate's profile\n- Analyze how well the candidate's experience, skills, certifications, and career context align with the found positions\n- Focus on factual overlap with the job descriptions. Do not assume or infer skills unless directly evidenced in the resume\n- Consider soft skills, languages, technical tools, physical or location requirements, and industry familiarity when applicable\n- Provide grounded reasoning in the actual job texts, not generic assumptions\n\n## Process\n### Step 1: Find Best Matching Jobs\n- Search the Altrad job portal: https://jobsaltradservices.cvw.io/\n- Identify the 2 best matching positions based on the candidate's profile\n- If no strong matches found (fit rating below 6/10), research what Altrad does as a company and provide alternative recommendations\n\n### Step 2: Deep Analysis\nFor each identified position, conduct the detailed analysis as specified in the output format below.\n\n## Job Reference Links\nUse these as examples of job types, but search for the actual best matches:\n**Reference Job A (Industrial Site Coordinator):**  \nhttps://jobsaltradservices.cvw.io/?lang=en-US&section=5128fc53-c020-4a05-c131-557357e25470\n**Reference Job B (Technical Administrator / Office role):**  \nhttps://jobsaltradservices.cvw.io/?lang=en-US&section=3cbac90e-efc9-23d9-ee96-23aced22596c\n\n## Output Format\n### Found Job Opportunities\n**Job A: [Title and Link]**\n- Location: [Location]\n- Key Requirements Summary:\n\n**Job B: [Title and Link]** \n- Location: [Location]\n- Key Requirements Summary:\n\n### Candidate Alignment with Job A\n- Relevant skills and experiences aligned with this job:\n- Notable gaps or mismatches:\n- Fit with job environment and requirements (language, certifications, worksite nature):\n- Soft skill or organizational match:\n- Risk Factor (Low / Medium / High) with explanation:\n- Reward Factor (Low / Medium / High) with explanation:\n- Overall Fit Rating (0–10):\n\n### Candidate Alignment with Job B\n- Relevant skills and experiences aligned with this job:\n- Notable gaps or mismatches:\n- Fit with job environment and requirements (language, certifications, workstyle):\n- Soft skill or organizational match:\n- Risk Factor (Low / Medium / High) with explanation:\n- Reward Factor (Low / Medium / High) with explanation:\n- Overall Fit Rating (0–10):\n\n### Conclusion: Best Matching Role\nState which of the two roles is a better match for this candidate and why, using concrete comparisons.\n\n### Alternative Recommendations (if no strong matches found)\n- Company Overview: What Altrad does\n- Potential Growth Paths: Areas where candidate could develop\n- Skill Development: Recommendations for bridging gaps\n- Future Opportunities: Long-term career possibilities within Altrad"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        208
+      ],
+      "id": "6f78cb3f-55fe-456c-afa7-8cf06c7e8347",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        16,
+        432
+      ],
+      "id": "7d99d6d2-78f0-4de3-aa14-7ff750f12fd7",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "vojz1cvxUpTiZ61e",
+          "name": "Google Gemini(PaLM) Api zakenlijk"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"name\": \"resume_screening_evaluation\",\n  \"description\": \"Analyzes a candidate's resume against a job description and outputs strengths, weaknesses, risk/reward assessment, and an overall fit score.\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"job_a\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"candidate_strengths\": {\n          \"type\": \"array\",\n          \"items\": { \"type\": \"string\" }\n        },\n        \"candidate_weaknesses\": {\n          \"type\": \"array\",\n          \"items\": { \"type\": \"string\" }\n        },\n        \"risk_factor\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"score\": { \"type\": \"string\", \"enum\": [\"Low\", \"Medium\", \"High\"] },\n            \"explanation\": { \"type\": \"string\" }\n          }\n        },\n        \"reward_factor\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"score\": { \"type\": \"string\", \"enum\": [\"Low\", \"Medium\", \"High\"] },\n            \"explanation\": { \"type\": \"string\" }\n          }\n        },\n        \"overall_fit_rating\": {\n          \"type\": \"integer\",\n          \"minimum\": 0,\n          \"maximum\": 10\n        }\n      }\n    },\n    \"job_b\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"candidate_strengths\": {\n          \"type\": \"array\",\n          \"items\": { \"type\": \"string\" }\n        },\n        \"candidate_weaknesses\": {\n          \"type\": \"array\",\n          \"items\": { \"type\": \"string\" }\n        },\n        \"risk_factor\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"score\": { \"type\": \"string\", \"enum\": [\"Low\", \"Medium\", \"High\"] },\n            \"explanation\": { \"type\": \"string\" }\n          }\n        },\n        \"reward_factor\": {\n          \"type\": \"object\",\n          \"properties\": {\n            \"score\": { \"type\": \"string\", \"enum\": [\"Low\", \"Medium\", \"High\"] },\n            \"explanation\": { \"type\": \"string\" }\n          }\n        },\n        \"overall_fit_rating\": {\n          \"type\": \"integer\",\n          \"minimum\": 0,\n          \"maximum\": 10\n        }\n      }\n    },\n    \"conclusion\": {\n      \"type\": \"string\",\n      \"description\": \"Clear statement on which job is a better fit and why.\"\n    }\n  },\n  \"required\": [\"job_a\", \"job_b\", \"conclusion\"]\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        144,
+        432
+      ],
+      "id": "8f7a2a43-aa39-4795-b739-8c36f152acbd",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "text": "={{ $('Standardize').item.json.text }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "first name",
+              "description": "the first name of the candidate",
+              "required": true
+            },
+            {
+              "name": "last name",
+              "description": "the last name of the candidate",
+              "required": true
+            },
+            {
+              "name": "email",
+              "description": "the email address of the candidate",
+              "required": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        352,
+        208
+      ],
+      "id": "d1967118-0ae6-46f4-a4ef-e9251eda5017",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Candidate Analysis - Altrad Benelux BV</title>\n    <style>\n        * {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n        }\n\n        /* A4 Page Setup */\n        @page {\n            size: A4;\n            margin: 15mm;\n        }\n\n        body {\n            font-family: 'Arial', sans-serif;\n            font-size: 11px;\n            line-height: 1.3;\n            color: #333;\n            background: white;\n            width: 210mm;\n            min-height: 297mm;\n            margin: 0 auto;\n            padding: 0;\n        }\n\n        /* Print-specific styles */\n        @media print {\n            body {\n                width: auto;\n                margin: 0;\n                padding: 0;\n                min-height: auto;\n            }\n            \n            .container {\n                height: auto;\n                min-height: auto;\n            }\n        }\n\n        .container {\n            max-width: 100%;\n            min-height: 100vh;\n            display: flex;\n            flex-direction: column;\n        }\n\n        /* Header - Compact */\n        .header {\n            background-color: #2c3e50;\n            color: white;\n            padding: 8mm 0;\n            text-align: center;\n            margin-bottom: 5mm;\n        }\n\n        .header h1 {\n            font-size: 18px;\n            font-weight: bold;\n            margin-bottom: 2px;\n        }\n\n        .header .subtitle {\n            font-size: 12px;\n            opacity: 0.9;\n        }\n\n        .header .date {\n            font-size: 10px;\n            margin-top: 3px;\n            opacity: 0.8;\n        }\n\n        /* Candidate Info Section */\n        .candidate-info {\n            border: 2px solid #2c3e50;\n            padding: 4mm;\n            margin-bottom: 4mm;\n            background-color: #ecf0f1;\n            display: grid;\n            grid-template-columns: 1fr 1fr 1fr;\n            gap: 4mm;\n        }\n\n        .info-field {\n            text-align: center;\n        }\n\n        .info-label {\n            font-size: 9px;\n            font-weight: bold;\n            color: #2c3e50;\n            text-transform: uppercase;\n            margin-bottom: 1mm;\n            letter-spacing: 0.5px;\n        }\n\n        .info-value {\n            font-size: 12px;\n            font-weight: bold;\n            color: #2c3e50;\n            padding: 2mm;\n            background-color: white;\n            border: 1px solid #bdc3c7;\n            border-radius: 2mm;\n            min-height: 6mm;\n            display: flex;\n            align-items: center;\n            justify-content: center;\n        }\n        .candidate-section {\n            border: 1px solid #ddd;\n            padding: 4mm;\n            margin-bottom: 4mm;\n            background-color: #f8f9fa;\n        }\n\n        .candidate-section h2 {\n            font-size: 14px;\n            color: #2c3e50;\n            margin-bottom: 2mm;\n        }\n\n        .candidate-section p {\n            font-size: 10px;\n            color: #666;\n        }\n\n        /* Jobs Grid - Side by side, compact */\n        .jobs-container {\n            display: flex;\n            gap: 4mm;\n            flex: 1;\n            margin-bottom: 4mm;\n        }\n\n        .job-card {\n            flex: 1;\n            border: 1px solid #ddd;\n            background: white;\n            display: flex;\n            flex-direction: column;\n        }\n\n        .job-header {\n            background-color: #34495e;\n            color: white;\n            padding: 3mm;\n            text-align: center;\n        }\n\n        .job-title {\n            font-size: 12px;\n            font-weight: bold;\n            margin-bottom: 2mm;\n        }\n\n        .rating-display {\n            display: flex;\n            align-items: center;\n            justify-content: center;\n            gap: 3mm;\n        }\n\n        .rating-score {\n            background-color: white;\n            color: #2c3e50;\n            padding: 1mm 3mm;\n            border-radius: 2mm;\n            font-weight: bold;\n            font-size: 11px;\n        }\n\n        .rating-label {\n            font-size: 9px;\n            opacity: 0.9;\n        }\n\n        .job-content {\n            padding: 3mm;\n            flex: 1;\n            display: flex;\n            flex-direction: column;\n        }\n\n        .section {\n            margin-bottom: 3mm;\n        }\n\n        .section:last-child {\n            margin-bottom: 0;\n        }\n\n        .section-title {\n            font-size: 10px;\n            font-weight: bold;\n            color: #2c3e50;\n            margin-bottom: 1mm;\n            text-transform: uppercase;\n            border-bottom: 1px solid #eee;\n            padding-bottom: 1mm;\n        }\n\n        .points-list {\n            list-style: none;\n            font-size: 9px;\n        }\n\n        .points-list li {\n            margin-bottom: 1mm;\n            padding-left: 3mm;\n            line-height: 1.2;\n        }\n\n        .strengths-list li:before {\n            content: \"✓\";\n            color: #27ae60;\n            font-weight: bold;\n            margin-left: -3mm;\n            margin-right: 1mm;\n        }\n\n        .weaknesses-list li:before {\n            content: \"•\";\n            color: #e74c3c;\n            font-weight: bold;\n            margin-left: -3mm;\n            margin-right: 1mm;\n        }\n\n        /* Risk/Reward - Horizontal layout */\n        .risk-reward-container {\n            display: flex;\n            gap: 2mm;\n            margin-top: 2mm;\n        }\n\n        .factor-card {\n            flex: 1;\n            border: 1px solid #eee;\n            padding: 2mm;\n            background-color: #fafafa;\n        }\n\n        .factor-title {\n            font-size: 8px;\n            font-weight: bold;\n            color: #666;\n            margin-bottom: 1mm;\n            text-transform: uppercase;\n        }\n\n        .factor-score {\n            font-size: 9px;\n            font-weight: bold;\n            padding: 1mm 2mm;\n            border-radius: 1mm;\n            display: inline-block;\n            margin-bottom: 1mm;\n        }\n\n        .risk-high, .reward-low {\n            background-color: #ffebee;\n            color: #c62828;\n            border: 1px solid #ffcdd2;\n        }\n\n        .risk-low, .reward-high {\n            background-color: #e8f5e8;\n            color: #2e7d32;\n            border: 1px solid #c8e6c9;\n        }\n\n        .risk-medium, .reward-medium {\n            background-color: #fff3e0;\n            color: #ef6c00;\n            border: 1px solid #ffcc02;\n        }\n\n        .factor-explanation {\n            font-size: 8px;\n            color: #666;\n            line-height: 1.3;\n        }\n\n        /* Conclusion - Compact */\n        .conclusion {\n            border: 1px solid #ddd;\n            padding: 4mm;\n            background-color: #f8f9fa;\n            margin-top: auto;\n        }\n\n        .conclusion h2 {\n            font-size: 12px;\n            color: #2c3e50;\n            margin-bottom: 2mm;\n            border-bottom: 2px solid #3498db;\n            padding-bottom: 1mm;\n        }\n\n        .conclusion-text {\n            font-size: 10px;\n            color: #555;\n            line-height: 1.4;\n        }\n\n        /* Footer */\n        .footer {\n            text-align: center;\n            font-size: 8px;\n            color: #999;\n            padding: 2mm 0;\n            border-top: 1px solid #eee;\n            margin-top: 2mm;\n        }\n\n        /* Allow full content - no height restrictions */\n        .jobs-container {\n            min-height: auto;\n            overflow: visible;\n        }\n\n        .job-content {\n            overflow: visible;\n        }\n\n        .points-list {\n            overflow: visible;\n        }\n\n        /* Page break management */\n        .job-card {\n            page-break-inside: avoid;\n            break-inside: avoid;\n        }\n\n        .conclusion {\n            page-break-before: auto;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <header class=\"header\">\n            <h1>ALTRAD BENELUX BV</h1>\n            <div class=\"subtitle\">Candidate Analysis Report</div>\n            <div class=\"date\">{{ $now.toFormat('MMMM dd, yyyy - HH:mm') }}</div>\n        </header>\n\n        <!-- Candidate Information Section -->\n        <section class=\"candidate-info\">\n            <div class=\"info-field\">\n                <div class=\"info-label\">First Name</div>\n                <div class=\"info-value\">{{ $json.output['first name'] || 'N/A' }}</div>\n            </div>\n            <div class=\"info-field\">\n                <div class=\"info-label\">Last Name</div>\n                <div class=\"info-value\">{{ $json.output['last name'] || 'N/A' }}</div>\n            </div>\n            <div class=\"info-field\">\n                <div class=\"info-label\">Email Address</div>\n                <div class=\"info-value\">{{ $json.output.email || 'N/A'  }}</div>\n            </div>\n        </section>\n\n        <section class=\"candidate-section\">\n            <h2>Candidate Analysis</h2>\n            <p>Automated job-matching analysis - Generated {{ $now.toFormat('yyyy-MM-dd HH:mm') }}</p>\n        </section>\n\n        <div class=\"jobs-container\">\n            <!-- Job A Card -->\n            <div class=\"job-card\">\n                <div class=\"job-header\">\n                    <h3 class=\"job-title\">Industrial Site Coordinator</h3>\n                    <div class=\"rating-display\">\n                        <div class=\"rating-score\">{{ $('AI Agent').item.json.output.job_a.overall_fit_rating }}/10</div>\n                        <div class=\"rating-label\">Fit Score</div>\n                    </div>\n                </div>\n                \n                <div class=\"job-content\">\n                    <div class=\"section\">\n                        <h4 class=\"section-title\">Strengths</h4>\n                        <ul class=\"points-list strengths-list\">\n                            {{ $('AI Agent').item.json.output.job_a.candidate_strengths.map(strength => `<li>${strength}</li>`).join('') }}\n                        </ul>\n                    </div>\n\n                    <div class=\"section\">\n                        <h4 class=\"section-title\">Areas of Concern</h4>\n                        <ul class=\"points-list weaknesses-list\">\n                            {{ $('AI Agent').item.json.output.job_a.candidate_weaknesses.map(weakness => `<li>${weakness}</li>`).join('') }}\n                        </ul>\n                    </div>\n\n                    <div class=\"risk-reward-container\">\n                        <div class=\"factor-card\">\n                            <div class=\"factor-title\">Risk Assessment</div>\n                            <div class=\"factor-score risk-{{ $('AI Agent').item.json.output.job_a.risk_factor.score.toLowerCase() }}\">{{ $('AI Agent').item.json.output.job_a.risk_factor.score }}</div>\n                            <div class=\"factor-explanation\">{{ $('AI Agent').item.json.output.job_a.risk_factor.explanation }}</div>\n                        </div>\n                        <div class=\"factor-card\">\n                            <div class=\"factor-title\">Value Proposition</div>\n                            <div class=\"factor-score reward-{{ $('AI Agent').item.json.output.job_a.reward_factor.score.toLowerCase() }}\">{{ $('AI Agent').item.json.output.job_a.reward_factor.score }}</div>\n                            <div class=\"factor-explanation\">{{ $('AI Agent').item.json.output.job_a.reward_factor.explanation }}</div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n\n            <!-- Job B Card -->\n            <div class=\"job-card\">\n                <div class=\"job-header\">\n                    <h3 class=\"job-title\">Technical Administrator / Office</h3>\n                    <div class=\"rating-display\">\n                        <div class=\"rating-score\">{{ $('AI Agent').item.json.output.job_b.overall_fit_rating }}/10</div>\n                        <div class=\"rating-label\">Fit Score</div>\n                    </div>\n                </div>\n                \n                <div class=\"job-content\">\n                    <div class=\"section\">\n                        <h4 class=\"section-title\">Strengths</h4>\n                        <ul class=\"points-list strengths-list\">\n                            {{ $('AI Agent').item.json.output.job_b.candidate_strengths.map(strength => `<li>${strength}</li>`).join('') }}\n                        </ul>\n                    </div>\n\n                    <div class=\"section\">\n                        <h4 class=\"section-title\">Areas of Concern</h4>\n                        <ul class=\"points-list weaknesses-list\">\n                            {{ $('AI Agent').item.json.output.job_b.candidate_weaknesses.map(weakness => `<li>${weakness}</li>`).join('') }}\n                        </ul>\n                    </div>\n\n                    <div class=\"risk-reward-container\">\n                        <div class=\"factor-card\">\n                            <div class=\"factor-title\">Risk Assessment</div>\n                            <div class=\"factor-score risk-{{ $('AI Agent').item.json.output.job_b.risk_factor.score.toLowerCase() }}\">{{ $('AI Agent').item.json.output.job_b.risk_factor.score }}</div>\n                            <div class=\"factor-explanation\">{{ $('AI Agent').item.json.output.job_b.risk_factor.explanation }}</div>\n                        </div>\n                        <div class=\"factor-card\">\n                            <div class=\"factor-title\">Value Proposition</div>\n                            <div class=\"factor-score reward-{{ $('AI Agent').item.json.output.job_b.reward_factor.score.toLowerCase() }}\">{{ $('AI Agent').item.json.output.job_b.reward_factor.score }}</div>\n                            <div class=\"factor-explanation\">{{ $('AI Agent').item.json.output.job_b.reward_factor.explanation }}</div>\n                        </div>\n                    </div>\n                </div>\n            </div>\n        </div>\n\n        <section class=\"conclusion\">\n            <h2>Recommendation</h2>\n            <div class=\"conclusion-text\">\n                {{ $('AI Agent').item.json.output.conclusion }}\n            </div>\n        </section>\n    </div>\n\n    <footer class=\"footer\">\n        <p>&copy; 2025 Altrad Benelux BV | Confidential | Automatically Generated</p>\n    </footer>\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        704,
+        208
+      ],
+      "id": "ecba9134-98b7-4c5e-a51e-9a9e80ef5ccc",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "56ddeb35-240e-44eb-87e5-d2d63bb6b6f3",
+              "name": "html",
+              "value": "={{ $json.html.base64Encode() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        928,
+        208
+      ],
+      "id": "51162959-128c-4b2d-b4e9-d06f0f850ca2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "html",
+        "options": {
+          "fileName": "index.html",
+          "mimeType": "text/html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        208
+      ],
+      "id": "defc36ea-4f7b-48dd-abd1-b366f769e9e0",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "fromEmail": "subco-check@go-knowledge.com",
+        "toEmail": "={{ $('Email Trigger (IMAP)').item.json.headers.from }}",
+        "subject": "=Resume:  {{ $('Information Extractor').item.json.output[\"first name\"] }} {{ $('Information Extractor').item.json.output[\"last name\"] }}",
+        "html": "=<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Candidate Assessment - Altrad Benelux BV</title>\n    <style>\n        * {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n        }\n\n        body {\n            font-family: 'Arial', sans-serif;\n            line-height: 1.6;\n            color: #333;\n            background-color: #f4f4f4;\n            padding: 20px;\n        }\n\n        .email-container {\n            max-width: 600px;\n            margin: 0 auto;\n            background-color: white;\n            border-radius: 8px;\n            box-shadow: 0 4px 6px rgba(0,0,0,0.1);\n            overflow: hidden;\n        }\n\n        .header {\n            background-color: #2c3e50;\n            color: white;\n            padding: 30px;\n            text-align: center;\n        }\n\n        .header h1 {\n            font-size: 24px;\n            font-weight: bold;\n            margin-bottom: 5px;\n        }\n\n        .header .subtitle {\n            font-size: 14px;\n            opacity: 0.9;\n        }\n\n        .content {\n            padding: 30px;\n        }\n\n        .greeting {\n            font-size: 16px;\n            margin-bottom: 20px;\n            color: #2c3e50;\n        }\n\n        .candidate-info {\n            background-color: #ecf0f1;\n            border-left: 4px solid #3498db;\n            padding: 15px;\n            margin: 20px 0;\n            border-radius: 4px;\n        }\n\n        .candidate-info h3 {\n            color: #2c3e50;\n            font-size: 16px;\n            margin-bottom: 10px;\n        }\n\n        .info-row {\n            display: flex;\n            margin-bottom: 8px;\n        }\n\n        .info-label {\n            font-weight: bold;\n            color: #34495e;\n            width: 120px;\n            font-size: 14px;\n        }\n\n        .info-value {\n            color: #2c3e50;\n            font-size: 14px;\n        }\n\n        .message-body {\n            font-size: 15px;\n            line-height: 1.7;\n            color: #555;\n            margin: 20px 0;\n        }\n\n        .attachment-notice {\n            background-color: #e8f6f3;\n            border: 1px solid #1abc9c;\n            border-radius: 6px;\n            padding: 15px;\n            margin: 20px 0;\n            display: flex;\n            align-items: center;\n        }\n\n        .attachment-icon {\n            background-color: #1abc9c;\n            color: white;\n            width: 40px;\n            height: 40px;\n            border-radius: 50%;\n            display: flex;\n            align-items: center;\n            justify-content: center;\n            margin-right: 15px;\n            font-size: 18px;\n        }\n\n        .attachment-text {\n            flex: 1;\n        }\n\n        .attachment-text strong {\n            color: #16a085;\n            font-size: 16px;\n        }\n\n        .attachment-text p {\n            margin: 0;\n            color: #555;\n            font-size: 14px;\n        }\n\n        .next-steps {\n            background-color: #fff3cd;\n            border: 1px solid #ffc107;\n            border-radius: 6px;\n            padding: 15px;\n            margin: 20px 0;\n        }\n\n        .next-steps h4 {\n            color: #856404;\n            margin-bottom: 10px;\n            font-size: 16px;\n        }\n\n        .next-steps ul {\n            margin-left: 20px;\n            color: #666;\n        }\n\n        .next-steps li {\n            margin-bottom: 5px;\n            font-size: 14px;\n        }\n\n        .signature {\n            margin-top: 30px;\n            padding-top: 20px;\n            border-top: 1px solid #eee;\n        }\n\n        .signature-name {\n            font-weight: bold;\n            color: #2c3e50;\n            font-size: 16px;\n        }\n\n        .signature-title {\n            color: #7f8c8d;\n            font-size: 14px;\n            margin-bottom: 5px;\n        }\n\n        .contact-info {\n            font-size: 13px;\n            color: #95a5a6;\n            margin-top: 10px;\n        }\n\n        .footer {\n            background-color: #34495e;\n            color: white;\n            padding: 20px;\n            text-align: center;\n            font-size: 12px;\n        }\n\n        .footer a {\n            color: #3498db;\n            text-decoration: none;\n        }\n\n        /* Responsive */\n        @media (max-width: 600px) {\n            .email-container {\n                margin: 10px;\n                border-radius: 0;\n            }\n            \n            .content {\n                padding: 20px;\n            }\n            \n            .info-row {\n                flex-direction: column;\n                margin-bottom: 12px;\n            }\n            \n            .info-label {\n                width: auto;\n                margin-bottom: 3px;\n            }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"email-container\" style=\"max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden;\">\n        <div class=\"header\" style=\"background-color: #2c3e50; color: white; padding: 30px; text-align: center;\">\n            <h1 style=\"font-size: 24px; font-weight: bold; margin-bottom: 5px; color: white;\">ALTRAD BENELUX BV</h1>\n            <div class=\"subtitle\" style=\"font-size: 14px; opacity: 0.9; color: white;\">Human Resources Department</div>\n        </div>\n\n        <div class=\"content\">\n            <div class=\"greeting\">\n                Dear Hiring Manager,\n            </div>\n\n            <div class=\"candidate-info\">\n                <h3>📋 Candidate Assessment Complete</h3>\n                <div class=\"info-row\">\n                    <span class=\"info-label\">Candidate:</span>\n                    <span class=\"info-value\">{{ $('Information Extractor').item.json.output['first name'] || 'N/A' }} {{ $('Information Extractor').item.json.output['last name'] || 'N/A' }}</span>\n                </div>\n                <div class=\"info-row\">\n                    <span class=\"info-label\">Email:</span>\n                    <span class=\"info-value\">{{ $('Information Extractor').item.json.output.email || 'N/A' }}</span>\n                </div>\n                <div class=\"info-row\">\n                    <span class=\"info-label\">Assessment Date:</span>\n                    <span class=\"info-value\">{{ $now.toFormat('MMMM dd, yyyy') }}</span>\n                </div>\n            </div>\n\n            <div class=\"message-body\">\n                <p>We have completed the automated candidate assessment for the above-mentioned candidate. Our AI-driven analysis has evaluated their suitability for the available positions within Altrad Benelux BV.</p>\n                \n                <p>The comprehensive assessment includes:</p>\n                <ul style=\"margin: 15px 0 15px 25px;\">\n                    <li>Detailed strength analysis for each position</li>\n                    <li>Risk and reward factor evaluation</li>\n                    <li>Overall fit rating (1-10 scale)</li>\n                    <li>Professional recommendations</li>\n                </ul>\n            </div>\n\n            <div class=\"attachment-notice\">\n                <div class=\"attachment-icon\">📎</div>\n                <div class=\"attachment-text\">\n                    <strong>Assessment Report Attached</strong>\n                    <p>Please find the detailed candidate assessment report attached as a PDF document.</p>\n                </div>\n            </div>\n\n            <div class=\"next-steps\">\n                <h4>📌 Next Steps</h4>\n                <ul>\n                    <li>Review the detailed assessment report</li>\n                    <li>Consider the fit ratings and recommendations</li>\n                    <li>Schedule interviews for high-scoring candidates</li>\n                    <li>Contact HR for any questions or clarifications</li>\n                </ul>\n            </div>\n\n            <div class=\"message-body\">\n                <p>This assessment was generated using our advanced AI recruitment system, designed to provide objective and comprehensive candidate evaluations. The analysis considers multiple factors including experience alignment, skill compatibility, and potential value to the organization.</p>\n                \n                <p>Should you require any additional information or have questions about this assessment, please don't hesitate to reach out to our HR team.</p>\n            </div>\n\n            <div class=\"signature\">\n                <div class=\"signature-name\">Altrad Benelux BV</div>\n                <div class=\"signature-title\">Automated Recruitment System</div>\n                <div class=\"contact-info\">\n                    📧 hr@altrad-benelux.com<br>\n                    📞 +31 (0) 10 XXX XXXX<br>\n                    🌐 www.altrad-benelux.com\n                </div>\n            </div>\n        </div>\n\n        <div class=\"footer\" style=\"background-color: #34495e; color: white; padding: 20px; text-align: center; font-size: 12px;\">\n            <p style=\"margin: 0; color: white;\">&copy; 2025 Altrad Benelux BV. All rights reserved.</p>\n            <p style=\"margin: 5px 0 0 0; color: white;\">This email was automatically generated by our recruitment system on {{ $now.toFormat('yyyy-MM-dd HH:mm') }}</p>\n        </div>\n    </div>\n</body>\n</html>",
+        "options": {
+          "attachments": "=output.pdf , attachment_0"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1824,
+        384
+      ],
+      "id": "be14ab3d-612f-4fbf-9c56-4a088301ac18",
+      "name": "Send email",
+      "webhookId": "a24efdc2-c1db-48f6-b6d2-175d21f211f3",
+      "credentials": {
+        "smtp": {
+          "id": "wC8hJt1HLZj7h952",
+          "name": "subco-check"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        208
+      ],
+      "id": "d4b78515-25f6-4fb1-92fe-158e375eff57",
+      "name": "Extract from File1"
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "destinationKey": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        400
+      ],
+      "id": "0ff052a6-c54e-4157-a9c0-e710602ae543",
+      "name": "Extract from File2"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1600,
+        384
+      ],
+      "id": "3a39e3ac-9d2d-4322-8e56-026c0842a350",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.5:3000/forms/libreoffice/convert",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "merge",
+              "value": "true"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "attachment"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "output.pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -656,
+        32
+      ],
+      "id": "5ac6be2d-de6d-4a45-9ff9-e54cbbe3a387",
+      "name": "Convert to PDF2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.5:3000/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "output.pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1392,
+        208
+      ],
+      "id": "7e9fc706-030f-45ce-985b-4eefe33e7b16",
+      "name": "Convert to PDF3"
+    },
+    {
+      "parameters": {
+        "formTitle": "cv screening",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "upload cv",
+              "fieldType": "file",
+              "acceptFileTypes": "pdf, docx, doc, txt"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -1456,
+        176
+      ],
+      "id": "5a347262-59a2-488c-aa58-cd7fcf014eb5",
+      "name": "On form submission",
+      "webhookId": "5f73371c-7ac2-424d-8117-c059d9b7ffb8"
+    }
+  ],
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Extract Attachment",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Extract Attachment": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Convert to PDF2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from File2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Standardize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Standardize": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Convert to PDF3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "Standardize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File2": {
+      "main": [
+        [
+          {
+            "node": "Standardize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to PDF2": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to PDF3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "5f4a2dc1-58ac-4153-91ab-041ef654e99d",
+  "triggerCount": 0,
+  "tags": []
+}
