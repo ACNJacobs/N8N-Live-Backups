@@ -1,0 +1,117 @@
+{
+  "createdAt": "2025-06-12T18:33:03.748Z",
+  "updatedAt": "2025-07-21T11:11:03.000Z",
+  "id": "FGGAG4qVMZNPpyBv",
+  "name": "My workflow 2",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "lets make your story",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Select writer",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Paul van Loon"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Kies de genres van kinderboeken",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Avontuur"
+                  },
+                  {
+                    "option": "Fantasie"
+                  },
+                  {
+                    "option": "Educatief"
+                  },
+                  {
+                    "option": "Dierenverhalen"
+                  },
+                  {
+                    "option": "Klassiekers"
+                  },
+                  {
+                    "option": "Humor"
+                  },
+                  {
+                    "option": "Vriendschap"
+                  },
+                  {
+                    "option": "Mysterie"
+                  },
+                  {
+                    "option": "Prentenboeken"
+                  },
+                  {
+                    "option": "Sprookjes"
+                  }
+                ]
+              },
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d07fd92b-f78e-4bb4-9e2e-ac85c7497e02",
+      "name": "On form submission",
+      "webhookId": "2cf0bff7-ea32-45ad-80b4-efaa906e4994"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        200,
+        0
+      ],
+      "id": "adf8121b-e9e3-4648-aab7-b5e80aa5f07d",
+      "name": "AI Agent"
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "1596e0bb-dee5-4baa-80bb-eb79a7dcee4d",
+  "triggerCount": 1,
+  "tags": []
+}
