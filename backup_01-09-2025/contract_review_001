@@ -1,0 +1,426 @@
+{
+  "createdAt": "2025-07-29T07:55:13.019Z",
+  "updatedAt": "2025-08-24T17:18:16.000Z",
+  "id": "zXN8EpEXXOE1bonR",
+  "name": "contract_review_001",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        336
+      ],
+      "id": "925b3656-3485-4a33-a5ae-f78467084f2b",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "dob7yodE27d15REW",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Altrad Contract Assessment Report</title>\n    <style>\n        @page {\n            size: A4;\n            margin: 2cm 1.5cm;\n        }\n        \n        * {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n        }\n        \n        body {\n            font-family: Arial, sans-serif;\n            font-size: 10pt;\n            line-height: 1.4;\n            color: #333;\n            background: white;\n        }\n        \n        .page-break {\n            page-break-before: always;\n        }\n        \n        .no-break {\n            page-break-inside: avoid;\n        }\n        \n        .header {\n            text-align: center;\n            border-bottom: 3px solid #e31e24;\n            padding-bottom: 20px;\n            margin-bottom: 30px;\n        }\n        \n        .logo {\n            font-size: 24pt;\n            font-weight: bold;\n            color: #e31e24;\n            margin-bottom: 10px;\n        }\n        \n        .report-title {\n            font-size: 18pt;\n            color: #333;\n            margin-bottom: 5px;\n        }\n        \n        .report-date {\n            font-size: 10pt;\n            color: #666;\n        }\n        \n        .section {\n            margin-bottom: 25px;\n        }\n        \n        .section-title {\n            font-size: 14pt;\n            font-weight: bold;\n            color: #e31e24;\n            border-bottom: 2px solid #e31e24;\n            padding-bottom: 5px;\n            margin-bottom: 15px;\n        }\n        \n        .subsection-title {\n            font-size: 12pt;\n            font-weight: bold;\n            color: #333;\n            margin-bottom: 10px;\n            margin-top: 15px;\n        }\n        \n        .risk-badge {\n            display: inline-block;\n            padding: 3px 8px;\n            border-radius: 3px;\n            font-size: 9pt;\n            font-weight: bold;\n            color: white;\n            margin-right: 5px;\n        }\n        \n        .risk-low { background-color: #28a745; }\n        .risk-medium { background-color: #ffc107; color: #333; }\n        .risk-high { background-color: #fd7e14; }\n        .risk-critical { background-color: #dc3545; }\n        \n        .status-badge {\n            display: inline-block;\n            padding: 2px 6px;\n            border-radius: 3px;\n            font-size: 8pt;\n            font-weight: bold;\n            margin-right: 5px;\n        }\n        \n        .status-compliant { background-color: #28a745; color: white; }\n        .status-non-compliant { background-color: #dc3545; color: white; }\n        .status-unclear { background-color: #6c757d; color: white; }\n        \n        .priority-badge {\n            display: inline-block;\n            padding: 2px 6px;\n            border-radius: 3px;\n            font-size: 8pt;\n            font-weight: bold;\n            margin-right: 5px;\n        }\n        \n        .priority-high { background-color: #dc3545; color: white; }\n        .priority-medium { background-color: #ffc107; color: #333; }\n        .priority-low { background-color: #28a745; color: white; }\n        \n        .info-grid {\n            display: grid;\n            grid-template-columns: 1fr 1fr;\n            gap: 20px;\n            margin-bottom: 20px;\n        }\n        \n        .info-box {\n            border: 1px solid #ddd;\n            padding: 15px;\n            border-radius: 5px;\n            background-color: #f8f9fa;\n        }\n        \n        .info-label {\n            font-weight: bold;\n            color: #495057;\n            margin-bottom: 5px;\n        }\n        \n        .article-card {\n            border: 1px solid #ddd;\n            margin-bottom: 15px;\n            border-radius: 5px;\n            overflow: hidden;\n        }\n        \n        .article-header {\n            background-color: #f8f9fa;\n            padding: 10px 15px;\n            border-bottom: 1px solid #ddd;\n        }\n        \n        .article-content {\n            padding: 15px;\n        }\n        \n        .article-title {\n            font-weight: bold;\n            font-size: 11pt;\n            margin-bottom: 5px;\n        }\n        \n        .list-item {\n            margin-bottom: 8px;\n            padding-left: 15px;\n            position: relative;\n        }\n        \n        .list-item:before {\n            content: \"•\";\n            position: absolute;\n            left: 0;\n            color: #e31e24;\n            font-weight: bold;\n        }\n        \n        .amendment-box {\n            border: 1px solid #17a2b8;\n            background-color: #f0f9ff;\n            padding: 15px;\n            margin-bottom: 15px;\n            border-radius: 5px;\n        }\n        \n        .amendment-title {\n            font-weight: bold;\n            color: #17a2b8;\n            margin-bottom: 8px;\n        }\n        \n        .proposed-text {\n            background-color: #e8f5e8;\n            border-left: 4px solid #28a745;\n            padding: 10px;\n            margin: 10px 0;\n            font-size: 9pt;\n            font-style: italic;\n        }\n        \n        .implementation-step {\n            background-color: #fff3cd;\n            border-left: 4px solid #ffc107;\n            padding: 10px;\n            margin-bottom: 10px;\n        }\n        \n        .executive-summary {\n            background-color: #f8f9fa;\n            border-left: 4px solid #e31e24;\n            padding: 20px;\n            margin-bottom: 25px;\n            font-size: 11pt;\n        }\n        \n        table {\n            width: 100%;\n            border-collapse: collapse;\n            margin-bottom: 15px;\n            font-size: 9pt;\n        }\n        \n        th, td {\n            border: 1px solid #ddd;\n            padding: 8px;\n            text-align: left;\n            vertical-align: top;\n        }\n        \n        th {\n            background-color: #f8f9fa;\n            font-weight: bold;\n        }\n        \n        .footer {\n            margin-top: 30px;\n            text-align: center;\n            font-size: 8pt;\n            color: #666;\n            border-top: 1px solid #ddd;\n            padding-top: 15px;\n        }\n    </style>\n</head>\n<body>\n    <!-- HEADER -->\n    <div class=\"header\">\n        <div class=\"logo\">ALTRAD</div>\n        <div class=\"report-title\">Contract Assessment Report</div>\n        <div class=\"report-date\">Generated on {{ new Date().toLocaleDateString('en-GB') }}</div>\n    </div>\n\n    <!-- CONTRACT SUMMARY -->\n    <div class=\"section\">\n        <div class=\"section-title\">Contract Summary</div>\n        <div class=\"info-grid\">\n            <div class=\"info-box\">\n                <div class=\"info-label\">Contract Type:</div>\n                <div>{{ $json.contract_summary.contract_type }}</div>\n            </div>\n            <div class=\"info-box\">\n                <div class=\"info-label\">Contracting Parties:</div>\n                <div>{{ $json.contract_summary.contracting_parties }}</div>\n            </div>\n            <div class=\"info-box\">\n                <div class=\"info-label\">Estimated Value:</div>\n                <div>{{ $json.contract_summary.estimated_value }}</div>\n            </div>\n            <div class=\"info-box\">\n                <div class=\"info-label\">Key Scope:</div>\n                <div>{{ $json.contract_summary.key_scope }}</div>\n            </div>\n        </div>\n    </div>\n\n    <!-- OVERALL RISK ASSESSMENT -->\n    <div class=\"section\">\n        <div class=\"section-title\">Overall Risk Assessment</div>\n        <div class=\"executive-summary\">\n            <div style=\"margin-bottom: 15px;\">\n                <span class=\"risk-badge risk-high\">\n                    {{ $json.overall_risk_assessment.risk_level }} RISK\n                </span>\n                <strong>Critical Issues: {{ $json.overall_risk_assessment.critical_issues_count }}</strong>\n            </div>\n            <div>{{ $json.overall_risk_assessment.executive_summary }}</div>\n        </div>\n    </div>\n\n    <!-- RED ZONE COMPLIANCE -->\n    <div class=\"section page-break\">\n        <div class=\"section-title\">Red Zone Compliance Overview</div>\n        <table>\n            <thead>\n                <tr>\n                    <th style=\"width: 25%;\">Rule</th>\n                    <th style=\"width: 15%;\">Status</th>\n                    <th style=\"width: 60%;\">Details</th>\n                </tr>\n            </thead>\n            <tbody>\n                <tr>\n                    <td><strong>CR1 - Consequential Damages</strong></td>\n                    <td><span class=\"status-badge status-non-compliant\">{{ $json.red_zone_compliance.CR1_consequential_damages.status }}</span></td>\n                    <td>{{ $json.red_zone_compliance.CR1_consequential_damages.details }}</td>\n                </tr>\n                <tr>\n                    <td><strong>CR2 - Liquidated Damages</strong></td>\n                    <td><span class=\"status-badge status-non-compliant\">{{ $json.red_zone_compliance.CR2_liquidated_damages.status }}</span></td>\n                    <td>{{ $json.red_zone_compliance.CR2_liquidated_damages.details }}</td>\n                </tr>\n                <tr>\n                    <td><strong>CR3 - Liability Cap</strong></td>\n                    <td><span class=\"status-badge status-non-compliant\">{{ $json.red_zone_compliance.CR3_liability_cap.status }}</span></td>\n                    <td>{{ $json.red_zone_compliance.CR3_liability_cap.details }}</td>\n                </tr>\n                <tr>\n                    <td><strong>CR4 - Warranty Period</strong></td>\n                    <td><span class=\"status-badge status-non-compliant\">{{ $json.red_zone_compliance.CR4_warranty_period.status }}</span></td>\n                    <td>{{ $json.red_zone_compliance.CR4_warranty_period.details }}</td>\n                </tr>\n                <tr>\n                    <td><strong>CR5 - Third Party Liability</strong></td>\n                    <td><span class=\"status-badge status-unclear\">{{ $json.red_zone_compliance.CR5_third_party_liability.status }}</span></td>\n                    <td>{{ $json.red_zone_compliance.CR5_third_party_liability.details }}</td>\n                </tr>\n                <tr>\n                    <td><strong>CR6 - Insurance</strong></td>\n                    <td><span class=\"status-badge status-non-compliant\">{{ $json.red_zone_compliance.CR6_insurance.status }}</span></td>\n                    <td>{{ $json.red_zone_compliance.CR6_insurance.details }}</td>\n                </tr>\n                <tr>\n                    <td><strong>CR7 - Payment Terms</strong></td>\n                    <td><span class=\"status-badge status-compliant\">{{ $json.red_zone_compliance.CR7_payment_terms.status }}</span></td>\n                    <td>{{ $json.red_zone_compliance.CR7_payment_terms.details }}</td>\n                </tr>\n                <tr>\n                    <td><strong>CR8 - Suspension/Termination</strong></td>\n                    <td><span class=\"status-badge status-non-compliant\">{{ $json.red_zone_compliance.CR8_suspension_termination.status }}</span></td>\n                    <td>{{ $json.red_zone_compliance.CR8_suspension_termination.details }}</td>\n                </tr>\n                <tr>\n                    <td><strong>CR9 - Retentions/Security</strong></td>\n                    <td><span class=\"status-badge status-non-compliant\">{{ $json.red_zone_compliance.CR9_retentions_security.status }}</span></td>\n                    <td>{{ $json.red_zone_compliance.CR9_retentions_security.details }}</td>\n                </tr>\n                <tr>\n                    <td><strong>CR10 - Governing Law</strong></td>\n                    <td><span class=\"status-badge status-compliant\">{{ $json.red_zone_compliance.CR10_governing_law.status }}</span></td>\n                    <td>{{ $json.red_zone_compliance.CR10_governing_law.details }}</td>\n                </tr>\n                <tr>\n                    <td><strong>CR11 - Code of Conduct</strong></td>\n                    <td><span class=\"status-badge status-unclear\">{{ $json.red_zone_compliance.CR11_code_conduct.status }}</span></td>\n                    <td>{{ $json.red_zone_compliance.CR11_code_conduct.details }}</td>\n                </tr>\n            </tbody>\n        </table>\n    </div>\n\n    <!-- CRITICAL ISSUES -->\n    <div class=\"section page-break\">\n        <div class=\"section-title\">Critical Issues</div>\n        {{ $json.criticalIssuesHtml }}\n    </div>\n\n    <!-- NEGOTIATION PRIORITIES -->\n    <div class=\"section page-break\">\n        <div class=\"section-title\">Negotiation Priorities</div>\n        {{ $json.negotiationPrioritiesHtml }}\n    </div>\n\n    <!-- CONTRACT AMENDMENTS -->\n    <div class=\"section page-break\">\n        <div class=\"section-title\">Contract Amendments</div>\n        \n        <div class=\"subsection-title\">Critical Amendments Required</div>\n        {{ $json.criticalAmendmentsHtml }}\n\n        <div class=\"subsection-title\">Additional Clauses Needed</div>\n        {{ $json.additionalClausesHtml }}\n    </div>\n\n    <!-- IMPLEMENTATION ROADMAP -->\n    <div class=\"section page-break\">\n        <div class=\"section-title\">Implementation Roadmap</div>\n        \n        <div class=\"subsection-title\">Immediate Actions</div>\n        {{ $json.immediateActionsHtml }}\n\n        <div class=\"subsection-title\">Negotiation Sequence</div>\n        {{ $json.negotiationSequenceHtml }}\n\n        <div class=\"subsection-title\">Fallback Strategies</div>\n        {{ $json.fallbackStrategiesHtml }}\n\n        <div class=\"subsection-title\">Deal Breakers</div>\n        {{ $json.dealBreakersHtml }}\n    </div>\n\n    <!-- ARTICLE ANALYSIS -->\n    <div class=\"section page-break\">\n        <div class=\"section-title\">Detailed Article Analysis</div>\n        {{ $json.articleAnalysisHtml }}\n    </div>\n\n    <!-- RECOMMENDATIONS SUMMARY -->\n    <div class=\"section page-break\">\n        <div class=\"section-title\">Final Recommendations</div>\n        \n        <div class=\"info-box\" style=\"margin-bottom: 20px;\">\n            <div class=\"info-label\">Proceed with Contract:</div>\n            <div style=\"font-size: 12pt; font-weight: bold; color: #ffc107;\">\n                {{ $json.recommendations.proceed }}\n            </div>\n        </div>\n\n        <div class=\"subsection-title\">Conditions:</div>\n        {{ $json.conditionsHtml }}\n\n        <div class=\"info-grid\">\n            <div>\n                <div class=\"subsection-title\">Must Change:</div>\n                {{ $json.mustChangeHtml }}\n            </div>\n            <div>\n                <div class=\"subsection-title\">Should Change:</div>\n                {{ $json.shouldChangeHtml }}\n            </div>\n        </div>\n\n        <div class=\"subsection-title\">Could Improve:</div>\n        {{ $json.couldImproveHtml }}\n    </div>\n\n    <!-- FOOTER -->\n    <div class=\"footer\">\n        <div>This report was generated by Altrad's Contract Assessment System</div>\n        <div>Confidential and Proprietary - For Internal Use Only</div>\n    </div>\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        1024,
+        432
+      ],
+      "id": "6576da62-f628-4611-aaa0-efe45acb1743",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "jsCode": "// INPUT: de uitvoer van een eerdere node waarin de tekst staat in item.json.output\n\nconst text = $input.first().json.output;\nlet start = text.indexOf(\"```json\");\nlet end = text.indexOf(\"```\", start + 6);\n\nif (start === -1 || end === -1) {\n  throw new Error(\"Kan geen JSON-blok vinden in de tekst.\");\n}\n\n// Haal de JSON-string uit de tekst\nconst jsonString = text.slice(start + 7, end).trim();\n\n// Probeer het JSON-object te parsen\nlet parsedJson;\ntry {\n  parsedJson = JSON.parse(jsonString);\n} catch (err) {\n  throw new Error(\"JSON kon niet geparsed worden: \" + err.message);\n}\n\n// Geef het netjes terug in een array met één object (zoals n8n verwacht)\nreturn [\n  {\n    json: parsedJson\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        416
+      ],
+      "id": "b7484a5a-d6e8-448a-b027-02821b630da9",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "// N8N Code Node - Transform JSON to HTML strings\nconst inputData = $input.all()[0].json;\n\n// Generate Critical Issues HTML\nconst criticalIssuesHtml = inputData.critical_issues\n  .map(issue => `\n    <div class=\"article-card no-break\">\n      <div class=\"article-header\">\n        <div class=\"article-title\">\n          <span class=\"risk-badge risk-${issue.risk_level.toLowerCase()}\">${issue.risk_level}</span>\n          ${issue.issue}\n        </div>\n        <div style=\"font-size: 9pt; color: #666;\">${issue.article_reference}</div>\n      </div>\n      <div class=\"article-content\">\n        <div class=\"subsection-title\">Business Impact:</div>\n        <div style=\"margin-bottom: 10px;\">${issue.business_impact}</div>\n        <div class=\"subsection-title\">Recommended Action:</div>\n        <div class=\"implementation-step\">${issue.recommended_action}</div>\n      </div>\n    </div>\n  `).join('');\n\n// Generate Negotiation Priorities HTML\nconst negotiationPrioritiesHtml = inputData.negotiation_priorities\n  .map(priority => `\n    <div class=\"article-card no-break\">\n      <div class=\"article-header\">\n        <div class=\"article-title\">\n          <span class=\"priority-badge priority-${priority.priority.toLowerCase()}\">${priority.priority}</span>\n          ${priority.item}\n        </div>\n      </div>\n      <div class=\"article-content\">\n        <div style=\"display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; font-size: 9pt;\">\n          <div>\n            <div class=\"info-label\">Current Position:</div>\n            <div>${priority.current_position}</div>\n          </div>\n          <div>\n            <div class=\"info-label\">Target Position:</div>\n            <div>${priority.target_position}</div>\n          </div>\n          <div>\n            <div class=\"info-label\">Fallback Position:</div>\n            <div>${priority.fallback_position}</div>\n          </div>\n        </div>\n      </div>\n    </div>\n  `).join('');\n\n// Generate Article Analysis HTML\nconst articleAnalysisHtml = inputData.article_analysis\n  .map(article => `\n    <div class=\"article-card no-break\">\n      <div class=\"article-header\">\n        <div class=\"article-title\">\n          Article ${article.article_number}: ${article.title}\n          <span class=\"risk-badge risk-${article.risk_level.toLowerCase()}\">${article.risk_level}</span>\n        </div>\n      </div>\n      <div class=\"article-content\">\n        <div class=\"subsection-title\">Summary:</div>\n        <div style=\"margin-bottom: 10px;\">${article.summary}</div>\n        \n        ${article.concerns && article.concerns.length > 0 ? `\n          <div class=\"subsection-title\">Concerns:</div>\n          ${article.concerns.map(concern => `<div class=\"list-item\">${concern}</div>`).join('')}\n        ` : ''}\n        \n        ${article.recommendations && article.recommendations.length > 0 ? `\n          <div class=\"subsection-title\">Recommendations:</div>\n          ${article.recommendations.map(rec => `<div class=\"list-item\">${rec}</div>`).join('')}\n        ` : ''}\n      </div>\n    </div>\n  `).join('');\n\n// Generate Contract Amendments HTML\nconst criticalAmendmentsHtml = inputData.contract_amendments.critical_amendments\n  .map(amendment => `\n    <div class=\"amendment-box no-break\">\n      <div class=\"amendment-title\">${amendment.article}</div>\n      <div style=\"margin-bottom: 10px;\"><strong>Current:</strong> ${amendment.current_text}</div>\n      <div class=\"proposed-text\">\n        <strong>Proposed Amendment:</strong><br>\n        ${amendment.proposed_amendment}\n      </div>\n      <div style=\"margin-top: 10px; font-size: 9pt;\">\n        <strong>Rationale:</strong> ${amendment.rationale} (${amendment.altrad_rule})\n      </div>\n    </div>\n  `).join('');\n\nconst additionalClausesHtml = inputData.contract_amendments.additional_clauses_needed\n  .map(clause => `\n    <div class=\"amendment-box no-break\">\n      <div class=\"amendment-title\">${clause.clause_type}</div>\n      <div style=\"margin-bottom: 10px;\"><strong>Location:</strong> ${clause.location}</div>\n      <div class=\"proposed-text\">\n        <strong>Proposed Text:</strong><br>\n        ${clause.proposed_text}\n      </div>\n      <div style=\"margin-top: 10px; font-size: 9pt;\">\n        <strong>Rationale:</strong> ${clause.rationale}\n      </div>\n    </div>\n  `).join('');\n\n// Generate Implementation Roadmap HTML\nconst immediateActionsHtml = inputData.implementation_roadmap.immediate_actions\n  .map(action => `<div class=\"implementation-step\">${action}</div>`).join('');\n\nconst negotiationSequenceHtml = inputData.implementation_roadmap.negotiation_sequence\n  .map(step => `<div class=\"list-item\">${step}</div>`).join('');\n\nconst fallbackStrategiesHtml = inputData.implementation_roadmap.fallback_strategies\n  .map(strategy => `<div class=\"list-item\">${strategy}</div>`).join('');\n\nconst dealBreakersHtml = inputData.implementation_roadmap.deal_breakers\n  .map(breaker => `<div class=\"list-item\" style=\"color: #dc3545; font-weight: bold;\">${breaker}</div>`).join('');\n\n// Generate Recommendations HTML\nconst conditionsHtml = inputData.recommendations.conditions\n  .map(condition => `<div class=\"list-item\">${condition}</div>`).join('');\n\nconst mustChangeHtml = inputData.recommendations.must_change\n  .map(item => `<div class=\"list-item\" style=\"color: #dc3545;\">${item}</div>`).join('');\n\nconst shouldChangeHtml = inputData.recommendations.should_change\n  .map(item => `<div class=\"list-item\" style=\"color: #fd7e14;\">${item}</div>`).join('');\n\nconst couldImproveHtml = inputData.recommendations.could_improve\n  .map(item => `<div class=\"list-item\" style=\"color: #28a745;\">${item}</div>`).join('');\n\n// Return all data including the generated HTML strings\nreturn [{\n  json: {\n    ...inputData,\n    // Generated HTML strings for the HTML node\n    criticalIssuesHtml,\n    negotiationPrioritiesHtml,\n    articleAnalysisHtml,\n    criticalAmendmentsHtml,\n    additionalClausesHtml,\n    immediateActionsHtml,\n    negotiationSequenceHtml,\n    fallbackStrategiesHtml,\n    dealBreakersHtml,\n    conditionsHtml,\n    mustChangeHtml,\n    shouldChangeHtml,\n    couldImproveHtml\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        416
+      ],
+      "id": "ae59b727-422a-4db0-ae16-3f47b394d57e",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "56ddeb35-240e-44eb-87e5-d2d63bb6b6f3",
+              "name": "html",
+              "value": "={{ $json.html.base64Encode() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1424,
+        416
+      ],
+      "id": "68f8662c-8922-486b-b517-233eb4c54f74",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "html",
+        "options": {
+          "fileName": "index.html",
+          "mimeType": "text/html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        256,
+        672
+      ],
+      "id": "340dfc7b-5762-43f2-895b-6bc1b82d6582",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "fromEmail": "ai@go-knowledge.nl",
+        "toEmail": "={{ $('On form submission').item.json[\"Email \"] }}",
+        "subject": "=contract review {{ $('On form submission').item.json[\"Contract \"][0].filename }}",
+        "emailFormat": "text",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "=contract_review.pdf"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        752,
+        672
+      ],
+      "id": "4bf907fd-2619-4da7-8369-0e0353f91a76",
+      "name": "Send email",
+      "webhookId": "6329f052-e7a7-4078-b065-1256a769bcde",
+      "credentials": {
+        "smtp": {
+          "id": "yG4Ihfi7vhKZzG49",
+          "name": "ai@go-knowledge"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "basicAuth",
+        "formTitle": "Ai Contract Review",
+        "formDescription": "Assessing a contract using AI",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Email ",
+              "fieldType": "email",
+              "placeholder": "provide your email address so we can send the report to you.",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Contract ",
+              "fieldType": "file",
+              "acceptFileTypes": "pdf",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "customCss": ":root {\n\t--font-family: 'Open Sans', sans-serif;\n\t--font-weight-normal: 400;\n\t--font-weight-bold: 600;\n\t--font-size-body: 12px;\n\t--font-size-label: 16px; /* vergroot van 14px */\n\t--font-size-test-notice: 12px;\n\t--font-size-input: 16px; /* vergroot van 14px */\n\t--font-size-header: 20px;\n\t--font-size-paragraph: 14px;\n\t--font-size-link: 12px;\n\t--font-size-error: 12px;\n\t--font-size-html-h1: 28px;\n\t--font-size-html-h2: 20px;\n\t--font-size-html-h3: 16px;\n\t--font-size-html-h4: 14px;\n\t--font-size-html-h5: 12px;\n\t--font-size-html-h6: 10px;\n\t--font-size-subheader: 14px;\n\t/* Colors - Altrad Theme */\n\t--color-background: #f8f9fa;\n\t--color-test-notice-text: #E31E24;\n\t--color-test-notice-bg: #fef7f7;\n\t--color-test-notice-border: #f5c6c7;\n\t--color-card-bg: #ffffff;\n\t--color-card-border: #e1e5e9;\n\t--color-card-shadow: rgba(227, 30, 36, 0.08);\n\t--color-link: #6b6b6b;\n\t--color-header: #2c2c2c;\n\t--color-label: #2c2c2c;\n\t--color-input-border: #e1e5e9;\n\t--color-input-text: #6b6b6b;\n\t--color-focus-border: #E31E24;\n\t--color-submit-btn-bg: #E31E24;\n\t--color-submit-btn-text: #ffffff;\n\t--color-error: #E31E24;\n\t--color-required: #E31E24;\n\t--color-clear-button-bg: #6b6b6b;\n\t--color-html-text: #2c2c2c;\n\t--color-html-link: #E31E24;\n\t--color-header-subtext: #6b6b6b;\n\t/* Border Radii */\n\t--border-radius-card: 8px;\n\t--border-radius-input: 6px;\n\t--border-radius-clear-btn: 50%;\n\t--card-border-radius: 8px;\n\t/* Spacing */\n\t--padding-container-top: 24px;\n\t--padding-card: 24px;\n\t--padding-test-notice-vertical: 12px;\n\t--padding-test-notice-horizontal: 24px;\n\t--margin-bottom-card: 16px;\n\t--padding-form-input: 18px; /* vergroot van 12px */\n\t--card-padding: 24px;\n\t--card-margin-bottom: 16px;\n\t/* Dimensions */\n\t--container-width: 520px; /* vergroot van 448px */\n\t--submit-btn-height: 56px; /* vergroot van 48px */\n\t--checkbox-size: 18px;\n\t/* Others */\n\t--box-shadow-card: 0px 4px 16px 0px var(--color-card-shadow);\n\t--opacity-placeholder: 0.5;\n\t/* Logo */\n\t--logo-url: url('https://bnl.altradservices.com/assets/images/b/Benelux_RVB-660c4912.jpg');\n}"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        176
+      ],
+      "id": "f24e05d4-ca28-4ad6-ad0c-c714b7ee64e4",
+      "name": "On form submission",
+      "webhookId": "4ea67feb-2467-42fe-b2fc-4cc3e1333e77",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "E4b7CmW8gisIRQ8H",
+          "name": "Login Contract Assessment Agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=make a review on this contract:{{ $json.text }}",
+        "options": {
+          "systemMessage": "=CONTRACT ASSESSMENT AGENT PROMPT\nROLE & CONTEXT\n\nYou are a specialized contract analyst who assesses contracts for Altrad Group companies. You analyze contracts for compliance with the Altrad Contracting Rules (Red Zones) and identify risks and deviations.\n\nInput handling (strict): You will receive the full contract as plain UTF-8 text in a field named contract_text. Do not read base64, files or links. Do not simulate if contract_text is missing. If missing, return exactly:\n\n{\"status\":\"INPUT_ERROR\",\"missing\":[\"contract_text\"],\"message\":\"No readable contract text provided in `contract_text`.\"}\n\n\nFoundational rule (numbering neutrality): Never map CR numbers or example article numbers to a contract’s numbering. Analyze by topic/content and only cite the identifiers actually present in the contract (article/section/paragraph title or number as found). If none, write: “no explicit identifier – [heading/subject]”.\n\nCONTRACT ADAPTABILITY\n\nThis analysis framework applies to ALL contract types including:\n\nServices Contracts (Scaffolding, Insulation, Painting, Mechanical)\n\nSupply Contracts (Equipment, Materials)\n\nConstruction/Engineering Contracts\n\nSubcontractor Agreements\n\nFramework Agreements\n\nAuto-detect contract characteristics:\n\nContract type and scope\n\nArticle numbering system\n\nApplicable jurisdiction\n\nKey commercial terms structure\n\nDo not assume any fixed mapping between topics and article numbers; detect and cite the contract’s own identifiers.\n\nALTRAD CONTRACTING RULES (RED ZONES)\n\nCR1 - Consequential Damages: No liability for indirect/consequential damages (loss of profit, loss of business, loss of goodwill). Express release and waiver from client required.\n\nCR2 - Liquidated Damages:\n\nCap at 1% of contract value per week, maximum 10% total\n\nOnly for clearly defined milestones\n\nAim for 5% cap, only 10% if essential for contract award\n\nTry to obtain 5 working day grace period before LDs begin\n\nCR3 - Liability Cap/Period:\n\n≥€5m: max 50% of contract price\n\n€0.75m–5m: max 75% of contract price\n\n<€0.75m: max 150% of contract price\n\nLiability ceases upon completion certificate/occupation/use by client\n\nAlways seek to minimize liability cap towards 10% where possible\n\nCR4 - Warranty Period:\n\nMaximum 24 months from delivery/completion certificate date\n\nStart at 12 months, only extend to 24 if essential for contract award\n\nBack-to-back arrangements with manufacturers/suppliers/subcontractors\n\nCR5 - Third Party Liability: Each party assumes own liability for injury/death of third party personnel or damage to third party property\n\nCR6 - Insurance:\n\nContract must identify which insurances client shall provide\n\nIndemnity from client for losses caused by such insurance failing\n\nClient insurer should waive subrogation rights against us/our insurers\n\nCR7 - Payment Terms: Maximum 60 day payment terms + credit check on counterparty\n\nCR8 - Suspension & Termination:\n\nRight to suspend/terminate upon: insolvency, continued non-payment (60+ days), work suspension exceeding 90 days\n\nIf client suspends for no fault/breach: entitlement to standby rates or documented costs + profit\n\nCR9 - Retentions & Security:\n\nRetention shall not exceed 10%\n\nBank guarantees: max 10% during execution, 5% for guarantee period\n\nNo overlap between bank and parent company guarantees\n\nCR10 - Governing Law: Do not accept laws you are not familiar with\n\nCR11 - Code of Conduct: Prohibition of bribery, corruption, slavery, human trafficking, child labour\n\nASSESSMENT INSTRUCTIONS\n\nAnalyze the provided contract systematically by topic and assess. Work only with contract_text. Do not invent content not present in contract_text.\n\nA. ARTICLE-BY-ARTICLE ANALYSIS\n\nFor each contract article/section/paragraph (adapt to actual contract structure and do not assume any fixed numbering):\n\nArticle/Section identifier (as found in the contract: number, letter, or title-based; if none, state “no explicit identifier – [heading/subject]”)\n\nCore content summary\n\nAltrad rules compliance check\n\nRisk level (LOW/MEDIUM/HIGH/CRITICAL)\n\nSpecific concerns and red flags\n\nNegotiation recommendations\n\nEvidence: quote a short exact excerpt (1–3 sentences) from contract_text supporting your finding.\n\nNote: Search the contract text semantically for each topic (payment, LDs, liability, insurance, warranty, etc.) and cite only the identifiers actually present.\n\nB. SPECIFIC FOCUS AREAS\n\nPay special attention to (adapt emphasis based on contract type). Do not assume article numbers.\n\nFINANCIAL TERMS: Price structure and indexation; payment terms and invoicing procedures; securities and guarantees; retention percentage and conditions; liquidated damages structure.\n\nLIABILITY & RISK: Liability allocations; liability limitations and exclusions; insurance requirements; consequential damages clauses; warranty and defects liability.\n\nOPERATIONAL TERMS: Changes/variations; suspension and termination rights; delivery and acceptance; subcontracting; deadlines and delay procedures.\n\nLEGAL & COMPLIANCE: Applicable law and jurisdiction; confidentiality; intellectual property; employment conditions; registration/certification requirements.\n\nC. OUTPUT STRUCTURE\n{\n  \"contract_summary\": {\n    \"contract_type\": \"...\",\n    \"contracting_parties\": \"...\",\n    \"estimated_value\": \"...\",\n    \"key_scope\": \"...\"\n  },\n  \"overall_risk_assessment\": {\n    \"risk_level\": \"LOW/MEDIUM/HIGH/CRITICAL\",\n    \"executive_summary\": \"...\",\n    \"critical_issues_count\": \"number\",\n    \"compliance_score\": \"...%\" \n  },\n  \"red_zone_compliance\": {\n    \"CR1_consequential_damages\": {\"status\": \"COMPLIANT/NON_COMPLIANT/PARTIAL/UNCLEAR\", \"compliance_percent\": \"...%\", \"details\": \"...\", \"evidence\": \"...\"},\n    \"CR2_liquidated_damages\": {\"status\": \"...\", \"compliance_percent\": \"...%\", \"details\": \"...\", \"evidence\": \"...\"},\n    \"CR3_liability_cap\": {\"status\": \"...\", \"compliance_percent\": \"...%\", \"details\": \"...\", \"evidence\": \"...\"},\n    \"CR4_warranty_period\": {\"status\": \"...\", \"compliance_percent\": \"...%\", \"details\": \"...\", \"evidence\": \"...\"},\n    \"CR5_third_party_liability\": {\"status\": \"...\", \"compliance_percent\": \"...%\", \"details\": \"...\", \"evidence\": \"...\"},\n    \"CR6_insurance\": {\"status\": \"...\", \"compliance_percent\": \"...%\", \"details\": \"...\", \"evidence\": \"...\"},\n    \"CR7_payment_terms\": {\"status\": \"...\", \"compliance_percent\": \"...%\", \"details\": \"...\", \"evidence\": \"...\"},\n    \"CR8_suspension_termination\": {\"status\": \"...\", \"compliance_percent\": \"...%\", \"details\": \"...\", \"evidence\": \"...\"},\n    \"CR9_retentions_security\": {\"status\": \"...\", \"compliance_percent\": \"...%\", \"details\": \"...\", \"evidence\": \"...\"},\n    \"CR10_governing_law\": {\"status\": \"...\", \"compliance_percent\": \"...%\", \"details\": \"...\", \"evidence\": \"...\"},\n    \"CR11_code_conduct\": {\"status\": \"...\", \"compliance_percent\": \"...%\", \"details\": \"...\", \"evidence\": \"...\"}\n  },\n  \"article_analysis\": [\n    {\n      \"article_or_section_identifier\": \"...\",\n      \"title\": \"...\",\n      \"summary\": \"...\",\n      \"risk_level\": \"...\",\n      \"altrad_compliance\": \"...\",\n      \"concerns\": [\"...\"],\n      \"recommendations\": [\"...\"],\n      \"evidence\": \"short exact quote from contract_text\"\n    }\n  ],\n  \"critical_issues\": [\n    {\n      \"issue\": \"...\",\n      \"article_reference\": \"...\",\n      \"risk_level\": \"...\",\n      \"business_impact\": \"...\",\n      \"recommended_action\": \"...\",\n      \"evidence\": \"short exact quote\"\n    }\n  ],\n  \"negotiation_priorities\": [\n    {\n      \"priority\": \"HIGH/MEDIUM/LOW\",\n      \"item\": \"...\",\n      \"current_position\": \"...\",\n      \"target_position\": \"...\",\n      \"fallback_position\": \"...\"\n    }\n  ],\n  \"recommendations\": {\n    \"proceed\": \"YES/NO/CONDITIONAL\",\n    \"conditions\": [\"...\"],\n    \"must_change\": [\"...\"],\n    \"should_change\": [\"...\"],\n    \"could_improve\": [\"...\"]\n  },\n  \"contract_amendments\": {\n    \"critical_amendments\": [\n      {\n        \"article\": \"...\",\n        \"current_text\": \"...\",\n        \"proposed_amendment\": \"...\",\n        \"rationale\": \"...\",\n        \"altrad_rule\": \"...\",\n        \"evidence\": \"short exact quote\"\n      }\n    ],\n    \"additional_clauses_needed\": [\n      {\n        \"clause_type\": \"...\",\n        \"proposed_text\": \"...\",\n        \"location\": \"...\",\n        \"rationale\": \"...\"\n      }\n    ]\n  },\n  \"implementation_roadmap\": {\n    \"immediate_actions\": [\"...\"],\n    \"negotiation_sequence\": [\"...\"],\n    \"fallback_strategies\": [\"...\"],\n    \"deal_breakers\": [\"...\"]\n  }\n}\n\nANALYSIS GUIDELINES\n\nBe specific: Quote exact article numbers and clause text only as found in contract_text.\n\nQuantify risks: Provide numeric compliance_percent for each CR and an overall compliance_score.\n\nPrioritize: Focus on business-critical items first.\n\nBe practical: Provide implementable recommendations.\n\nContextualize: Consider industry standards and local legislation.\n\nIdentify gaps: If a topic cannot be found in contract_text, mark the CR as UNCLEAR and explain what is missing.\n\nNumbering neutrality: Never rely on fixed/example article numbers; search by topic and cite only actual identifiers present.\n\nNo fabrication: If unsure, say so; do not invent clauses or identifiers.\n\nEXAMPLE ANALYSIS APPROACH\n\nUse only the actual clause identifiers found in the contract; any examples are illustrative, not assumptions.\n\nNote the overall structure and length.\n\nIdentify applicable law and jurisdiction (cite the actual clause you find).\n\nAssess liability provisions against CR3 caps (cite actual clause identifiers).\n\nReview security requirements against CR9 (cite actual clause identifiers).\n\nExamine payment terms against CR7 (cite actual clause identifiers).\n\nCheck warranty periods against CR4 (cite actual clause identifiers).\n\nEvaluate suspension/termination rights against CR8 (cite actual clause identifiers).\n\nReview insurance provisions against CR6 (cite actual clause identifiers).",
+          "passthroughBinaryImages": "={{ true }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1168,
+        144
+      ],
+      "id": "6f2b9c60-8c8a-4ae3-a991-1ab362260974",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.5:3000/forms/chromium/convert/html",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Gotenberg-Output-Filename",
+              "value": "=contract_review_{{ $('Attachment Type Filter').item.json.fileName }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "contract_review.pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        672
+      ],
+      "id": "0db10279-a0b3-4d06-b620-6390c22177f9",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        720,
+        176
+      ],
+      "id": "84847733-d880-43fc-80cf-6004199c009d",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst inputItems = $input.all();\n\nfor (const item of inputItems) {\n  if (item.binary) {\n    for (const [key, bin] of Object.entries(item.binary)) {\n      const fileName = bin.fileName?.toLowerCase() || '';\n      const mimeType = bin.mimeType?.toLowerCase() || '';\n\n      const isAttachment = key.startsWith('attachment_') || \n                           key.includes('attachment') || \n                           key.startsWith('data_') ||\n                           bin.fileName;\n\n      // Herkenbare extensies\n      const isPdf = mimeType === 'application/pdf' || fileName.endsWith('.pdf');\n      const isJpg = mimeType === 'image/jpeg' || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg');\n      const isPng = mimeType === 'image/png' || fileName.endsWith('.png');\n\n      const isAllowedFile = isPdf || isJpg || isPng;\n\n      if (isAttachment && isAllowedFile) {\n        results.push({\n          binary: {\n            data: bin,\n          },\n          json: {\n            fileName: bin.fileName || `attachment_${key}`,\n            mimeType: bin.mimeType || 'unknown',\n            originalKey: key,\n          },\n        });\n      }\n    }\n  }\n}\n\nreturn results.length > 0 ? results : [{\n  json: {\n    error: 'Geen PDF of afbeeldingsbestanden gevonden',\n    tip: 'Controleer of er PDF/JPG/PNG-bijlagen in de e-mail zitten en of de e-mail correct is verwerkt'\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        176
+      ],
+      "id": "26b518e3-f650-475c-9ce0-4303178ba0ed",
+      "name": "Attachment Type Filter",
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// N8N Code Node - Contract Analysis to Excel Template Format\n// Genereert Excel in de exacte template structuur met volledig detail uit rapport\n\nconst contractData = $input.first().json;\n\n// ===== UTILITY FUNCTIES =====\n\nfunction escapeXml(unsafe) {\n    if (unsafe === null || unsafe === undefined) return '';\n    return String(unsafe)\n        .replace(/&/g, \"&amp;\")\n        .replace(/</g, \"&lt;\")\n        .replace(/>/g, \"&gt;\")\n        .replace(/\"/g, \"&quot;\")\n        .replace(/'/g, \"&#039;\");\n}\n\nfunction truncateText(text, maxLength = 200) {\n    if (!text || text.length <= maxLength) return text;\n    return text.substring(0, maxLength) + '...';\n}\n\nfunction formatDisplayName(fieldName) {\n    return fieldName\n        .replace(/_/g, ' ')\n        .replace(/\\b\\w/g, l => l.toUpperCase());\n}\n\n// ===== UITGEBREIDE DATA EXTRACTIE =====\n\nfunction createDetailedTemplateData(data) {\n    const templateRows = [];\n    let rowNumber = 1;\n    \n    // Handle array input\n    let processData = data;\n    if (Array.isArray(data)) {\n        processData = data[0];\n    }\n    \n    if (!processData || typeof processData !== 'object') {\n        return [];\n    }\n\n    // 1. OVERALL RISK ASSESSMENT (als eerste rij)\n    const riskAssessment = processData.overall_risk_assessment || {};\n    if (riskAssessment.risk_level) {\n        templateRows.push({\n            no: rowNumber++,\n            doc: \"Assessment\",\n            article: \"Overall Risk\",\n            clause: riskAssessment.risk_level,\n            comments: `Compliance Score: ${riskAssessment.compliance_score || 'N/A'} | Critical Issues: ${riskAssessment.critical_issues_count || 0}`,\n            suggestedClauses: truncateText(riskAssessment.executive_summary || \"No summary provided\", 300),\n            clientAnswers: \"\"\n        });\n    }\n\n    // 2. RED ZONE COMPLIANCE - ALLE NON-COMPLIANT EN PARTIAL ITEMS\n    const compliance = processData.red_zone_compliance || {};\n    Object.entries(compliance).forEach(([key, item]) => {\n        if (item && item.status && item.status !== \"COMPLIANT\") {\n            const cleanKey = key.replace(/CR\\d+_/, '').replace(/_/g, ' ').toUpperCase();\n            templateRows.push({\n                no: rowNumber++,\n                doc: \"Red Zone\",\n                article: key,\n                clause: cleanKey,\n                comments: `${item.status} (${item.compliance_percent || '0%'}) - ${truncateText(item.details || 'No details', 250)}`,\n                suggestedClauses: truncateText(item.evidence || \"Review and update clause as needed\", 250),\n                clientAnswers: \"\"\n            });\n        }\n    });\n\n    // 3. CRITICAL ISSUES - VOLLEDIG DETAIL\n    const criticalIssues = processData.critical_issues || [];\n    criticalIssues.forEach(issue => {\n        templateRows.push({\n            no: rowNumber++,\n            doc: \"Critical Issue\",\n            article: issue.article_reference || \"General\",\n            clause: issue.issue || \"Unknown Issue\",\n            comments: `${issue.risk_level || 'CRITICAL'} RISK - ${truncateText(issue.business_impact || 'No impact specified', 200)}`,\n            suggestedClauses: truncateText(issue.recommended_action || \"Review required\", 250),\n            clientAnswers: \"\"\n        });\n    });\n\n    // 4. ARTICLE ANALYSIS - ALLE HIGH EN CRITICAL ARTIKELEN MET DETAILS\n    const articles = processData.article_analysis || [];\n    articles\n        .filter(article => article.risk_level === 'HIGH' || article.risk_level === 'CRITICAL' || \n                         (article.concerns && article.concerns.length > 0))\n        .forEach(article => {\n            const concerns = Array.isArray(article.concerns) ? article.concerns.join(\"; \") : \"\";\n            const recommendations = Array.isArray(article.recommendations) ? article.recommendations.join(\"; \") : \"\";\n            \n            templateRows.push({\n                no: rowNumber++,\n                doc: \"Article\",\n                article: article.article_or_section_identifier || \"Unknown\",\n                clause: article.title || \"No Title\",\n                comments: `${article.risk_level || 'MEDIUM'} - ${article.summary ? truncateText(article.summary, 150) : 'No summary'} ${concerns ? '| Issues: ' + truncateText(concerns, 100) : ''}`,\n                suggestedClauses: recommendations ? truncateText(recommendations, 250) : \"No specific recommendations\",\n                clientAnswers: \"\"\n            });\n        });\n\n    // 5. NEGOTIATION PRIORITIES - ALLE PRIORITEITEN MET VOLLEDIGE POSITIES\n    const priorities = processData.negotiation_priorities || [];\n    priorities.forEach(priority => {\n        const currentPos = priority.current_position || 'Not specified';\n        const targetPos = priority.target_position || 'Not specified';\n        const fallbackPos = priority.fallback_position || 'Not specified';\n        \n        templateRows.push({\n            no: rowNumber++,\n            doc: \"Negotiation\",\n            article: `${priority.priority || 'MEDIUM'} Priority`,\n            clause: priority.item || \"Unknown Item\",\n            comments: `Current: ${truncateText(currentPos, 120)} | Target: ${truncateText(targetPos, 120)}`,\n            suggestedClauses: `Fallback: ${truncateText(fallbackPos, 200)}`,\n            clientAnswers: \"\"\n        });\n    });\n\n    // 6. CONTRACT AMENDMENTS - CRITICAL AMENDMENTS MET DETAILS\n    const amendments = processData.contract_amendments || {};\n    \n    // Critical amendments\n    if (amendments.critical_amendments && Array.isArray(amendments.critical_amendments)) {\n        amendments.critical_amendments.forEach(amendment => {\n            templateRows.push({\n                no: rowNumber++,\n                doc: \"Amendment\",\n                article: amendment.article || \"New Article\",\n                clause: \"CRITICAL Amendment Required\",\n                comments: `Rule: ${amendment.altrad_rule || 'N/A'} - ${truncateText(amendment.rationale || 'No rationale', 200)}`,\n                suggestedClauses: truncateText(amendment.proposed_amendment || \"Amendment text required\", 300),\n                clientAnswers: \"\"\n            });\n        });\n    }\n\n    // Additional clauses needed\n    if (amendments.additional_clauses_needed && Array.isArray(amendments.additional_clauses_needed)) {\n        amendments.additional_clauses_needed.forEach(clause => {\n            templateRows.push({\n                no: rowNumber++,\n                doc: \"New Clause\",\n                article: clause.location || \"New Article\",\n                clause: clause.clause_type || \"Additional Clause\",\n                comments: truncateText(clause.rationale || \"New clause required\", 200),\n                suggestedClauses: truncateText(clause.proposed_text || \"Clause text to be defined\", 300),\n                clientAnswers: \"\"\n            });\n        });\n    }\n\n    // 7. IMPLEMENTATION ROADMAP ITEMS\n    const roadmap = processData.implementation_roadmap || {};\n    \n    // Immediate actions\n    if (roadmap.immediate_actions && Array.isArray(roadmap.immediate_actions)) {\n        roadmap.immediate_actions.slice(0, 3).forEach((action, index) => {\n            templateRows.push({\n                no: rowNumber++,\n                doc: \"Action\",\n                article: \"Immediate Action\",\n                clause: `Action ${index + 1}`,\n                comments: truncateText(action, 250),\n                suggestedClauses: \"Execute immediately before contract signing\",\n                clientAnswers: \"\"\n            });\n        });\n    }\n\n    // Deal breakers\n    if (roadmap.deal_breakers && Array.isArray(roadmap.deal_breakers)) {\n        roadmap.deal_breakers.slice(0, 5).forEach((breaker, index) => {\n            templateRows.push({\n                no: rowNumber++,\n                doc: \"Deal Breaker\",\n                article: \"Non-Negotiable\",\n                clause: `Deal Breaker ${index + 1}`,\n                comments: \"CRITICAL: Contract cannot proceed if this issue is not resolved\",\n                suggestedClauses: truncateText(breaker, 300),\n                clientAnswers: \"\"\n            });\n        });\n    }\n\n    // 8. RECOMMENDATIONS MUST/SHOULD/COULD CHANGE\n    const recommendations = processData.recommendations || {};\n    \n    // Must change items\n    if (recommendations.must_change && Array.isArray(recommendations.must_change)) {\n        recommendations.must_change.forEach((item, index) => {\n            templateRows.push({\n                no: rowNumber++,\n                doc: \"Must Change\",\n                article: \"Mandatory\",\n                clause: `Required Change ${index + 1}`,\n                comments: \"MANDATORY: Must be changed before contract execution\",\n                suggestedClauses: truncateText(item, 300),\n                clientAnswers: \"\"\n            });\n        });\n    }\n\n    // Should change items\n    if (recommendations.should_change && Array.isArray(recommendations.should_change)) {\n        recommendations.should_change.forEach((item, index) => {\n            templateRows.push({\n                no: rowNumber++,\n                doc: \"Should Change\",\n                article: \"Recommended\",\n                clause: `Recommended Change ${index + 1}`,\n                comments: \"RECOMMENDED: Strongly advised to change\",\n                suggestedClauses: truncateText(item, 300),\n                clientAnswers: \"\"\n            });\n        });\n    }\n\n    // Could improve items\n    if (recommendations.could_improve && Array.isArray(recommendations.could_improve)) {\n        recommendations.could_improve.slice(0, 3).forEach((item, index) => {\n            templateRows.push({\n                no: rowNumber++,\n                doc: \"Could Improve\",\n                article: \"Optional\",\n                clause: `Improvement ${index + 1}`,\n                comments: \"OPTIONAL: Nice to have improvement\",\n                suggestedClauses: truncateText(item, 300),\n                clientAnswers: \"\"\n            });\n        });\n    }\n\n    // Vul aan tot minimaal 30 rijen voor voldoende ruimte\n    while (templateRows.length < 30) {\n        templateRows.push({\n            no: rowNumber++,\n            doc: \"\",\n            article: \"\",\n            clause: \"\",\n            comments: \"\",\n            suggestedClauses: \"\",\n            clientAnswers: \"\"\n        });\n    }\n\n    return templateRows;\n}\n\n// ===== EXCEL XML GENERATIE MET BETERE STYLING =====\n\nfunction generateDetailedTemplateExcelXML(contractData) {\n    const today = new Date().toLocaleDateString('nl-NL');\n    const contractSummary = contractData.contract_summary || {};\n    const contractType = contractSummary.contract_type || 'Unknown Contract Type';\n    const templateRows = createDetailedTemplateData(contractData);\n\n    // Uitgebreide Excel styles\n    const styles = `\n  <Style ss:ID=\"Header\">\n   <Font ss:Bold=\"1\" ss:Size=\"11\" ss:Color=\"#FFFFFF\"/>\n   <Interior ss:Color=\"#C00000\" ss:Pattern=\"Solid\"/>\n   <Alignment ss:Horizontal=\"Center\" ss:Vertical=\"Center\"/>\n   <Borders>\n    <Border ss:Position=\"Bottom\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Left\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Right\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Top\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n   </Borders>\n  </Style>\n  <Style ss:ID=\"Title\">\n   <Font ss:Bold=\"1\" ss:Size=\"16\"/>\n   <Alignment ss:Horizontal=\"Center\" ss:Vertical=\"Center\"/>\n  </Style>\n  <Style ss:ID=\"ProjectRef\">\n   <Font ss:Bold=\"1\" ss:Size=\"11\"/>\n   <Interior ss:Color=\"#E7E6E6\" ss:Pattern=\"Solid\"/>\n   <Borders>\n    <Border ss:Position=\"Bottom\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Left\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Right\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Top\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n   </Borders>\n  </Style>\n  <Style ss:ID=\"DataCell\">\n   <Borders>\n    <Border ss:Position=\"Bottom\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Left\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Right\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Top\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n   </Borders>\n   <Alignment ss:Vertical=\"Top\" ss:WrapText=\"1\"/>\n  </Style>\n  <Style ss:ID=\"CriticalCell\">\n   <Interior ss:Color=\"#FFCCCB\" ss:Pattern=\"Solid\"/>\n   <Font ss:Bold=\"1\"/>\n   <Borders>\n    <Border ss:Position=\"Bottom\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Left\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Right\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Top\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n   </Borders>\n   <Alignment ss:Vertical=\"Top\" ss:WrapText=\"1\"/>\n  </Style>\n  <Style ss:ID=\"HighCell\">\n   <Interior ss:Color=\"#FFE4B5\" ss:Pattern=\"Solid\"/>\n   <Borders>\n    <Border ss:Position=\"Bottom\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Left\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Right\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Top\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n   </Borders>\n   <Alignment ss:Vertical=\"Top\" ss:WrapText=\"1\"/>\n  </Style>\n  <Style ss:ID=\"MediumCell\">\n   <Interior ss:Color=\"#FFFACD\" ss:Pattern=\"Solid\"/>\n   <Borders>\n    <Border ss:Position=\"Bottom\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Left\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Right\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n    <Border ss:Position=\"Top\" ss:LineStyle=\"Continuous\" ss:Weight=\"1\"/>\n   </Borders>\n   <Alignment ss:Vertical=\"Top\" ss:WrapText=\"1\"/>\n  </Style>`;\n\n    // Data rows met intelligente styling\n    const dataRows = templateRows.map(row => {\n        let cellStyle = \"DataCell\";\n        \n        // Bepaal cell style op basis van content\n        if (row.doc === \"Critical Issue\" || row.clause.includes(\"CRITICAL\") || row.doc === \"Deal Breaker\") {\n            cellStyle = \"CriticalCell\";\n        } else if (row.doc === \"Amendment\" || row.comments.includes(\"HIGH\") || row.doc === \"Must Change\") {\n            cellStyle = \"HighCell\";\n        } else if (row.doc === \"Red Zone\" || row.doc === \"Should Change\" || row.comments.includes(\"MEDIUM\")) {\n            cellStyle = \"MediumCell\";\n        }\n\n        return `\n    <Row ss:Height=\"30\">\n     <Cell ss:StyleID=\"${cellStyle}\"><Data ss:Type=\"Number\">${row.no}</Data></Cell>\n     <Cell ss:StyleID=\"${cellStyle}\"><Data ss:Type=\"String\">${escapeXml(row.doc)}</Data></Cell>\n     <Cell ss:StyleID=\"${cellStyle}\"><Data ss:Type=\"String\">${escapeXml(row.article)}</Data></Cell>\n     <Cell ss:StyleID=\"${cellStyle}\"><Data ss:Type=\"String\">${escapeXml(row.clause)}</Data></Cell>\n     <Cell ss:StyleID=\"${cellStyle}\"><Data ss:Type=\"String\">${escapeXml(row.comments)}</Data></Cell>\n     <Cell ss:StyleID=\"${cellStyle}\"><Data ss:Type=\"String\">${escapeXml(row.suggestedClauses)}</Data></Cell>\n     <Cell ss:StyleID=\"${cellStyle}\"><Data ss:Type=\"String\">${escapeXml(row.clientAnswers)}</Data></Cell>\n    </Row>`;\n    }).join('');\n\n    // Contract details voor header\n    const contractParties = contractSummary.contracting_parties || 'Not specified';\n    const estimatedValue = contractSummary.estimated_value || 'N/A';\n\n    return `<?xml version=\"1.0\"?>\n<?mso-application progid=\"Excel.Sheet\"?>\n<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\"\n xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\">\n <DocumentProperties xmlns=\"urn:schemas-microsoft-com:office:office\">\n  <Title>Template Contract Qualification - Detailed Analysis</Title>\n  <Subject>Contract Analysis: ${escapeXml(contractType)}</Subject>\n  <Created>${new Date().toISOString()}</Created>\n </DocumentProperties>\n <Styles>\n${styles}\n </Styles>\n <Worksheet ss:Name=\"Contract Qualification\">\n  <Table>\n    <Column ss:AutoFitWidth=\"0\" ss:Width=\"45\"/>\n    <Column ss:AutoFitWidth=\"0\" ss:Width=\"100\"/>\n    <Column ss:AutoFitWidth=\"0\" ss:Width=\"150\"/>\n    <Column ss:AutoFitWidth=\"0\" ss:Width=\"200\"/>\n    <Column ss:AutoFitWidth=\"0\" ss:Width=\"350\"/>\n    <Column ss:AutoFitWidth=\"0\" ss:Width=\"350\"/>\n    <Column ss:AutoFitWidth=\"0\" ss:Width=\"120\"/>\n    \n    <Row ss:Height=\"35\">\n     <Cell ss:StyleID=\"Title\" ss:MergeAcross=\"6\"><Data ss:Type=\"String\">Template Contract Qualification - Detailed Analysis</Data></Cell>\n    </Row>\n    <Row ss:Height=\"5\">\n     <Cell><Data ss:Type=\"String\"></Data></Cell>\n    </Row>\n    <Row ss:Height=\"20\">\n     <Cell ss:StyleID=\"ProjectRef\"><Data ss:Type=\"String\">Project Reference</Data></Cell>\n     <Cell ss:StyleID=\"ProjectRef\" ss:MergeAcross=\"3\"><Data ss:Type=\"String\">${escapeXml(contractType)}</Data></Cell>\n     <Cell ss:StyleID=\"ProjectRef\"><Data ss:Type=\"String\">Date</Data></Cell>\n     <Cell ss:StyleID=\"ProjectRef\"><Data ss:Type=\"String\">${today}</Data></Cell>\n    </Row>\n    <Row ss:Height=\"20\">\n     <Cell ss:StyleID=\"ProjectRef\"><Data ss:Type=\"String\">Contracting Parties</Data></Cell>\n     <Cell ss:StyleID=\"ProjectRef\" ss:MergeAcross=\"5\"><Data ss:Type=\"String\">${escapeXml(contractParties)}</Data></Cell>\n    </Row>\n    <Row ss:Height=\"20\">\n     <Cell ss:StyleID=\"ProjectRef\"><Data ss:Type=\"String\">Estimated Value</Data></Cell>\n     <Cell ss:StyleID=\"ProjectRef\" ss:MergeAcross=\"5\"><Data ss:Type=\"String\">${escapeXml(estimatedValue)}</Data></Cell>\n    </Row>\n    <Row ss:Height=\"5\">\n     <Cell><Data ss:Type=\"String\"></Data></Cell>\n    </Row>\n    <Row ss:Height=\"25\">\n     <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">No</Data></Cell>\n     <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Doc.</Data></Cell>\n     <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Article</Data></Cell>\n     <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Clause</Data></Cell>\n     <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Comments</Data></Cell>\n     <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Suggested clauses</Data></Cell>\n     <Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">Client's answers</Data></Cell>\n    </Row>\n${dataRows}\n  </Table>\n </Worksheet>\n</Workbook>`;\n}\n\n// ===== HOOFDLOGICA =====\n\ntry {\n    if (!contractData) {\n        throw new Error('No contract data provided');\n    }\n    \n    console.log('Generating Detailed Template Contract Qualification...');\n    \n    // Genereer bestandsnaam\n    const contractType = contractData.contract_summary?.contract_type || 'Contract';\n    const cleanType = contractType.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30);\n    const dateStr = new Date().toISOString().split('T')[0];\n    const fileName = `Detailed_Contract_Qualification_${cleanType}_${dateStr}.xls`;\n    \n    // Genereer Excel XML\n    const excelXML = generateDetailedTemplateExcelXML(contractData);\n    \n    // Log resultaten\n    console.log(`Detailed Template Excel bestand gegenereerd: ${fileName}`);\n    console.log(`Contract type: ${contractData.contract_summary?.contract_type || 'Unknown'}`);\n    console.log(`Risk level: ${contractData.overall_risk_assessment?.risk_level || 'Unknown'}`);\n    console.log(`Critical issues: ${contractData.critical_issues?.length || 0}`);\n    console.log(`Negotiation priorities: ${contractData.negotiation_priorities?.length || 0}`);\n    \n    // Return resultaat\n    return {\n        json: {\n            ...contractData,\n            excelGenerated: true,\n            excelFilename: fileName,\n            templateFormat: true,\n            detailedAnalysis: true,\n            processingTimestamp: new Date().toISOString(),\n            reportSummary: {\n                contractType: contractData.contract_summary?.contract_type || 'Unknown',\n                riskLevel: contractData.overall_risk_assessment?.risk_level || 'Unknown',\n                complianceScore: contractData.overall_risk_assessment?.compliance_score || 'N/A',\n                criticalIssues: contractData.critical_issues?.length || 0,\n                totalAnalyzedItems: (contractData.critical_issues?.length || 0) + \n                                 (contractData.negotiation_priorities?.length || 0) +\n                                 (contractData.article_analysis?.length || 0)\n            }\n        },\n        binary: {\n            ...($input.first().binary || {}),\n            file: {\n                data: Buffer.from(excelXML, 'utf8').toString('base64'),\n                mimeType: 'application/vnd.ms-excel',\n                fileName: fileName\n            }\n        }\n    };\n\n} catch (error) {\n    console.error('Critical error during detailed template Excel generation:', error);\n    \n    return {\n        json: {\n            ...contractData,\n            excelGenerated: false,\n            error: error.message,\n            errorTimestamp: new Date().toISOString()\n        },\n        binary: $input.first().binary || {}\n    };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        416
+      ],
+      "id": "3366dfa1-5301-43cb-990c-f4aa7769d5ef",
+      "name": "Excel code"
+    }
+  ],
+  "connections": {
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Excel code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Attachment Type Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attachment Type Filter": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Excel code": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "848b22f8-b3bc-46b8-9388-b79e34bf15ff",
+  "triggerCount": 1,
+  "tags": []
+}
