@@ -1,0 +1,136 @@
+{
+  "createdAt": "2025-07-17T07:41:20.244Z",
+  "updatedAt": "2025-07-23T19:07:42.000Z",
+  "id": "TqQlQm1cVMh35JwL",
+  "name": "PDF documents",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"message\":\"\",\n  \"id\": \"\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -260,
+        -160
+      ],
+      "id": "889b0055-8709-4d1d-92af-a4d34cb99675",
+      "name": "When Executed by Another Workflow",
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "jsCode": "const attachments = [];\nconst inputItems = $input.all();\n\n// Loop door alle input items (meestal is er maar 1 email)\ninputItems.forEach(item => {\n  if (item.binary) {\n    for (const [key, value] of Object.entries(item.binary)) {\n      if (key.startsWith('attachment_')) {\n        attachments.push({\n          binary: { data: value },\n          json: {\n            fileName: value.fileName,\n            mimeType: value.mimeType,\n            attachmentKey: key,\n            tempFilePath: `/tmp/${Date.now()}_${value.fileName}`\n          }\n        });\n      }\n    }\n  }\n});\n\nreturn attachments.length > 0 ? attachments : [{\n  json: { error: 'Geen attachments gevonden' }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        -160
+      ],
+      "id": "f66abde5-7b65-4efd-8490-83054fd7f4e6",
+      "name": "Extract Attachments2",
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://31.21.232.159:11434/api/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "llava:13b"
+            },
+            {
+              "name": "prompt",
+              "value": "=zet alle belangrijke gegevens in een lijst {{$json[\"text\"]}},\n\"stream\": false\n"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        420,
+        -160
+      ],
+      "id": "4da768e9-c027-4f2f-8cfa-3d85209db713",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "=data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        200,
+        -160
+      ],
+      "id": "093bd8c7-1783-4b71-ba20-0e5b14095440",
+      "name": "Extract from File1"
+    }
+  ],
+  "connections": {
+    "Extract Attachments2": {
+      "main": [
+        [
+          {
+            "node": "Extract from File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Extract Attachments2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "aba4728b-a3bf-453a-9c9a-d43545d0a837",
+  "triggerCount": 0,
+  "tags": []
+}
