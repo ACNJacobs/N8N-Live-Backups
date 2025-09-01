@@ -1,0 +1,318 @@
+{
+  "createdAt": "2025-05-13T12:03:24.149Z",
+  "updatedAt": "2025-07-21T11:11:02.000Z",
+  "id": "Q12gtdri8L5aMq9s",
+  "name": "email to jira",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "format": "resolved",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        -940,
+        -400
+      ],
+      "id": "0841b7aa-9563-4600-8056-f58dc7e3ee4f",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "PjNGH4771U0uqMQT",
+          "name": "IMAP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "58f41444-66de-4ce7-aab5-d76d6e958bbc",
+              "name": "from",
+              "value": "={{$json[\"from\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "79b415cf-294b-4546-b81f-0133b6ee5f5e",
+              "name": "Subject",
+              "value": "={{$json[\"subject\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "0b0b2fba-b040-431d-90dc-ffb9d3e003ae",
+              "name": "Body",
+              "value": "={{$json[\"text\"]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -740,
+        -400
+      ],
+      "id": "ad05f0f8-884f-46ab-a0da-b4724574c8be",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -100
+      ],
+      "id": "8f1ca9a8-014d-4d07-9d12-15ce89676809",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "dob7yodE27d15REW",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dfead268-8923-4fb5-a162-394a80973591",
+              "leftValue": "=$json[\"compleet\"]",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -20,
+        -400
+      ],
+      "id": "62764048-203a-436d-9275-aa0302616935",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "fromEmail": "ai@go-knowledge.com",
+        "toEmail": "={{ $('Email Trigger (IMAP)').item.json.headers.from }}\n",
+        "subject": "=Re: {{ $('Edit Fields').item.json.Subject }}",
+        "html": "=\n<p><strong>Status:</strong> {{ $json[\"parsedOutput\"][\"compleet\"] ? \"Compleet\" : \"Onvolledig\" }}</p>\n<p><strong>Type:</strong> {{ $json[\"parsedOutput\"][\"type\"] }}</p>\n<p><strong>Samenvatting:</strong><br>{{ $json[\"parsedOutput\"][\"summary\"] }}</p>\n<p><strong>Vragen:</strong><ul>\n  {{ $json[\"parsedOutput\"][\"vragen\"].map(v => `<li>${v}</li>`).join(\"\") }}\n</ul></p>\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        200,
+        -300
+      ],
+      "id": "94afe38b-303d-4167-b234-2a4f75ef3144",
+      "name": "Send Email",
+      "webhookId": "cdd056f2-425f-444f-8980-11fc8ba2c657",
+      "credentials": {
+        "smtp": {
+          "id": "yG4Ihfi7vhKZzG49",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"parsedOutput\": {{ JSON.parse($json[\"output\"].match(/```json\\n([\\s\\S]*?)\\n```/)[1]) }}\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -200,
+        -400
+      ],
+      "id": "42bb6623-b9f0-463c-9ff9-a43208420a80",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ JSON.parse($json[\"from\"]).value[0].address }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -380,
+        -80
+      ],
+      "id": "243268d6-ce5d-4ab1-8efe-39e63de1fcb3",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyseer de onderstaande e-mail en bepaal het ticket type + benodigde informatie.\n\nSTAP 1: BEPAAL TICKET TYPE\n- Bug: Iets werkt niet zoals verwacht\n- Task: Operationele taak, configuratie, onderhoud  \n- Story: Nieuwe functionaliteit voor eindgebruiker\n- Feature: Technische nieuwe functie\n- Spike: Onderzoek/analyse/proof-of-concept nodig\n- Epic: Grote functionaliteit die opgesplitst moet worden\n\nSTAP 2: CHECK MINIMALE VEREISTEN PER TYPE\n\n**Bug - Minimaal nodig:**\n- Wat gaat er mis?\n- Wanneer/waar gebeurt het?\n- Wat had je verwacht?\n\n**Task - Minimaal nodig:**\n- Wat moet er gedaan worden?\n- Waarom is dit nodig?\n- Wanneer moet het klaar zijn?\n\n**Story - Minimaal nodig:**\n- Wie wil dit? (gebruiker/rol)\n- Wat willen ze kunnen doen?\n- Waarom willen ze dit?\n\n**Feature - Minimaal nodig:**\n- Welke functionaliteit?\n- Wat is het doel?\n- Wie gaat het gebruiken?\n\n**Spike - Minimaal nodig:**\n- Wat moet onderzocht worden?\n- Waarom is onderzoek nodig?\n- Wat is het verwachte resultaat?\n\n**Epic - Minimaal nodig:**\n- Wat is de grote functionaliteit?\n- Wie profiteert ervan?\n- Wat is de business waarde?\n\nSTAP 3: UITVOER\n\n{\n  \"compleet\": true/false,\n  \"type\": \"Bug|Task|Story|Feature|Spike|Epic\",\n  \"summary\": \"Korte titel (max 100 chars)\",\n  \"beschrijving\": \"Volledige beschrijving\",\n  \"prioriteit\": \"High|Medium|Low\",\n  \"vragen\": [\n   Analyseer de onderstaande e-mail en bepaal het ticket type + benodigde informatie.\n\nSTAP 1: BEPAAL TICKET TYPE\n- Bug: Iets werkt niet zoals verwacht\n- Task: Operationele taak, configuratie, onderhoud  \n- Story: Nieuwe functionaliteit voor eindgebruiker\n- Feature: Technische nieuwe functie\n- Spike: Onderzoek/analyse/proof-of-concept nodig\n- Epic: Grote functionaliteit die opgesplitst moet worden\n\nSTAP 2: CHECK MINIMALE VEREISTEN PER TYPE\n\n**Bug - Minimaal nodig:**\n- Wat gaat er mis?\n- Wanneer/waar gebeurt het?\n- Wat had je verwacht?\n\n**Task - Minimaal nodig:**\n- Wat moet er gedaan worden?\n- Waarom is dit nodig?\n- Wanneer moet het klaar zijn?\n\n**Story - Minimaal nodig:**\n- Wie wil dit? (gebruiker/rol)\n- Wat willen ze kunnen doen?\n- Waarom willen ze dit?\n\n**Feature - Minimaal nodig:**\n- Welke functionaliteit?\n- Wat is het doel?\n- Wie gaat het gebruiken?\n\n**Spike - Minimaal nodig:**\n- Wat moet onderzocht worden?\n- Waarom is onderzoek nodig?\n- Wat is het verwachte resultaat?\n\n**Epic - Minimaal nodig:**\n- Wat is de grote functionaliteit?\n- Wie profiteert ervan?\n- Wat is de business waarde?\n\nSTAP 3: UITVOER\n\n{\n  \"compleet\": true/false,\n  \"type\": \"Bug|Task|Story|Feature|Spike|Epic\",\n  \"summary\": \"Korte titel (max 100 chars)\",\n  \"beschrijving\": \"Volledige beschrijving\",\n  \"prioriteit\": \"High|Medium|Low\",\n  \"vragen\": [\n    \"Specifieke vraag 1\",\n    \"Specifieke vraag 2\"\n  ],\n  \"confidence\": \"High|Medium|Low\",\n  \"aanbevelingen\": \"Extra tips voor betere ticket\",\n  \"jira_velden\": {\n    \"components\": \"Geschat component\",\n    \"story_points\": \"1|2|3|5|8|13\",\n    \"team\": \"Geschat team\",\n    \"dependencies\": [\"Mogelijke dependencies\"]\n  }\n}\n\nBELANGRIJK: Geef ALLEEN geldige JSON terug zonder extra tekst, uitleg of markdown. Start direct met { en eindig met }.\n\nE-mailinhoud:\n{{ $json[\"Body\"] }}\n  ],\n  \"confidence\": \"High|Medium|Low\",\n  \"aanbevelingen\": \"Extra tips voor betere ticket\",\n  \"jira_velden\": {\n    \"components\": \"Geschat component\",\n    \"story_points\": \"1|2|3|5|8|13\",\n    \"team\": \"Geschat team\",\n    \"dependencies\": [\"Mogelijke dependencies\"]\n  }\n}\n\nBELANGRIJK: Geef ALLEEN geldige JSON terug zonder extra tekst, uitleg of markdown. Start direct met { en eindig met }.\n\nE-mailinhoud:\n{{ $json[\"Body\"] }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -560,
+        -400
+      ],
+      "id": "1647504b-bac0-478a-9ea2-4bd20b5e8245",
+      "name": "AI Agent Bart",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "fromEmail": "ai@go-knowledge.com",
+        "toEmail": "={{ $('Email Trigger (IMAP)').item.json.headers.from }}\n",
+        "subject": "=Re: {{ $('Edit Fields').item.json.Subject }}",
+        "html": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; border-radius: 8px;\">\n  \n  <h2 style=\"color: #28a745; margin-bottom: 20px;\">✅ E-mail Succesvol Geanalyseerd</h2>\n  \n  <div style=\"background-color: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Status:</strong> \n      <span style=\"color: {{ $json['parsedOutput']['compleet'] ? '#28a745' : '#dc3545' }}; font-weight: bold;\">\n        {{ $json[\"parsedOutput\"][\"compleet\"] ? \"Compleet\" : \"Onvolledig\" }}\n      </span>\n    </p>\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Ticket Type:</strong> \n      <span style=\"background-color: #e9ecef; padding: 4px 8px; border-radius: 4px; font-weight: bold;\">\n        {{ $json[\"parsedOutput\"][\"type\"] }}\n      </span>\n    </p>\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Samenvatting:</strong>\n    </p>\n    <div style=\"background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 10px 0; border-radius: 0 4px 4px 0;\">\n      {{ $json[\"parsedOutput\"][\"summary\"] }}\n    </div>\n    \n    {{ $json[\"parsedOutput\"][\"beschrijving\"] ? `\n    <p style=\"margin: 15px 0 5px 0;\"><strong>Beschrijving:</strong></p>\n    <div style=\"background-color: #ffffff; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; margin: 10px 0;\">\n      ${ $json[\"parsedOutput\"][\"beschrijving\"] }\n    </div>\n    ` : \"\" }}\n    \n    {{ $json[\"parsedOutput\"][\"prioriteit\"] ? `\n    <p style=\"margin: 10px 0;\">\n      <strong>Prioriteit:</strong> \n      <span style=\"color: ${ $json[\"parsedOutput\"][\"prioriteit\"] === 'High' ? '#dc3545' : $json[\"parsedOutput\"][\"prioriteit\"] === 'Medium' ? '#ffc107' : '#28a745' }; font-weight: bold;\">\n        ${ $json[\"parsedOutput\"][\"prioriteit\"] }\n      </span>\n    </p>\n    ` : \"\" }}\n    \n    {{ $json[\"parsedOutput\"][\"ontbrekende_info\"] && $json[\"parsedOutput\"][\"ontbrekende_info\"].length > 0 ? `\n    <div style=\"background-color: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;\">\n      <p style=\"margin: 0 0 10px 0; font-weight: bold;\">⚠️ Aanvullende vragen:</p>\n      <ul style=\"margin: 0; padding-left: 20px;\">\n        ${ $json[\"parsedOutput\"][\"ontbrekende_info\"].map(v => `<li style=\"margin: 5px 0;\">${v}</li>`).join(\"\") }\n      </ul>\n    </div>\n    ` : \"\" }}\n    \n    {{ $json[\"parsedOutput\"][\"aanbevelingen\"] ? `\n    <div style=\"background-color: #d1ecf1; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #17a2b8;\">\n      <p style=\"margin: 0 0 10px 0; font-weight: bold;\">💡 Aanbevelingen:</p>\n      <p style=\"margin: 0;\">${ $json[\"parsedOutput\"][\"aanbevelingen\"] }</p>\n    </div>\n    ` : \"\" }}\n    \n  </div>\n  \n  <div style=\"background-color: #e9ecef; padding: 15px; border-radius: 5px; margin-top: 20px;\">\n    <p style=\"margin: 0 0 10px 0; font-weight: bold;\">📋 Volgende stappen:</p>\n    <ul style=\"margin: 0; padding-left: 20px;\">\n      <li>Deze analyse wordt gebruikt voor ticket aanmaak</li>\n      <li>Je ontvangt bericht zodra het ticket is aangemaakt</li>\n      <li>Bij vragen kun je reageren op deze e-mail</li>\n    </ul>\n  </div>\n  \n</div>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        200,
+        -500
+      ],
+      "id": "73d8b411-c6cc-4103-b7e8-4ab8fc237c17",
+      "name": "Send Email1",
+      "webhookId": "cdd056f2-425f-444f-8980-11fc8ba2c657",
+      "credentials": {
+        "smtp": {
+          "id": "yG4Ihfi7vhKZzG49",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "AI Agent Bart",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent Bart",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send Email1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent Bart",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent Bart": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Email Trigger (IMAP)": {
+      "lastMessageUid": 35
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "08d246bb-f2e3-408d-919c-1f1840554fb8",
+  "triggerCount": 1,
+  "tags": []
+}
