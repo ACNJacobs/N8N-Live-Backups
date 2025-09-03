@@ -1,0 +1,262 @@
+{
+  "createdAt": "2025-05-14T15:33:15.485Z",
+  "updatedAt": "2025-05-15T19:24:00.000Z",
+  "id": "4krNBb3le5A7p8nO",
+  "name": "data analist",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Start",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -380,
+        -140
+      ],
+      "id": "d3208df5-080f-4afc-89da-fccd0fcc79ce"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Hier kunt u het formulier configureren dat wordt getoond wanneer u de workflow start\nreturn {\n  ui: {\n    title: \"Contract Analyse\",\n    description: \"Upload een klantcontract en de algemene voorwaarden voor analyse\",\n    submitButtonText: \"Analyseren\",\n    cancelButtonText: \"Annuleren\"\n  },\n  schema: {\n    type: \"object\",\n    properties: {\n      clientContract: {\n        type: \"string\",\n        format: \"binary\",\n        title: \"Upload Klantcontract\",\n        description: \"Upload het contract van de klant (PDF of DOCX)\"\n      },\n      termsAndConditions: {\n        type: \"string\",\n        format: \"binary\",\n        title: \"Upload Algemene Voorwaarden\",\n        description: \"Upload uw algemene voorwaarden (PDF of DOCX)\"\n      },\n      contactEmail: {\n        type: \"string\",\n        format: \"email\",\n        title: \"E-mailadres\",\n        description: \"E-mailadres voor notificaties\"\n      },\n      teamsUser: {\n        type: \"string\",\n        title: \"Microsoft Teams Gebruiker\",\n        description: \"Gebruikersnaam voor Teams notificatie (bijv. gebruiker@bedrijf.nl)\"\n      }\n    },\n    required: [\"clientContract\", \"termsAndConditions\"]\n  }\n};"
+      },
+      "name": "Document Upload Formulier",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        -140
+      ],
+      "id": "f1be17fd-0609-4eb3-9e62-ed4732dc95ad"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Deze node verwerkt de geüploade bestanden en converteert ze naar tekst\nconst clientContractBuffer = items[0].json.clientContract;\nconst termsBuffer = items[0].json.termsAndConditions;\n\n// Hier bepalen we het bestandstype en verwerken we het bestand\nconst processDocument = async (fileBuffer, fileName) => {\n  // Bepaal bestandstype\n  let fileType = '';\n  if (fileName.endsWith('.pdf')) {\n    fileType = 'pdf';\n  } else if (fileName.endsWith('.docx')) {\n    fileType = 'docx';\n  } else {\n    throw new Error(`Niet-ondersteund bestandsformaat: ${fileName}`);\n  }\n  \n  // Hier zou logica komen om het document te verwerken afhankelijk van het type\n  // In een echte implementatie zou u hier PDF.js of docx-parser gebruiken\n  \n  // Voor dit voorbeeld simuleren we tekstextractie\n  return `Geëxtraheerde tekst uit ${fileName}`;\n};\n\n// Verwerk beide documenten\nconst clientContractText = await processDocument(clientContractBuffer, 'contract.pdf');\nconst termsText = await processDocument(termsBuffer, 'voorwaarden.pdf');\n\n// Return de resultaten\nreturn [\n  {\n    json: {\n      clientContractText,\n      termsText,\n      contactEmail: items[0].json.contactEmail,\n      teamsUser: items[0].json.teamsUser\n    }\n  }\n];"
+      },
+      "name": "Document Verwerker",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        60,
+        -140
+      ],
+      "id": "53ffa40e-8846-4ebf-b83c-400369736351"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Deze node verwerkt de AI-analyse resultaten en formatteert ze tot een rapport\nconst analysisText = items[0].json.text || items[0].json.content || '';\n\n// Basisinformatie voor het rapport\nconst now = new Date();\nconst reportDate = now.toLocaleDateString('nl-NL', {\n  weekday: 'long',\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\nconst reportTime = now.toLocaleTimeString('nl-NL');\n\n// Rapport in HTML format\nconst htmlReport = `\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Contract Analyse Rapport</title>\n  <style>\n    body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }\n    h1 { color: #2c3e50; }\n    .header { border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }\n    .footer { border-top: 1px solid #eee; margin-top: 30px; padding-top: 20px; font-size: 0.8em; color: #7f8c8d; }\n    .highlight { background-color: #ffffcc; padding: 2px 5px; }\n  </style>\n</head>\n<body>\n  <div class=\"header\">\n    <h1>Contract Analyse Rapport</h1>\n    <p>Gegenereerd op ${reportDate} om ${reportTime}</p>\n  </div>\n  \n  <h2>Bevindingen en Aanbevelingen</h2>\n  ${analysisText.replace(/\\n\\n/g, '</p><p>').replace(/\\n/g, '<br>')}\n  \n  <div class=\"footer\">\n    <p>Dit rapport is automatisch gegenereerd door de Contract Analyse Agent.</p>\n    <p>Voor vragen of hulp bij het implementeren van deze aanbevelingen, neem contact op met de juridische afdeling.</p>\n  </div>\n</body>\n</html>\n`;\n\n// Rapport in Markdown format voor Teams notificatie\nconst markdownReport = `\n# Contract Analyse Rapport\n\nGegenereerd op ${reportDate} om ${reportTime}\n\n## Bevindingen en Aanbevelingen\n\n${analysisText}\n\n---\n*Dit rapport is automatisch gegenereerd door de Contract Analyse Agent.*\n`;\n\n// Return beide formats, plus de originele analyse\nreturn [\n  {\n    json: {\n      htmlReport,\n      markdownReport,\n      rawAnalysis: analysisText,\n      contactEmail: items[0].json.contactEmail,\n      teamsUser: items[0].json.teamsUser\n    }\n  }\n];"
+      },
+      "name": "Rapport Generator",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        920,
+        -140
+      ],
+      "id": "0e32ac12-e368-4126-9dae-6d203e2cc394"
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "operation": "send"
+      },
+      "name": "Microsoft Teams",
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        -220
+      ],
+      "id": "d500fc93-816f-45de-869b-2b57b08d5732"
+    },
+    {
+      "parameters": {
+        "fromEmail": "contractanalyse@uwbedrijf.nl",
+        "toEmail": "={{$node[\"Document Upload Formulier\"].json[\"contactEmail\"]}}",
+        "subject": "Contract Analyse Rapport",
+        "text": "Zie bijgevoegd het rapport van de contract analyse.",
+        "options": {}
+      },
+      "name": "Email Verzender",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        -20
+      ],
+      "id": "416f9730-b88d-42c7-9390-1820d2d9f071",
+      "webhookId": "91b78b3a-dd3f-4f79-a151-003c8ddcdecb"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "name": "Notificatie Splitter",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 2,
+      "position": [
+        1140,
+        -120
+      ],
+      "id": "944fdda4-41a6-4baa-ab63-648e2f291486"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        280,
+        -140
+      ],
+      "id": "cb4f472f-096d-4984-afad-d37b9007c0de",
+      "name": "When chat message received",
+      "webhookId": "9c9b6932-7768-4f66-9a62-8d3f80db164f"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        500,
+        80
+      ],
+      "id": "26244945-c09b-4bc3-9474-581742e6bcac",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RzMqWR9wvxNArzYZ",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        500,
+        -140
+      ],
+      "id": "f048896e-9172-472b-ad1c-c6621314f7bc",
+      "name": "AI Agent"
+    }
+  ],
+  "connections": {
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "Document Upload Formulier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Upload Formulier": {
+      "main": [
+        [
+          {
+            "node": "Document Verwerker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rapport Generator": {
+      "main": [
+        [
+          {
+            "node": "Notificatie Splitter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notificatie Splitter": {
+      "main": [
+        [
+          {
+            "node": "Microsoft Teams",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email Verzender",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Verwerker": {
+      "main": [
+        []
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Rapport Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "65c5f498-e1ce-417c-ba30-2d1cc090c97c",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-05-14T15:33:15.489Z",
+      "updatedAt": "2025-05-14T15:33:15.489Z",
+      "role": "workflow:owner",
+      "workflowId": "4krNBb3le5A7p8nO",
+      "projectId": "GRYQdjzbr9zYZfKu"
+    }
+  ],
+  "tags": []
+}
