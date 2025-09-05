@@ -1,0 +1,469 @@
+{
+  "createdAt": "2025-07-30T08:24:22.381Z",
+  "updatedAt": "2025-07-30T08:36:15.000Z",
+  "id": "lZEHj39c2ygz6PeM",
+  "name": "werkt nog niet",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Product: {{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are a creative branding agent. Based on this product description, generate 3 distinct name + tagline options.\n\nReturn your output in this format:\n[\n  { \"name\": \"Name1\", \"tagline\": \"Tagline1\" },\n  { \"name\": \"Name2\", \"tagline\": \"Tagline2\" },\n  { \"name\": \"Name3\", \"tagline\": \"Tagline3\" }\n]\n"
+        }
+      },
+      "id": "24e27b6b-93ec-4f7c-a01c-583519b6d9d7",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        -304,
+        -916
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": true
+        }
+      },
+      "id": "69c1895e-7324-420e-ba81-dc9609dc70af",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "position": [
+        304,
+        -916
+      ],
+      "typeVersion": 3
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "or",
+          "conditions": [
+            {
+              "id": "595ebd64-59de-470c-9827-24d204db58f9",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.turn }}",
+              "rightValue": 5
+            },
+            {
+              "id": "fb2ec186-4676-4e91-85b1-af7ce745b203",
+              "operator": {
+                "name": "filter.operator.equals",
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.done }}",
+              "rightValue": "Yes"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4c458132-8f2b-47d0-915c-9f79b80d01d3",
+      "name": "If",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        752,
+        -1040
+      ],
+      "typeVersion": 2.2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ideas:\n{{JSON.stringify($('Edit Fields').item.json.ideas)}}",
+        "options": {
+          "systemMessage": "You are a critical branding analyst. For each name + tagline below, provide a short flaw summary and a suggestion for improvement."
+        }
+      },
+      "id": "71a3a665-dc2e-439a-8981-5703b07aac7c",
+      "name": "Critic Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        976,
+        -1040
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=**Original Ideas:** {{ JSON.stringify($('Edit Fields').item.json.ideas) }}\n\n**Critics Feedback:** {{ $json.output }}",
+        "options": {
+          "systemMessage": "You are a refiner. Use the original ideas and the critic’s feedback to create 3 improved name + tagline combinations.\n\nBe concise, clever, and impactful.\n\nReturn your output in this format:\n[\n  { \"name\": \"Name1\", \"tagline\": \"Tagline1\" },\n  { \"name\": \"Name2\", \"tagline\": \"Tagline2\" },\n  { \"name\": \"Name3\", \"tagline\": \"Tagline3\" }\n]\n"
+        }
+      },
+      "id": "0160162b-23f9-4eb2-986e-ef82c2867043",
+      "name": "Refiner Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1376,
+        -1040
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1c6c6fc2-96de-469a-b30f-7ffae52c9847",
+              "name": "ideas",
+              "type": "array",
+              "value": "={{ $json.output }}"
+            },
+            {
+              "id": "1a857aee-ae3f-4e81-a09c-a9e83edd9b98",
+              "name": "turn",
+              "type": "number",
+              "value": "={{ $json.turn || 1}}"
+            },
+            {
+              "id": "d310985b-59a3-44b8-aa5a-e77f2b352ae4",
+              "name": "done",
+              "type": "string",
+              "value": "={{ $json.done || \"No\"}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b22c8659-e58e-4831-9f95-a6b5f2e0c14b",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        560,
+        -912
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsCode": "const ideas = $json.output.ideas || [];\nconst currentTurn = $json.output.turn ?? 0;\nconst currentDone = $json.output.done || \"No\";\n\nconst nextTurn = currentTurn + 1;\n\nreturn [\n  {\n    json: {\n      ideas,\n      turn: nextTurn,\n      done: currentDone\n    }\n  }\n];\n"
+      },
+      "id": "78385d93-79d3-4ef8-a2dc-591c21d03b6c",
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2176,
+        -1040
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "21a77915-3d73-450d-bc9c-f655471a3b56",
+              "name": "output",
+              "type": "array",
+              "value": "={{ $json.ideas }}"
+            },
+            {
+              "id": "6dee88ae-c3f3-464a-a3cc-179bd28b7c5e",
+              "name": "turn",
+              "type": "number",
+              "value": "={{ $json.turn }}"
+            },
+            {
+              "id": "2f2caa57-797c-4fa3-9126-da46777a2b63",
+              "name": "done",
+              "type": "string",
+              "value": "={{ $json.done }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bbaf0f54-145f-40fd-ac82-20871600499a",
+      "name": "Edit Fields1",
+      "type": "n8n-nodes-base.set",
+      "position": [
+        2400,
+        -916
+      ],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"ideas\": [\n      { \"name\": \"EnterpriseMind\", \"tagline\": \"Harness AI to transform your business ideas into reality.\" },\n      { \"name\": \"InnoLogix\", \"tagline\": \"Capture and evolve your entrepreneurial ideas with AI-powered journaling.\" },\n      { \"name\": \"VentureScript\", \"tagline\": \"Document and accelerate your startup journey with intelligent AI journaling.\" }],\n  \"done\": \"Yes\",\n  \"turn\": 2\n}"
+      },
+      "id": "2a7535cf-2954-4b7f-833a-feac3d9ceb9b",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [
+        1872,
+        -816
+      ],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {},
+      "id": "c5ccefd5-f097-4230-a06f-2133a2ffbe77",
+      "name": "When clicking ‘Execute workflow’",
+      "type": "n8n-nodes-base.manualTrigger",
+      "position": [
+        -512,
+        -1088
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "# ⚙️ Setup Guide\n## This is a workflow for user's customization.\n### 🧑‍💻 Author: [Sebastian/OptiLever](www.linkedin.com/in/sebastian-9ab9b9242)\n\n### 🚀 Prerequisite:\n\n**1. Connect to Openai API account.**\n\n\n---\n\n### 🚀 Steps to Connect:\n\n\n1. **Edit Fields Node Setup (Initial)**\n- Locate the **\"Edit Fields\"** node at the beginning of the workflow.\n- **Edit the following fields:**\n- Ensure the input field **\"ideas\"** is set as an array.\n- Add a field **\"turn\"** to track the number of loop iterations (default value: 1).\n- Add a field **\"done\"** to track if the evaluation is complete (default value: false).\n\n\n\n2. **Critic Agent Setup**\n- Configure the **\"Critic Agent\"** node to analyze the input and provide feedback.\n- Ensure the output is structured to include suggestions for improvements.\n\n\n\n3. **Refiner Agent Setup**\n- Configure the **\"Refiner Agent\"** node to use the original input and critic feedback.\n- Ensure the output is an improved version of the input (e.g., three improved names and taglines).\n\n\n\n4. **Evaluation Agent Setup**\n- Configure the **\"Evaluation Agent\"** node to rank the refined outputs.\n- Ensure the output includes a **\"done\"** field indicating if the result is satisfactory.\n\n\n\n5. **Edit Fields Node Setup (Final)**\n- Ensure the final **\"Edit Fields\"** node matches the structure of the initial input.\n- This ensures the loop can process the data correctly in each iteration.\n\n\n\n6. **If Node Setup**\n- Configure the **\"If\"** node to check if **\"turn\"** exceeds a threshold (e.g., 5) or if **\"done\"** is true.\n- If true, exit the loop and proceed to the next step in the workflow.\n\n\n\n7. **Optional: Additional AI Agents**\n- Add additional AI agents after the loop to further process the final output.\n\n\n---\n\n\n",
+        "height": 1160,
+        "width": 3920,
+        "color": 5
+      },
+      "id": "f43d250d-27bf-4952-8fae-3eb337e164ba",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1056,
+        -1232
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=**Results To Examine:** {{ $json.output }}\n\n**Turns Through Loop:** {{ $('Edit Fields').item.json.turn }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an evaluator. Rank the 3 improved name ideas and taglines. Recommend if the names and taglines are so awesome that it would make anyone want to purchase from this company, or further improvement is needed (Yes/No). Output a JSON that follows this format:\n{\n\t\"ideas\": [\n      { \"name\": \"EnterpriseMind\", \"tagline\": \"Harness AI to transform your business ideas into reality.\" },\n      { \"name\": \"InnoLogix\", \"tagline\": \"Capture and evolve your entrepreneurial ideas with AI-powered journaling.\" },\n      { \"name\": \"VentureScript\", \"tagline\": \"Document and accelerate your startup journey with intelligent AI journaling.\" }],\n  \"done\": \"Yes\",\n  \"turn\": 2\n}"
+        }
+      },
+      "id": "b431a3a1-0a18-4cbe-9d33-b9e7141932ca",
+      "name": "Evaluation agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "position": [
+        1776,
+        -1040
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        848,
+        -688
+      ],
+      "id": "51b10db1-38a3-46b8-8366-763358379e15",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "vojz1cvxUpTiZ61e",
+          "name": "Google Gemini(PaLM) Api zakenlijk"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -704,
+        -864
+      ],
+      "id": "7ac6d012-9201-4688-a3a2-2d3262d71e88",
+      "name": "When chat message received",
+      "webhookId": "925481a4-6010-41fc-a8a8-718d7672366e"
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Critic Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Critic Agent": {
+      "main": [
+        [
+          {
+            "node": "Refiner Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refiner Agent": {
+      "main": [
+        [
+          {
+            "node": "Evaluation agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Evaluation agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        []
+      ]
+    },
+    "Evaluation agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Critic Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Refiner Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Evaluation agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "5fc6d7a4-f440-4563-b15c-745a7bc9e39d",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-07-30T08:24:22.384Z",
+      "updatedAt": "2025-07-30T08:24:22.384Z",
+      "role": "workflow:owner",
+      "workflowId": "lZEHj39c2ygz6PeM",
+      "projectId": "GRYQdjzbr9zYZfKu"
+    }
+  ],
+  "tags": []
+}
