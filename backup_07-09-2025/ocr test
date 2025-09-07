@@ -1,0 +1,999 @@
+{
+  "createdAt": "2025-07-20T09:20:54.882Z",
+  "updatedAt": "2025-07-21T11:11:08.000Z",
+  "id": "zvS5FwchbJmZItZS",
+  "name": "ocr test",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "purpose",
+              "value": "ocr"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        840,
+        720
+      ],
+      "id": "687e3a04-eb5f-4c38-aaf8-2f248ba4d8ef",
+      "name": "send pdf to Mistral"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.mistral.ai/v1/files/{{ $json.id }}/url?expiry=24",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        720
+      ],
+      "id": "13a0175d-79c3-4146-8408-bec7cb6e4d43",
+      "name": "mistral - get signed url"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.mistral.ai/v1/ocr",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "mistralCloudApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"mistral-ocr-latest\",\n  \"document\": {\n    \"type\": \"document_url\",\n    \"document_url\": \"{{ $json.url }}\"\n  },\n  \"include_image_base64\": true\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1240,
+        720
+      ],
+      "id": "b9e68846-d68e-4394-b2f0-2d83fd1b7971",
+      "name": "Get Parsed Invoice"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        440,
+        420
+      ],
+      "id": "4afb4a48-8c00-4c45-99a4-ed39af1dd94c",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.cloud.llamaindex.ai/api/v1/parsing/job/{{ $json.llama }}/result/markdown",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer "
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        1040
+      ],
+      "id": "e89e6d68-86d3-46b7-a844-3ef58d904bb6",
+      "name": "HTTP Request1",
+      "retryOnFail": true,
+      "waitBetweenTries": 2000
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.cloud.llamaindex.ai/api/v1/parsing/upload",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer "
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        740,
+        1040
+      ],
+      "id": "e8da5e3a-5d98-4b68-bbce-18f6fc761e72",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "76940da3-1e61-48f6-a768-d9b4a2d84793",
+              "name": "llama",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        940,
+        1040
+      ],
+      "id": "f7ed8a62-5444-4663-beb3-1be113ee7551",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "amount": 40
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        1040
+      ],
+      "id": "281cd0a5-e35a-4deb-b57d-ddf4a0f6d6c7",
+      "name": "Wait1",
+      "webhookId": "f087bc64-db7b-4ebf-b036-844769e20954"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        1040
+      ],
+      "id": "8dbdc1dc-7a73-4f18-8444-743ae254c729",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1xq9zo9RcWhTmW5RgP8jtkRWCxzHTtKTu",
+            "mode": "list",
+            "cachedResultName": "Gemini Vision Test",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1xq9zo9RcWhTmW5RgP8jtkRWCxzHTtKTu"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        260,
+        420
+      ],
+      "id": "af68e52f-1711-41d9-a418-ffde17f6c139",
+      "name": "Google Drive1"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive1').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        640,
+        420
+      ],
+      "id": "ae7e9fb7-9b37-4fa9-8ab6-6e38b4ad6ab1",
+      "name": "Google Drive"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        840,
+        420
+      ],
+      "id": "d43a448c-f313-4a35-8ead-aaa994cf17d8",
+      "name": "Transform to base64"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\":[\n      {\"text\": \"Extract ALL the information and text on the invoice from this PDF and output it without any additional text. Also extract text on images!\"},\n      {\n        \"inline_data\": {\n          \"mime_type\": \"application/pdf\",\n          \"data\": \"{{ $json.data }}\"\n        }\n      }\n    ]\n  }]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        420
+      ],
+      "id": "eb60aedc-d81f-4f46-b147-0657f3f6fa02",
+      "name": "Extract PDF Content Using Gemini Vision"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        440,
+        720
+      ],
+      "id": "e1ff5821-f53b-4113-9314-6c97583f5336",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1xq9zo9RcWhTmW5RgP8jtkRWCxzHTtKTu",
+            "mode": "list",
+            "cachedResultName": "Gemini Vision Test",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1xq9zo9RcWhTmW5RgP8jtkRWCxzHTtKTu"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        260,
+        720
+      ],
+      "id": "a3e6e9c2-9575-445e-8935-6047db3bd010",
+      "name": "Google Drive2"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive2').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        640,
+        720
+      ],
+      "id": "898b4953-3c2d-435d-9e6e-8076f01e60ee",
+      "name": "Google Drive3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        340,
+        1040
+      ],
+      "id": "3914ee00-aeb1-4236-8ca2-5a75b79b522b",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1xq9zo9RcWhTmW5RgP8jtkRWCxzHTtKTu",
+            "mode": "list",
+            "cachedResultName": "Gemini Vision Test",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1xq9zo9RcWhTmW5RgP8jtkRWCxzHTtKTu"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        160,
+        1040
+      ],
+      "id": "5ea19c14-cbf8-42f5-96c2-a6b49836f8dd",
+      "name": "Google Drive4"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive4').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        540,
+        1040
+      ],
+      "id": "3ef03ade-6ad5-4b22-959d-fdbf31f31aba",
+      "name": "Google Drive5"
+    },
+    {
+      "parameters": {
+        "content": "# Gemini Vision\n",
+        "height": 300,
+        "width": 1580,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "91fd1250-c6b0-4752-a05f-fbf5b92a48d5",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# Mistral OCR",
+        "height": 280,
+        "width": 1580,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        640
+      ],
+      "typeVersion": 1,
+      "id": "bba82001-cb9f-4edc-97ed-fa29f36078d6",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "# LlamaCloud",
+        "height": 300,
+        "width": 1580,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        940
+      ],
+      "typeVersion": 1,
+      "id": "43208d7e-6f2d-43ba-b4f0-7900180552a2",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $json.candidates[0].content.parts[0].text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1220,
+        420
+      ],
+      "id": "008c3eab-6c26-42b8-8a62-3c835be0931b",
+      "name": "Google Docs"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $json.pages[0].markdown }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1420,
+        720
+      ],
+      "id": "7ca30cbb-78b3-4339-827e-2aa8fb87be34",
+      "name": "Google Docs1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "=}{{ $json.markdown }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        1040
+      ],
+      "id": "9c7f89c9-8b4d-468e-ac27-6dfb3745df2f",
+      "name": "Google Docs2"
+    },
+    {
+      "parameters": {
+        "content": "![LlamaIndex](https://docs.cloud.llamaindex.ai/img/og.png)",
+        "height": 300,
+        "width": 520,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -540,
+        940
+      ],
+      "id": "35643eaa-cf47-45b3-b423-695e2d45bd5d",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "![Mistral](https://www.3ds.com/assets/invest/2024-06/logo-mistral.png)",
+        "height": 280,
+        "width": 520,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -540,
+        640
+      ],
+      "id": "0b41e3e3-74c5-4f9b-9d8c-7e7dce50f17a",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "![Google Gemini](https://upload.wikimedia.org/wikipedia/commons/thumb/8/8a/Google_Gemini_logo.svg/2560px-Google_Gemini_logo.svg.png)",
+        "height": 300,
+        "width": 520,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -540,
+        320
+      ],
+      "id": "034cd2e5-91ee-4bb5-b6a5-aac828b6df5f",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        460,
+        100
+      ],
+      "id": "24997ddb-3514-4a2e-ab70-3ebcd558b937",
+      "name": "Loop Over Items3"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1xq9zo9RcWhTmW5RgP8jtkRWCxzHTtKTu",
+            "mode": "list",
+            "cachedResultName": "Gemini Vision Test",
+            "cachedResultUrl": "https://drive.google.com/drive/folders/1xq9zo9RcWhTmW5RgP8jtkRWCxzHTtKTu"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        260,
+        100
+      ],
+      "id": "45d95cc0-e428-42d3-8442-db8e38666848",
+      "name": "Google Drive6"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Google Drive6').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        640,
+        100
+      ],
+      "id": "8baa24c0-711f-46eb-9314-4c902dab4c59",
+      "name": "Google Drive7"
+    },
+    {
+      "parameters": {
+        "content": "# NO OCR\n",
+        "height": 300,
+        "width": 1580,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "43ca9618-c055-4db2-86bc-fd1c1d1283c8",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "insert",
+              "text": "={{ $json.text }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        100
+      ],
+      "id": "164a0dd9-56a1-45b5-bd42-198097c65ecd",
+      "name": "Google Docs3"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        840,
+        100
+      ],
+      "id": "d2f14275-0336-4ef9-a208-85cc7d261226",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "content": "# Gemini Credentials\n\n## Setup Generic credential type --> Query Auth --> Put in API key.\n\nYou can find your API key at https://aistudio.google.com/apikey\n",
+        "height": 300,
+        "width": 520,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1600,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "37f0790f-82fc-4d07-8e88-f0780e465230",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "# Mistral Credentials\n\n\n## Setup Predefined credential type --> Mistral Cloud API\n\nYou can find your API key at https://auth.mistral.ai/ui/login?flow=553a55ae-ea37-4abf-88b3-0a2304888c2d",
+        "height": 280,
+        "width": 520,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1600,
+        640
+      ],
+      "typeVersion": 1,
+      "id": "31b18dbb-3203-43e4-8936-8b4a148dc578",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "# Llama Cloud Credentials\n\n\n## Put your API Key behind the word \"Bearer\"\n\nYou can find your API key at https://cloud.llamaindex.ai/login",
+        "height": 300,
+        "width": 520,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1600,
+        940
+      ],
+      "typeVersion": 1,
+      "id": "39abfd16-d165-4641-8ac7-977c63ecdb75",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "# Google Docs / Google Docs\n\n\n## Put your document URL in Doc ID or URL and connect with Google Credentials\n\n## Setup your Google Drive Credentials.\n",
+        "height": 300,
+        "width": 520,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1600,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "71b37aa5-e3a3-4f60-ab33-674ec12a8d1a",
+      "name": "Sticky Note10"
+    }
+  ],
+  "connections": {
+    "send pdf to Mistral": {
+      "main": [
+        [
+          {
+            "node": "mistral - get signed url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mistral - get signed url": {
+      "main": [
+        [
+          {
+            "node": "Get Parsed Invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Parsed Invoice": {
+      "main": [
+        [
+          {
+            "node": "Google Docs1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Google Drive4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Transform to base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform to base64": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Content Using Gemini Vision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Google Drive3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Google Drive5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive3": {
+      "main": [
+        [
+          {
+            "node": "send pdf to Mistral",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive5": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Content Using Gemini Vision": {
+      "main": [
+        [
+          {
+            "node": "Google Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Google Docs2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items3": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Google Drive7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive6": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive7": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Google Docs3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "bf532aea-e3ab-430d-a571-a1e78e9e6834",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-07-20T09:20:54.884Z",
+      "updatedAt": "2025-07-20T09:20:54.884Z",
+      "role": "workflow:owner",
+      "workflowId": "zvS5FwchbJmZItZS",
+      "projectId": "GRYQdjzbr9zYZfKu"
+    }
+  ],
+  "tags": []
+}
