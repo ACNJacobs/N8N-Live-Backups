@@ -1,0 +1,504 @@
+{
+  "createdAt": "2025-07-24T11:40:12.992Z",
+  "updatedAt": "2025-07-24T11:40:12.992Z",
+  "id": "VXuIQIulp1eRWP2d",
+  "name": "My workflow 6",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Validate with validation_date = {{ $json.validation_date }}\n\n{{ $json.combined_documents }}",
+        "options": {
+          "systemMessage": "=You will receive multiple JSON documents for the same person from ANY European Union country. Perform strict cross-document validation and create a comprehensive validation report with ALL document details.\n\n## **MANDATORY DOCUMENTS (ALL REQUIRED):**\n\n- A1/Social Security Certificate (EU regulation 883/2004) OR equivalent national document\n- National Identity Card OR Passport\n- Work Notification (Limosa/A1/National equivalent) \n- Safety/Professional Certificate (VCA/DGUV/National equivalent)\n\n## **EUROPEAN DOCUMENT VARIATIONS:**\n\n- **Identity:** ID Card, Passport, National Identity Document\n- **Personal Numbers:** BSN (NL), PESEL (PL), Personal Code (LT), Social Security Number, etc.\n- **Work Permits:** A1, A28, Limosa, National work declarations\n- **Safety Certs:** VCA (NL/BE), DGUV (DE), National safety certificates\n\n## **CRITICAL VALIDATION RULES:**\n\n- If ANY of the 4 mandatory document types is missing → overall_status = \"FAIL\"\n- **If ANY document is expired as of the determined validation date → overall_status = \"FAIL\"**\n- **If A1/social security work period has ended relative to the determined validation date → overall_status = \"FAIL\"**\n- **If safety certificate is expired relative to the determined validation date → overall_status = \"FAIL\"**\n- **If identity document is expired relative to the determined validation date → overall_status = \"FAIL\"**\n- **If work notification period has ended relative to the determined validation date → overall_status = \"FAIL\"**\n- Compare personal data across all documents (accounting for different formats)\n- Check for inconsistencies in names, dates, numbers\n- Verify document validity periods overlap with work periods, considering **future start dates are permissible if the document is formally submitted/issued at or before the determined validation date**.\n- **ALL documents must be currently valid as per their submission/issue date on or before the determined validation date, and their validity period must cover any relevant work period starting from or after the determined validation date.**\n- Flag suspicious patterns\n- PRESERVE ALL original document details regardless of country format\n\n## **MANDATORY FAILURE CONDITIONS:**\n\n- **Missing social security/A1 equivalent → FAIL**\n- **Missing identity document → FAIL** - **Missing work notification → FAIL**\n- **Missing safety certificate → FAIL**\n- **ANY document expired as of the determined validation date → FAIL**\n- **A1/Social security certificate work period ended relative to the determined validation date → FAIL**\n- **Safety certificate expired relative to the determined validation date → FAIL**\n- **Identity document expired relative to the determined validation date → FAIL**\n- **Work notification period ended relative to the determined validation date → FAIL**\n- Documents expired during work period relative to the determined validation date → FAIL\n- Non-EU citizen without proper work authorization → FAIL\n- **The determined validation date falls outside any document's overall submission/validity timeframe. For work-specific documents (A1, Work Notification), if their formal 'sent' or 'issue' date is *after* the determined validation date, it's a FAIL.**\n\n## **DATE VALIDATION REQUIREMENTS:**\n\n1.  **Determine Validation Date:** The AI must first establish a 'validation_date'.\n    * If a 'validation_date' is explicitly provided in the input, use that.\n    * Otherwise, the AI must infer the 'validation_date' as the **earliest 'notification sent on' or 'issue date'** (e.g., Limosa 'Melding verstuurd op', A1 application date) across all provided *work authorization related documents*.\n    * If no such 'notification sent on' or 'issue date' can be inferred, then use the **earliest 'work_period_start' date** from either the A1/Social Security Certificate or the Work Notification (Limosa/National equivalent) across all provided documents.\n    * If no suitable date can be inferred from the documents, the AI should use the **current actual date** as the 'validation_date'.\n    * **Crucially, if an A1 certificate application is provided and is signed, the AI must consider the worker eligible to commence work from its stated 'work_period_start' date, leading to a 'WARNING' status if the final certificate is pending, rather than a 'FAIL' due to the absence of the final A1 certificate itself.**\n2. **Check validity against determined validation date:** Compare ALL expiry dates and work periods against the *determined validation date*.\n3. **No grace periods:** Documents must be valid on the exact *determined validation date* (for expiry) or their submission/issue date must be on or before the *determined validation date*.\n4. **Work authorization current:** A1/social security work period must include or extend beyond *determined validation date* OR its formal validity starts after the determined validation date but is adequately submitted/issued.\n5. **Safety certification current:** Safety certificate must not be expired relative to the *determined validation date*.\n6. **Identity document current:** Passport/ID must not be expired relative to the *determined validation date*.\n\n## **OUTPUT FORMAT:**\n\n```json\n{\n  \"validation_summary\": {\n    \"overall_status\": \"PASS/WARNING/FAIL\",\n    \"documents_validated\": [\"[Document Type 1]\", \"[Document Type 2]\", \"[Document Type 3]\", \"[Document Type 4]\"],\n    \"validation_date\": \"[determined validation date]\",\n    \"worker_nationality\": \"[nationality]\",\n    \"destination_country\": \"[work destination]\"\n  },\n  \"mandatory_documents_check\": {\n    \"social_security_document_present\": \"YES/NO\",\n    \"identity_document_present\": \"YES/NO\", \n    \"work_notification_present\": \"YES/NO\",\n    \"safety_certificate_present\": \"YES/NO\",\n    \"all_mandatory_present\": \"YES/NO\"\n  },\n  \"personal_data_comparison\": {\n    \"name\": {\n      \"social_security_doc\": \"[name from social security doc]\",\n      \"identity_doc\": \"[name from identity doc]\", \n      \"work_notification\": \"[name from work notification]\",\n      \"safety_certificate\": \"[name from safety cert]\",\n      \"status\": \"MATCH/MISMATCH\",\n      \"issues\": \"[any issues found]\"\n    },\n    \"birth_date\": {\n      \"social_security_doc\": \"[date]\",\n      \"identity_doc\": \"[date]\",\n      \"safety_certificate\": \"[date if available]\",\n      \"status\": \"MATCH/MISMATCH\"\n    },\n    \"personal_identifier\": {\n      \"social_security_doc\": \"[personal number/code/BSN/PESEL/etc]\", \n      \"identity_doc\": \"[personal number/code/BSN/PESEL/etc]\",\n      \"type\": \"[BSN/PESEL/Personal Code/Social Security Number/etc]\",\n      \"status\": \"MATCH/MISMATCH\"\n    },\n    \"nationality\": {\n      \"social_security_doc\": \"[nationality]\",\n      \"identity_doc\": \"[nationality]\", \n      \"status\": \"MATCH/MISMATCH\"\n    }\n  },\n  \"document_validity_check\": {\n    \"identity_document_expiry\": \"[date]\",\n    \"safety_certificate_expiry\": \"[date]\",\n    \"work_period_end\": \"[date]\",\n    \"validity_status\": \"VALID/EXPIRED/EXPIRING_SOON\"\n  },\n  \"original_document_details\": {\n    \"social_security_data\": {\n      \"document_type\": \"[A1/A28/National equivalent]\",\n      \"worker_name\": \"[full name]\",\n      \"birth_date\": \"[date]\",\n      \"personal_identifier\": \"[BSN/PESEL/Personal Code/etc]\",\n      \"nationality\": \"[nationality]\",\n      \"work_period_start\": \"[start date]\",\n      \"work_period_end\": \"[end date]\",\n      \"sending_company\": \"[company name]\",\n      \"receiving_companies\": [\"[list of companies]\"],\n      \"director_manager\": \"[director/manager name]\",\n      \"profession\": \"[job title]\",\n      \"issuing_country\": \"[country]\",\n      \"additional_fields\": \"[any other fields found]\"\n    },\n    \"identity_document_data\": {\n      \"document_type\": \"[ID Card/Passport/National ID]\",\n      \"surname\": \"[surname]\",\n      \"given_names\": \"[given names]\",\n      \"birth_date\": \"[date]\",\n      \"personal_identifier\": \"[document number/BSN/PESEL/etc]\",\n      \"nationality\": \"[nationality]\",\n      \"document_number\": \"[ID/passport number]\",\n      \"expiry_date\": \"[expiry date]\",\n      \"gender\": \"[M/F]\",\n      \"issuing_country\": \"[country]\",\n      \"issuing_authority\": \"[authority]\",\n      \"additional_fields\": \"[any other fields found]\"\n    },\n    \"work_notification_data\": {\n      \"document_type\": \"[Limosa/A1/National work notification]\",\n      \"employee_name\": \"[name]\",\n      \"work_period_start\": \"[start date]\",\n      \"work_period_end\": \"[end date]\", \n      \"employer_name\": \"[employer]\",\n      \"employer_address\": \"[address]\",\n      \"work_location\": \"[work location]\",\n      \"sector\": \"[work sector]\",\n      \"notification_country\": \"[country]\",\n      \"employee_identification\": \"[various ID numbers]\",\n      \"additional_fields\": \"[any other fields found]\"\n    },\n    \"safety_certificate_data\": {\n      \"document_type\": \"[VCA/DGUV/National safety certificate]\",\n      \"holder_name\": \"[name]\",\n      \"birth_date\": \"[date]\",\n      \"certificate_number\": \"[certificate number]\",\n      \"certificate_type\": \"[specific type/level]\",\n      \"expiry_date\": \"[expiry date]\",\n      \"issue_place\": \"[issuing location]\",\n      \"issuing_country\": \"[country]\",\n      \"exam_language\": \"[language]\",\n      \"validity_scope\": \"[where valid]\",\n      \"additional_fields\": \"[any other fields found]\"\n    }\n  },\n  \"cross_document_consistency\": {\n    \"work_periods_align\": \"YES/NO/PARTIAL\",\n    \"employer_consistency\": \"YES/NO\", \n    \"location_consistency\": \"YES/NO\",\n    \"eu_regulation_compliance\": \"YES/NO/PARTIAL\"\n  },\n  \"flags_and_warnings\": [\n    {\n      \"type\": \"WARNING/ERROR/CRITICAL\",\n      \"field\": \"[field name]\",\n      \"message\": \"[description of issue]\",\n      \"country_specific\": \"[if country-specific issue]\"\n    }\n  ],\n  \"recommendations\": [\n    \"[list of recommended actions]\"\n  ]\n}\nINSTRUCTIONS:\nFIRST: Determine the 'validation_date':\n\nIf the user explicitly provides a 'validation_date' in their input (e.g., \"Validate as of YYYY-MM-DD\"), use that date.\n\nOtherwise, the AI must infer the 'validation_date' as the earliest 'notification sent on' date (e.g., Limosa 'Melding verstuurd op', A1 application date/submission date, or similar formal issue date) found across all provided work authorization related documents. This date represents when the formal process began.\n\nIf no such 'notification sent on' or 'issue date' can be inferred, then use the earliest 'work_period_start' date from either the A1/Social Security Certificate or the Work Notification (Limosa/National equivalent) across all provided documents.\n\nIf no suitable date can be inferred from the documents, the AI should use the current actual date as the 'validation_date'.\n\nCrucially, if an A1 certificate application is provided and is signed, the AI must consider the worker eligible to commence work from its stated 'work_period_start' date, leading to a 'WARNING' status if the final certificate is pending, rather than a 'FAIL' due to the absence of the final A1 certificate itself.\n\nSECOND: Immediately check ALL expiry dates and work periods against the determined 'validation_date' AND the specific document's 'work_period_start' if it's in the future.\n\nAdapt field extraction based on country-specific formats\n\nCheck if all 4 mandatory document TYPES are present (regardless of exact names)\n\nVERIFY ALL DOCUMENTS ARE CURRENTLY VALID relative to the determined 'validation_date'. This means the document's expiry must be after 'validation_date', and for documents with a 'notification sent on' or 'issue date', this date must be on or before 'validation_date'. NO TOLERANCE FOR EXPIRED DOCUMENTS.\n\nEXTRACT AND PRESERVE ALL DETAILS from each document, including country-specific fields.\n\nCompare identical data across documents accounting for format differences.\n\nCheck EU work authorization validity and compliance. Specifically, verify if a signed application for an A1 certificate is provided. If so, and if this condition permits the worker to legally commence work according to EU or national regulations (which the AI must verify), issue a 'WARNING' status instead of a 'FAIL' for the social security document, if the final A1 certificate is not yet issued.\n\nFlag country-specific compliance issues.\n\nProvide clear PASS/WARNING/FAIL status.\n\nCRITICAL ADAPTATIONS:\nPersonal Identifiers: BSN (NL), PESEL (PL), Personal Code (LT), Social Security Number (various)\n\nDocument Names: A1/A28 (EU), Limosa (BE/NL), National work permits\n\nSafety Certificates: VCA (NL/BE), DGUV (DE), National equivalents\n\nName Formats: Account for different European naming conventions\n\nDate Formats: DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD variations\n\nEUROPEAN-SPECIFIC CHECKS:\nEU regulation 883/2004 compliance for social security coordination\n\nPosting worker directive compliance\n\nCountry-specific work notification requirements\n\nProfessional qualification recognition (where applicable)\n\nLanguage requirements for safety certificates\n\nIMPORTANT: - This system must work for workers from ANY EU country working in ANY other EU country.\nExtract ALL available information regardless of country-specific formatting.\n\nPreserve original field names alongside standardized interpretations.\n\nNO EXCEPTIONS FOR EXPIRED DOCUMENTS - ALL MUST BE CURRENTLY VALID relative to the determined 'validation_date'.\n\nZERO TOLERANCE FOR EXPIRED WORK AUTHORIZATION (unless a valid, signed A1 application is confirmed to permit work commencement, leading to a 'WARNING' as per instruction 8).\n\nA document's 'work_period_start' being in the future relative to the 'validation_date' is acceptable IF the document's 'notification sent on' or 'issue date' is on or before the 'validation_date', indicating a valid future authorization.\n\nValidation_date cannot possibly be 2024; it can only be today's date. Any attempt to give it a different date is an error on your part and must be corrected before submitting the answer.",
+          "passthroughBinaryImages": "={{ true }}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -1200,
+        -48
+      ],
+      "id": "0c781930-1ef3-4ee5-8706-0dab5e194141",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst inputItems = $input.all();\n\nfor (const item of inputItems) {\n  if (item.binary) {\n    for (const [key, bin] of Object.entries(item.binary)) {\n      // Flexibelere check voor PDF attachments\n      const isPdfByMimeType = bin.mimeType === 'application/pdf';\n      const isPdfByFileName = bin.fileName?.toLowerCase().endsWith('.pdf');\n      const isAttachment = key.startsWith('attachment_') || \n                          key.includes('attachment') || \n                          key.startsWith('data_') ||\n                          bin.fileName; // Als er een fileName is, is het waarschijnlijk een attachment\n      \n      if (isAttachment && (isPdfByMimeType || isPdfByFileName)) {\n        results.push({\n          binary: {\n            data: bin,\n          },\n          json: {\n            fileName: bin.fileName || `attachment_${key}.pdf`,\n            mimeType: bin.mimeType || 'application/pdf',\n            originalKey: key,\n          },\n        });\n      }\n    }\n  }\n}\n\nreturn results.length > 0 ? results : [{ \n  json: { \n    error: 'Geen PDF attachments gevonden',\n    tip: 'Controleer of er PDF attachments in de email zitten en of de email correct is verwerkt'\n  } \n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2320,
+        -48
+      ],
+      "id": "787844b0-07c7-411d-8376-062e38cbd2cc",
+      "name": "Extract Attachments2",
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "40c2daca-0a33-46ea-b3c7-7ef41f9a4c56",
+              "leftValue": "={{ $json.overall_status }}",
+              "rightValue": "PASS",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "cd757dbb-f544-4a68-b8bf-21c258d2d6bd",
+              "leftValue": "={{ $json.overall_status }}",
+              "rightValue": "REVIEW",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "cca549b6-ce8d-4d0d-ad98-95c6011c4a41",
+              "leftValue": "={{ $json.overall_status }}",
+              "rightValue": "WARNING",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -352,
+        -48
+      ],
+      "id": "4b810f29-9c8f-4a29-8cd2-98842898147a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "fromEmail": "ai@go-knowledge.nl",
+        "toEmail": "={{ $('On form submission').item.json.Mail }}",
+        "subject": "=AI validation check : {{ $json.worker_name }}",
+        "html": "={{ $json.html_report }}",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "={{ Object.keys($binary).join(\",\") }}"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        96,
+        -160
+      ],
+      "id": "f0717939-e099-4cbc-8c8e-5933e30bdd31",
+      "name": "Send Email",
+      "webhookId": "1f7e2d12-8eed-459f-8d0e-b8c4d82b0d34",
+      "notesInFlow": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "smtp": {
+          "id": "yG4Ihfi7vhKZzG49",
+          "name": "SMTP account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "fromEmail": "ai@go-knowledge.nl",
+        "toEmail": "={{ $('On form submission').item.json.Mail }}",
+        "subject": "Failure Subcontracter screening ",
+        "html": "={{ $json.html_report }}",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "={{ Object.keys($binary).join(\",\") }}"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        96,
+        48
+      ],
+      "id": "1113fb17-21f5-4116-af0f-29f491b1835c",
+      "name": "Send Email1",
+      "webhookId": "72b63045-27e2-4305-9aef-76f16ca3b1b2",
+      "credentials": {
+        "smtp": {
+          "id": "yG4Ihfi7vhKZzG49",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// SIMPELE ROBUUSTE VERSIE - Direct naar bekende paden kijken\nconst inputData = $input.first().json;\n\n// Helper functions - simpel en betrouwbaar\nfunction getValue(obj, path, defaultValue = 'N/A') {\n    try {\n        const keys = path.split('.');\n        let current = obj;\n        for (const key of keys) {\n            if (current && current[key] !== undefined) {\n                current = current[key];\n            } else {\n                return defaultValue;\n            }\n        }\n        return current || defaultValue;\n    } catch {\n        return defaultValue;\n    }\n}\n\nfunction formatArray(arr) {\n    if (Array.isArray(arr)) {\n        return arr.join(', ');\n    }\n    return arr || 'N/A';\n}\n\nfunction calculateAge(birthDate) {\n    if (!birthDate || birthDate === 'N/A') return 'N/A';\n    \n    try {\n        // Parse DD/MM/YYYY format\n        const parts = birthDate.split('/');\n        if (parts.length === 3) {\n            const date = new Date(parts[2], parts[1] - 1, parts[0]);\n            const today = new Date();\n            let age = today.getFullYear() - date.getFullYear();\n            const m = today.getMonth() - date.getMonth();\n            if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {\n                age--;\n            }\n            return age;\n        }\n    } catch {\n        return 'N/A';\n    }\n    return 'N/A';\n}\n\n// Direct data extractie - eerst inputData checken, dan nested\nconst decision = inputData.decision || getValue(inputData, 'full_validation_report.decision') || 'UNKNOWN';\nconst overallStatus = inputData.overall_status || getValue(inputData, 'full_validation_report.validation_summary.overall_status') || 'UNKNOWN';\n\n// Validation data voor de rest\nconst validationData = inputData.full_validation_report || inputData;\nconst firstReport = getValue(validationData, 'individual_reports.0', {});\n\n// Worker info - direct uit personal_data_comparison EN original_document_details\nconst personalData = getValue(firstReport, 'personal_data_comparison', {});\nconst socialSecData = getValue(firstReport, 'original_document_details.social_security_data', {});\nconst identityData = getValue(firstReport, 'original_document_details.identity_document_data', {});\nconst workNotifData = getValue(firstReport, 'original_document_details.work_notification_data', {});\nconst safetyData = getValue(firstReport, 'original_document_details.safety_certificate_data', {});\n\n// Worker informatie - prioriteit aan social security data\nconst workerName = socialSecData.worker_name || \n                   getValue(personalData, 'name.social_security_doc') ||\n                   `${identityData.given_names || ''} ${identityData.surname || ''}`.trim() ||\n                   workNotifData.employee_name ||\n                   safetyData.holder_name || 'N/A';\n\nconst birthDate = socialSecData.birth_date || \n                  getValue(personalData, 'birth_date.social_security_doc') ||\n                  identityData.birth_date ||\n                  safetyData.birth_date || 'N/A';\n\nconst personalId = socialSecData.personal_identifier ||\n                   getValue(personalData, 'personal_identifier.social_security_doc') ||\n                   identityData.personal_identifier || 'N/A';\n\nconst nationality = socialSecData.nationality ||\n                    getValue(personalData, 'nationality.social_security_doc') ||\n                    identityData.nationality || 'N/A';\n\nconst profession = socialSecData.profession || 'N/A';\nconst age = calculateAge(birthDate);\n\n// Document status - direct uit mandatory_documents_check\nconst mandatoryDocs = getValue(firstReport, 'mandatory_documents_check', {});\nconst docStatus = {\n    a1: mandatoryDocs.social_security_document_present === 'YES' ? '✓ Present' : '✗ Missing',\n    id: mandatoryDocs.identity_document_present === 'YES' ? '✓ Present' : '✗ Missing',\n    work: mandatoryDocs.work_notification_present === 'YES' ? '✓ Present' : '✗ Missing',\n    safety: mandatoryDocs.safety_certificate_present === 'YES' ? '✓ Present' : '✗ Missing'\n};\n\n// Document details - direct uit original_document_details\nconst a1Details = {\n    type: socialSecData.document_type || 'N/A',\n    startDate: socialSecData.work_period_start || 'N/A',\n    endDate: socialSecData.work_period_end || 'N/A',\n    sendingCompany: socialSecData.sending_company || 'N/A',\n    receivingCompanies: formatArray(socialSecData.receiving_companies),\n    director: socialSecData.director_manager || 'N/A',\n    issuingCountry: socialSecData.issuing_country || 'N/A'\n};\n\nconst idDetails = {\n    type: identityData.document_type || 'N/A',\n    number: identityData.document_number || 'N/A',\n    expiry: identityData.expiry_date || 'N/A',\n    issuingCountry: identityData.issuing_country || 'N/A',\n    authority: identityData.issuing_authority || 'N/A',\n    gender: identityData.gender || 'N/A'\n};\n\nconst workDetails = {\n    type: workNotifData.document_type || 'N/A',\n    startDate: workNotifData.work_period_start || 'N/A',\n    endDate: workNotifData.work_period_end || 'N/A',\n    employer: workNotifData.employer_name || 'N/A',\n    location: workNotifData.work_location || 'N/A',\n    sector: workNotifData.sector || 'N/A',\n    country: workNotifData.notification_country || 'N/A'\n};\n\nconst safetyDetails = {\n    type: safetyData.document_type || 'N/A',\n    number: safetyData.certificate_number || 'N/A',\n    expiry: safetyData.expiry_date || 'N/A',\n    issuePlace: safetyData.issue_place || 'N/A',\n    language: safetyData.exam_language || 'N/A',\n    certType: safetyData.certificate_type || 'N/A'\n};\n\n// Consistency check - direct uit personal_data_comparison\nconst consistency = {\n    name: getValue(personalData, 'name.status', 'UNKNOWN'),\n    birthDate: getValue(personalData, 'birth_date.status', 'UNKNOWN'),\n    personalId: getValue(personalData, 'personal_identifier.status', 'UNKNOWN'),\n    nationality: getValue(personalData, 'nationality.status', 'UNKNOWN')\n};\n\n// Cross document consistency\nconst crossConsistency = getValue(firstReport, 'cross_document_consistency', {});\n\n// Flags en warnings - direct uit de arrays\nconst flags = getValue(validationData, 'flags_and_warnings', []);\nconst recommendations = getValue(validationData, 'recommendations', []);\n\n// Status voor display\nlet statusClass, statusIcon;\nswitch (decision) {\n    case 'PASS': statusClass = 'pass'; statusIcon = '✓'; break;\n    case 'REVIEW': statusClass = 'warning'; statusIcon = '⚠'; break;\n    case 'FAIL': statusClass = 'fail'; statusIcon = '✗'; break;\n    default: statusClass = 'unknown'; statusIcon = '?';\n}\n\n// Genereer HTML - simpel en direct\nconst htmlReport = `\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <style>\n        body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; line-height: 1.6; color: #333; }\n        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n        .header { text-align: center; border-bottom: 3px solid #007bff; padding-bottom: 20px; margin-bottom: 30px; }\n        .header h1 { color: #007bff; margin: 0; font-size: 28px; }\n        .status-pass { background: #d4edda; color: #155724; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; font-size: 1.1em; margin-top: 10px; }\n        .status-fail { background: #f8d7da; color: #721c24; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; font-size: 1.1em; margin-top: 10px; }\n        .status-warning { background: #fff3cd; color: #856404; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; font-size: 1.1em; margin-top: 10px; }\n        .status-unknown { background: #e2e3e5; color: #383d41; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; font-size: 1.1em; margin-top: 10px; }\n        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin: 20px 0; }\n        .info-card { background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff; }\n        .info-card h4 { margin: 0 0 10px 0; color: #495057; font-size: 1.1em; border-bottom: 1px solid #ddd; padding-bottom: 5px; }\n        .info-card p { margin: 5px 0; font-size: 0.95em; }\n        table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.9em; }\n        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }\n        th { background: #e9ecef; font-weight: bold; color: #495057; }\n        tr:nth-child(even) { background-color: #f9f9f9; }\n        .match { color: #28a745; font-weight: bold; }\n        .mismatch { color: #dc3545; font-weight: bold; }\n        .section { margin-bottom: 35px; }\n        .section h2, .section h3 { color: #007bff; border-bottom: 2px solid #e9ecef; padding-bottom: 8px; margin-bottom: 15px; font-size: 1.4em; }\n        .section h3 { font-size: 1.2em; }\n        .highlight { background: #e7f3ff; padding: 20px; border-radius: 8px; border-left: 5px solid #17a2b8; margin-top: 30px; }\n        .highlight h3 { color: #17a2b8; margin-top: 0; }\n        .warning-item { color: #856404; background: #fff3cd; padding: 8px; margin: 5px 0; border-radius: 4px; }\n        .error-item { color: #721c24; background: #f8d7da; padding: 8px; margin: 5px 0; border-radius: 4px; }\n        .critical-item { color: #721c24; background: #f5c6cb; padding: 8px; margin: 5px 0; border-radius: 4px; font-weight: bold; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>📋 Document Validation Report</h1>\n            <div class=\"status-${statusClass}\">${statusIcon} ${decision}</div>\n            <p><strong>Date:</strong> ${new Date().toLocaleDateString('nl-NL')} | <strong>Status:</strong> ${overallStatus} | <strong>Reference:</strong> DOC-${Date.now()}</p>\n        </div>\n        \n        <div class=\"section\">\n            <h2>👤 Worker Information</h2>\n            <div class=\"info-card\">\n                <h4>Personal Details</h4>\n                <p><strong>Name:</strong> ${workerName}</p>\n                <p><strong>Birth Date:</strong> ${birthDate}</p>\n                <p><strong>Age:</strong> ${age} years</p>\n                <p><strong>Personal ID:</strong> ${personalId}</p>\n                <p><strong>Nationality:</strong> ${nationality}</p>\n                <p><strong>Profession:</strong> ${profession}</p>\n            </div>\n        </div>\n\n        <div class=\"section\">\n            <h3>📋 Document Status</h3>\n            <p><strong>A1 Certificate:</strong> ${docStatus.a1}</p>\n            <p><strong>Identity Document:</strong> ${docStatus.id}</p>\n            <p><strong>Work Notification:</strong> ${docStatus.work}</p>\n            <p><strong>Safety Certificate:</strong> ${docStatus.safety}</p>\n        </div>\n\n        <div class=\"section\">\n            <h2>📄 Document Details</h2>\n            <div class=\"info-grid\">\n                <div class=\"info-card\">\n                    <h4>A1 Social Security Certificate</h4>\n                    <p><strong>Type:</strong> ${a1Details.type}</p>\n                    <p><strong>Work Period:</strong> ${a1Details.startDate} to ${a1Details.endDate}</p>\n                    <p><strong>Sending Company:</strong> ${a1Details.sendingCompany}</p>\n                    <p><strong>Receiving Companies:</strong> ${a1Details.receivingCompanies}</p>\n                    <p><strong>Director/Manager:</strong> ${a1Details.director}</p>\n                    <p><strong>Issuing Country:</strong> ${a1Details.issuingCountry}</p>\n                </div>\n                <div class=\"info-card\">\n                    <h4>Identity Document</h4>\n                    <p><strong>Type:</strong> ${idDetails.type}</p>\n                    <p><strong>Document Number:</strong> ${idDetails.number}</p>\n                    <p><strong>Expiry Date:</strong> ${idDetails.expiry}</p>\n                    <p><strong>Issuing Country:</strong> ${idDetails.issuingCountry}</p>\n                    <p><strong>Issuing Authority:</strong> ${idDetails.authority}</p>\n                    <p><strong>Gender:</strong> ${idDetails.gender}</p>\n                </div>\n                <div class=\"info-card\">\n                    <h4>Work Notification</h4>\n                    <p><strong>Type:</strong> ${workDetails.type}</p>\n                    <p><strong>Work Period:</strong> ${workDetails.startDate} to ${workDetails.endDate}</p>\n                    <p><strong>Employer:</strong> ${workDetails.employer}</p>\n                    <p><strong>Work Location:</strong> ${workDetails.location}</p>\n                    <p><strong>Sector:</strong> ${workDetails.sector}</p>\n                    <p><strong>Notification Country:</strong> ${workDetails.country}</p>\n                </div>\n                <div class=\"info-card\">\n                    <h4>Safety Certificate</h4>\n                    <p><strong>Type:</strong> ${safetyDetails.type}</p>\n                    <p><strong>Certificate Number:</strong> ${safetyDetails.number}</p>\n                    <p><strong>Certificate Type:</strong> ${safetyDetails.certType}</p>\n                    <p><strong>Expiry Date:</strong> ${safetyDetails.expiry}</p>\n                    <p><strong>Issue Place:</strong> ${safetyDetails.issuePlace}</p>\n                    <p><strong>Exam Language:</strong> ${safetyDetails.language}</p>\n                </div>\n            </div>\n        </div>\n        \n        <div class=\"section\">\n            <h3>🔍 Data Consistency</h3>\n            <table>\n                <tr><th>Field</th><th>Status</th></tr>\n                <tr><td>Name</td><td class=\"${consistency.name === 'MATCH' ? 'match' : 'mismatch'}\">${consistency.name === 'MATCH' ? '✓ MATCH' : '✗ MISMATCH'}</td></tr>\n                <tr><td>Birth Date</td><td class=\"${consistency.birthDate === 'MATCH' ? 'match' : 'mismatch'}\">${consistency.birthDate === 'MATCH' ? '✓ MATCH' : '✗ MISMATCH'}</td></tr>\n                <tr><td>Personal ID</td><td class=\"${consistency.personalId === 'MATCH' ? 'match' : 'mismatch'}\">${consistency.personalId === 'MATCH' ? '✓ MATCH' : '✗ MISMATCH'}</td></tr>\n                <tr><td>Nationality</td><td class=\"${consistency.nationality === 'MATCH' ? 'match' : 'mismatch'}\">${consistency.nationality === 'MATCH' ? '✓ MATCH' : '✗ MISMATCH'}</td></tr>\n                <tr><td>Work Periods</td><td class=\"${crossConsistency.work_periods_align === 'YES' ? 'match' : 'mismatch'}\">${crossConsistency.work_periods_align === 'YES' ? '✓ ALIGNED' : crossConsistency.work_periods_align === 'PARTIAL' ? '⚠ PARTIAL' : '✗ MISALIGNED'}</td></tr>\n                <tr><td>Employer Consistency</td><td class=\"${crossConsistency.employer_consistency === 'YES' ? 'match' : 'mismatch'}\">${crossConsistency.employer_consistency === 'YES' ? '✓ CONSISTENT' : '✗ INCONSISTENT'}</td></tr>\n                <tr><td>Location Consistency</td><td class=\"${crossConsistency.location_consistency === 'YES' ? 'match' : 'mismatch'}\">${crossConsistency.location_consistency === 'YES' ? '✓ CONSISTENT' : '⚠ PARTIAL'}</td></tr>\n            </table>\n        </div>\n        \n        ${flags.length > 0 ? `\n        <div class=\"section\">\n            <h3>🚨 Issues & Warnings</h3>\n            ${flags.map(flag => `\n                <div class=\"${flag.type.toLowerCase()}-item\">\n                    <strong>${flag.type}:</strong> ${flag.message}\n                    ${flag.field ? ` <em>(Field: ${flag.field})</em>` : ''}\n                </div>\n            `).join('')}\n        </div>\n        ` : ''}\n\n        ${recommendations.length > 0 ? `\n        <div class=\"highlight\">\n            <h3>💼 Recommendations</h3>\n            <ul>\n                ${recommendations.map(rec => `<li>${rec}</li>`).join('')}\n            </ul>\n        </div>\n        ` : ''}\n    </div>\n</body>\n</html>\n`;\n\n// Extract alle binary attachments (originele PDFs)\nlet allBinaryAttachments = {};\nif (inputData.binary) {\n    // Kopieer alle binary data, niet alleen attachment_ prefixes\n    Object.keys(inputData.binary).forEach(key => {\n        allBinaryAttachments[key] = inputData.binary[key];\n    });\n}\n\n// Return output met alle originele attachments\nreturn {\n    json: {\n        html_report: htmlReport,\n        subject: `Document Validation - ${workerName} - ${decision} - ${new Date().toLocaleDateString('nl-NL')}`,\n        worker_name: workerName,\n        decision: decision,\n        reference: `DOC-${Date.now()}`,\n        toEmail: getValue(inputData, 'originalEmail.from.address', 'fallback@email.com'),\n        validation_data_json: validationData,\n        // Voeg info toe over attachments voor debugging\n        attachment_count: Object.keys(allBinaryAttachments).length,\n        attachment_keys: Object.keys(allBinaryAttachments)\n    },\n    //binary: allBinaryAttachments\n    binary: $input.first().binary || {}\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        -160
+      ],
+      "id": "5a4bde24-6108-4aa6-aadf-03fcc67733cd",
+      "name": "mail template"
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1232,
+        192
+      ],
+      "id": "0f5f1239-bc7d-4e11-b9d6-c6b68cbd5e43",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "dob7yodE27d15REW",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// DYNAMISCHE EN ROBUUSTE VERSIE - Verwerkt een variabel aantal documenten\nconst inputData = $input.first().json;\n\n// --- Helper Functions ---\nfunction getValue(obj, path, defaultValue = 'N/A') {\n    try {\n        const value = path.split('.').reduce((acc, key) => acc && acc[key], obj);\n        return value !== undefined && value !== null ? value : defaultValue;\n    } catch {\n        return defaultValue;\n    }\n}\n\nfunction formatArray(arr) {\n    if (Array.isArray(arr)) {\n        return arr.join(', ');\n    }\n    return arr || 'N/A';\n}\n\nfunction calculateAge(birthDate) {\n    if (!birthDate || birthDate === 'N/A') return 'N/A';\n    try {\n        // Probeert DD/MM/YYYY en YYYY-MM-DD\n        let date;\n        if (birthDate.includes('/')) {\n            const parts = birthDate.split('/');\n            date = new Date(parts[2], parts[1] - 1, parts[0]);\n        } else if (birthDate.includes('-')) {\n            date = new Date(birthDate);\n        } else {\n            return 'N/A';\n        }\n        \n        const today = new Date();\n        let age = today.getFullYear() - date.getFullYear();\n        const m = today.getMonth() - date.getMonth();\n        if (m < 0 || (m === 0 && today.getDate() < date.getDate())) {\n            age--;\n        }\n        return isNaN(age) ? 'N/A' : age;\n    } catch {\n        return 'N/A';\n    }\n}\n\n// Functie om een HTML-kaart voor een specifiek document te genereren\nfunction renderDocumentCard(category, doc) {\n    let title = 'Onbekend Document';\n    let details = '';\n    const data = doc || {};\n\n    switch (category) {\n        case 'social_security_data':\n            title = 'A1 Sociaal Zekerheidscertificaat';\n            details = `\n                <p><strong>Type:</strong> ${data.document_type || 'N/A'}</p>\n                <p><strong>Werkperiode:</strong> ${data.work_period_start || 'N/A'} tot ${data.work_period_end || 'N/A'}</p>\n                <p><strong>Uitzendend bedrijf:</strong> ${data.sending_company || 'N/A'}</p>\n                <p><strong>Ontvangende bedrijven:</strong> ${formatArray(data.receiving_companies)}</p>\n                <p><strong>Directeur/Manager:</strong> ${data.director_manager || 'N/A'}</p>\n                <p><strong>Land van afgifte:</strong> ${data.issuing_country || 'N/A'}</p>\n            `;\n            break;\n        case 'identity_document_data':\n            title = 'Identiteitsdocument';\n            details = `\n                <p><strong>Type:</strong> ${data.document_type || 'N/A'}</p>\n                <p><strong>Nummer:</strong> ${data.document_number || 'N/A'}</p>\n                <p><strong>Vervaldatum:</strong> ${data.expiry_date || 'N/A'}</p>\n                <p><strong>Land van afgifte:</strong> ${data.issuing_country || 'N/A'}</p>\n                <p><strong>Autoriteit:</strong> ${data.issuing_authority || 'N/A'}</p>\n                <p><strong>Geslacht:</strong> ${data.gender || 'N/A'}</p>\n            `;\n            break;\n        case 'work_notification_data':\n            title = 'Werknotificatie';\n            details = `\n                <p><strong>Type:</strong> ${data.document_type || 'N/A'}</p>\n                <p><strong>Werkperiode:</strong> ${data.work_period_start || 'N/A'} tot ${data.work_period_end || 'N/A'}</p>\n                <p><strong>Werkgever:</strong> ${data.employer_name || 'N/A'}</p>\n                <p><strong>Werklocatie:</strong> ${data.work_location || 'N/A'}</p>\n                <p><strong>Sector:</strong> ${data.sector || 'N/A'}</p>\n                <p><strong>Notificatieland:</strong> ${data.notification_country || 'N/A'}</p>\n            `;\n            break;\n        case 'safety_certificate_data':\n            title = `Veiligheidscertificaat (${data.certificate_type || 'Type onbekend'})`;\n            details = `\n                <p><strong>Type:</strong> ${data.document_type || 'N/A'}</p>\n                <p><strong>Certificaatnummer:</strong> ${data.certificate_number || 'N/A'}</p>\n                <p><strong>Naam houder:</strong> ${data.holder_name || 'N/A'}</p>\n                <p><strong>Vervaldatum:</strong> ${data.expiry_date || 'N/A'}</p>\n                <p><strong>Plaats van afgifte:</strong> ${data.issue_place || 'N/A'}</p>\n                <p><strong>Taal examen:</strong> ${data.exam_language || 'N/A'}</p>\n            `;\n            break;\n        default:\n            title = category.replace(/_/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase());\n            details = `<p>Geen specifieke weergave voor dit documenttype.</p>`;\n            break;\n    }\n\n    return `<div class=\"info-card\"><h4>${title}</h4>${details}</div>`;\n}\n\n// --- Data Extractie ---\nconst decision = getValue(inputData, 'decision', 'UNKNOWN');\nconst overallStatus = getValue(inputData, 'overall_status', 'UNKNOWN');\nconst validationData = getValue(inputData, 'full_validation_report', {});\nconst firstReport = getValue(validationData, 'individual_reports.0', {});\n\n// Haal alle originele documentdetails op\nconst originalDocs = getValue(firstReport, 'original_document_details', {});\n\n// Extraheer data-objecten/arrays voor gemakkelijke toegang\nconst personalData = getValue(firstReport, 'personal_data_comparison', {});\nconst socialSecData = originalDocs.social_security_data || {};\nconst identityData = originalDocs.identity_document_data || {};\nconst workNotifData = originalDocs.work_notification_data || {};\n// Veiligheidsdata kan een array zijn, dus normaliseer het naar een array\nconst safetyDataArray = Array.isArray(originalDocs.safety_certificate_data) \n    ? originalDocs.safety_certificate_data \n    : [originalDocs.safety_certificate_data].filter(Boolean); // filter(Boolean) verwijdert null/undefined\nconst firstSafetyCert = safetyDataArray[0] || {};\n\n// Werknemersinformatie - met prioriteit en fallbacks\nconst workerName = socialSecData.worker_name ||\n                   getValue(personalData, 'name.social_security_doc') ||\n                   `${identityData.given_names || ''} ${identityData.surname || ''}`.trim() ||\n                   workNotifData.employee_name ||\n                   firstSafetyCert.holder_name || 'N/A';\n\nconst birthDate = socialSecData.birth_date ||\n                  getValue(personalData, 'birth_date.social_security_doc') ||\n                  identityData.birth_date ||\n                  firstSafetyCert.birth_date || 'N/A';\n\nconst personalId = socialSecData.personal_identifier ||\n                   getValue(personalData, 'personal_identifier.social_security_doc') ||\n                   identityData.personal_identifier ||\n                   getValue(workNotifData, 'employee_identification', '').split(' ')[0] || 'N/A'; // Haal alleen het nummer\n\nconst nationality = socialSecData.nationality ||\n                    getValue(personalData, 'nationality.social_security_doc') ||\n                    identityData.nationality || 'N/A';\n\nconst profession = socialSecData.profession || 'N/A';\nconst age = calculateAge(birthDate);\n\n// Documentstatus\nconst mandatoryDocs = getValue(firstReport, 'mandatory_documents_check', {});\nconst docStatus = {\n    a1: mandatoryDocs.social_security_document_present === 'YES' ? '✓ Aanwezig' : '✗ Ontbreekt',\n    id: mandatoryDocs.identity_document_present === 'YES' ? '✓ Aanwezig' : '✗ Ontbreekt',\n    work: mandatoryDocs.work_notification_present === 'YES' ? '✓ Aanwezig' : '✗ Ontbreekt',\n    safety: mandatoryDocs.safety_certificate_present === 'YES' ? '✓ Aanwezig' : '✗ Ontbreekt'\n};\n\n// --- Dynamische HTML Generatie ---\n\n// Genereer HTML voor alle documentkaarten\nlet documentDetailsHtml = '';\nfor (const category in originalDocs) {\n    const docData = originalDocs[category];\n    const documents = Array.isArray(docData) ? docData : [docData];\n    \n    for (const doc of documents) {\n        if (doc) { // Controleer of het documentobject bestaat\n            documentDetailsHtml += renderDocumentCard(category, doc);\n        }\n    }\n}\n\n// Consistentiechecks\nconst consistency = {\n    name: getValue(personalData, 'name.status', 'UNKNOWN'),\n    birthDate: getValue(personalData, 'birth_date.status', 'UNKNOWN'),\n    personalId: getValue(personalData, 'personal_identifier.status', 'UNKNOWN'),\n    nationality: getValue(personalData, 'nationality.status', 'UNKNOWN')\n};\nconst crossConsistency = getValue(firstReport, 'cross_document_consistency', {});\n\n// Flags, warnings en aanbevelingen\nconst flags = getValue(validationData, 'flags_and_warnings', []);\nconst recommendations = getValue(validationData, 'recommendations', []);\n\n// Status voor display\nlet statusClass, statusIcon;\nswitch (decision) {\n    case 'PASS': statusClass = 'pass'; statusIcon = '✓'; break;\n    case 'REVIEW': statusClass = 'warning'; statusIcon = '⚠'; break;\n    case 'FAIL': statusClass = 'fail'; statusIcon = '✗'; break;\n    default: statusClass = 'unknown'; statusIcon = '?';\n}\n\n// Genereer de volledige HTML-rapportage\nconst htmlReport = `\n<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <style>\n        body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background-color: #f5f5f5; line-height: 1.6; color: #333; }\n        .container { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n        .header { text-align: center; border-bottom: 3px solid #007bff; padding-bottom: 20px; margin-bottom: 30px; }\n        .header h1 { color: #007bff; margin: 0; font-size: 28px; }\n        .status-pass { background: #d4edda; color: #155724; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; font-size: 1.1em; margin-top: 10px; }\n        .status-fail { background: #f8d7da; color: #721c24; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; font-size: 1.1em; margin-top: 10px; }\n        .status-warning { background: #fff3cd; color: #856404; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; font-size: 1.1em; margin-top: 10px; }\n        .status-unknown { background: #e2e3e5; color: #383d41; padding: 8px 16px; border-radius: 20px; font-weight: bold; display: inline-block; font-size: 1.1em; margin-top: 10px; }\n        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px; margin-bottom: 20px; }\n        .info-card { background: #f8f9fa; padding: 15px; border-radius: 5px; border-left: 4px solid #007bff; }\n        .info-card h4 { margin: 0 0 10px 0; color: #495057; font-size: 1.1em; border-bottom: 1px solid #ddd; padding-bottom: 5px; }\n        .info-card p { margin: 5px 0; font-size: 0.95em; word-wrap: break-word; }\n        table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 0.9em; }\n        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }\n        th { background: #e9ecef; font-weight: bold; color: #495057; }\n        .match { color: #28a745; font-weight: bold; }\n        .mismatch { color: #dc3545; font-weight: bold; }\n        .section { margin-bottom: 35px; }\n        .section h2, .section h3 { color: #007bff; border-bottom: 2px solid #e9ecef; padding-bottom: 8px; margin-bottom: 15px; font-size: 1.4em; }\n        .section h3 { font-size: 1.2em; }\n        .highlight { background: #e7f3ff; padding: 20px; border-radius: 8px; border-left: 5px solid #17a2b8; margin-top: 30px; }\n        .highlight h3 { color: #17a2b8; margin-top: 0; }\n        .warning-item, .error-item, .critical-item { padding: 10px; margin: 5px 0; border-radius: 4px; border-left-width: 5px; border-left-style: solid; }\n        .warning-item { background: #fff3cd; border-left-color: #ffeeba; }\n        .error-item { background: #f8d7da; border-left-color: #f5c6cb; }\n        .critical-item { background: #f8d7da; color: #721c24; font-weight: bold; border-left-color: #dc3545; }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>📋 Document Validatie Rapport</h1>\n            <div class=\"status-${statusClass}\">${statusIcon} ${decision}</div>\n            <p><strong>Datum:</strong> ${new Date().toLocaleDateString('nl-NL')} | <strong>Status:</strong> ${overallStatus}</p>\n        </div>\n        \n        <div class=\"section\">\n            <h2>👤 Werknemersinformatie</h2>\n            <div class=\"info-card\">\n                <div class=\"info-grid\">\n                    <div><p><strong>Naam:</strong> ${workerName}</p></div>\n                    <div><p><strong>Geboortedatum:</strong> ${birthDate}</p></div>\n                    <div><p><strong>Leeftijd:</strong> ${age} jaar</p></div>\n                    <div><p><strong>Persoonlijk ID:</strong> ${personalId}</p></div>\n                    <div><p><strong>Nationaliteit:</strong> ${nationality}</p></div>\n                    <div><p><strong>Beroep:</strong> ${profession}</p></div>\n                </div>\n            </div>\n        </div>\n\n        <div class=\"section\">\n            <h3>📋 Documentstatus Overzicht</h3>\n            <p><strong>A1 Certificaat:</strong> ${docStatus.a1}</p>\n            <p><strong>Identiteitsdocument:</strong> ${docStatus.id}</p>\n            <p><strong>Werknotificatie:</strong> ${docStatus.work}</p>\n            <p><strong>Veiligheidscertificaat:</strong> ${docStatus.safety}</p>\n        </div>\n\n        <div class=\"section\">\n            <h2>📄 Document Details</h2>\n            <div class=\"info-grid\">\n                ${documentDetailsHtml}\n            </div>\n        </div>\n        \n        <div class=\"section\">\n            <h3>🔍 Data Consistentie</h3>\n            <table>\n                <tr><th>Veld</th><th>Status</th></tr>\n                <tr><td>Naam</td><td class=\"${consistency.name === 'MATCH' ? 'match' : 'mismatch'}\">${consistency.name || 'N/A'}</td></tr>\n                <tr><td>Geboortedatum</td><td class=\"${consistency.birthDate === 'MATCH' ? 'match' : 'mismatch'}\">${consistency.birthDate || 'N/A'}</td></tr>\n                <tr><td>Persoonlijk ID</td><td class=\"${consistency.personalId === 'MATCH' ? 'match' : 'mismatch'}\">${consistency.personalId || 'N/A'}</td></tr>\n                <tr><td>Nationaliteit</td><td class=\"${consistency.nationality === 'MATCH' ? 'match' : 'mismatch'}\">${consistency.nationality || 'N/A'}</td></tr>\n                <tr><td>Werkperiodes</td><td class=\"${crossConsistency.work_periods_align === 'YES' ? 'match' : 'mismatch'}\">${crossConsistency.work_periods_align || 'N/A'}</td></tr>\n                <tr><td>Werkgever</td><td class=\"${crossConsistency.employer_consistency === 'YES' ? 'match' : 'mismatch'}\">${crossConsistency.employer_consistency || 'N/A'}</td></tr>\n                <tr><td>Locatie</td><td class=\"${crossConsistency.location_consistency === 'YES' ? 'match' : 'mismatch'}\">${crossConsistency.location_consistency || 'N/A'}</td></tr>\n            </table>\n        </div>\n        \n        ${flags.length > 0 ? `\n        <div class=\"section\">\n            <h3>🚨 Gevonden Problemen & Waarschuwingen</h3>\n            ${flags.map(flag => `\n                <div class=\"${flag.type.toLowerCase()}-item\">\n                    <strong>${flag.type}:</strong> ${flag.message}\n                    ${flag.field ? `<em>(Veld: ${flag.field})</em>` : ''}\n                </div>\n            `).join('')}\n        </div>\n        ` : ''}\n\n        ${recommendations.length > 0 ? `\n        <div class=\"highlight\">\n            <h3>💼 Aanbevelingen</h3>\n            <ul>\n                ${recommendations.map(rec => `<li>${rec}</li>`).join('')}\n            </ul>\n        </div>\n        ` : ''}\n    </div>\n</body>\n</html>\n`;\n\n// Pak alle binaire data (originele documenten)\nconst allBinaryAttachments = $input.first().binary || {};\n\n// Return de output\nreturn [{\n    json: {\n        html_report: htmlReport,\n        subject: `Document Validatie - ${workerName} - ${decision}`,\n        worker_name: workerName,\n        decision: decision,\n        toEmail: getValue(inputData, 'originalEmail.from.address', 'fallback@email.com'),\n        validation_data_json: validationData\n    },\n    //binary: allBinaryAttachments\n    binary: $input.first().binary || {} \n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        48
+      ],
+      "id": "a7825dbd-32fc-49dc-9dfe-f8e2d096d5f2",
+      "name": "mail template1"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -2096,
+        -48
+      ],
+      "id": "37b5a5f7-3ce8-4e0c-88d6-30387daaddea",
+      "name": "Transform to base64"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpQueryAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"contents\": [{\n    \"parts\":[\n      {\"text\": \"You will receive official documents such as passports, ID cards, A1 forms, Limosa certificates, VCA certificates, and diplomas. For each document:\\n\\n1. Extract all readable text, including any text embedded in images.\\n2. Detect whether a stamp is present. If so, return true and an estimated confidence score (0–1). If not, return false.\\n3. Detect whether a signature is present. If so, return true and an estimated confidence score (0–1). If not, return false.\\n4. Do not extract or analyze any faces or photos in the document.\\n\\nReturn the result for each document in structured JSON with the following fields:\\n- document_type\\n- country_of_origin (if identifiable)\\n- full_name\\n- date_of_birth\\n- document_number\\n- expiry_date\\n- certificate_id or diploma_title (if present)\\n- stamp_present (true/false)\\n- stamp_confidence (0–1)\\n- signature_present (true/false)\\n- signature_confidence (0–1)\\n\\nOnly return JSON. Do not explain or format anything outside the JSON.\"},\n      {\n        \"inline_data\": {\n          \"mime_type\": \"application/pdf\",\n          \"data\": \"{{ $json.data }}\"\n        }\n      }\n    ]\n  }]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1872,
+        -48
+      ],
+      "id": "8a166afb-fe63-4d20-893e-ea852a99c8fe",
+      "name": "Extract PDF Content Using Gemini Vision",
+      "credentials": {
+        "httpQueryAuth": {
+          "id": "t6Npfn3CB5NrgzCP",
+          "name": "Query Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -1648,
+        -48
+      ],
+      "id": "15d5cc86-7320-464b-80b7-7b37d134f56a",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "formTitle": "Deployment Compliance Checker",
+        "formDescription": "primary function of checking and verifying the compliance of workers' documents and schedules for deployment on Belgian construction sites.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Mail",
+              "fieldType": "email",
+              "placeholder": "Your mail adress here!",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "PDF",
+              "fieldType": "file",
+              "acceptFileTypes": "PDF",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": false,
+          "respondWithOptions": {
+            "values": {
+              "formSubmittedText": "Response Recorded Thank you for your submission. Your response has been successfully recorded.  Email Notification: You will receive a detailed email response within the next few minutes.  Next Steps: Please check your inbox and spam folder for our response.  Support: If you don't receive an email within 10 minutes, please contact your system administrator.  You may now close this window."
+            }
+          },
+          "customCss": ":root {\n\t--font-family: 'Open Sans', sans-serif;\n\t--font-weight-normal: 400;\n\t--font-weight-bold: 600;\n\t--font-size-body: 12px;\n\t--font-size-label: 14px;\n\t--font-size-test-notice: 12px;\n\t--font-size-input: 14px;\n\t--font-size-header: 20px;\n\t--font-size-paragraph: 14px;\n\t--font-size-link: 12px;\n\t--font-size-error: 12px;\n\t--font-size-html-h1: 28px;\n\t--font-size-html-h2: 20px;\n\t--font-size-html-h3: 16px;\n\t--font-size-html-h4: 14px;\n\t--font-size-html-h5: 12px;\n\t--font-size-html-h6: 10px;\n\t--font-size-subheader: 14px;\n\t/* Colors - Altrad Theme */\n\t--color-background: #f8f9fa;\n\t--color-test-notice-text: #E31E24;\n\t--color-test-notice-bg: #fef7f7;\n\t--color-test-notice-border: #f5c6c7;\n\t--color-card-bg: #ffffff;\n\t--color-card-border: #e1e5e9;\n\t--color-card-shadow: rgba(227, 30, 36, 0.08);\n\t--color-link: #6b6b6b;\n\t--color-header: #2c2c2c;\n\t--color-label: #2c2c2c;\n\t--color-input-border: #e1e5e9;\n\t--color-input-text: #6b6b6b;\n\t--color-focus-border: #E31E24;\n\t--color-submit-btn-bg: #E31E24;\n\t--color-submit-btn-text: #ffffff;\n\t--color-error: #E31E24;\n\t--color-required: #E31E24;\n\t--color-clear-button-bg: #6b6b6b;\n\t--color-html-text: #2c2c2c;\n\t--color-html-link: #E31E24;\n\t--color-header-subtext: #6b6b6b;\n\t/* Border Radii */\n\t--border-radius-card: 8px;\n\t--border-radius-input: 6px;\n\t--border-radius-clear-btn: 50%;\n\t--card-border-radius: 8px;\n\t/* Spacing */\n\t--padding-container-top: 24px;\n\t--padding-card: 24px;\n\t--padding-test-notice-vertical: 12px;\n\t--padding-test-notice-horizontal: 24px;\n\t--margin-bottom-card: 16px;\n\t--padding-form-input: 12px;\n\t--card-padding: 24px;\n\t--card-margin-bottom: 16px;\n\t/* Dimensions */\n\t--container-width: 448px;\n\t--submit-btn-height: 48px;\n\t--checkbox-size: 18px;\n\t/* Others */\n\t--box-shadow-card: 0px 4px 16px 0px var(--color-card-shadow);\n\t--opacity-placeholder: 0.5;\n\t/* Logo */\n\t--logo-url: url('https://bnl.altradservices.com/assets/images/b/Benelux_RVB-660c4912.jpg');\n}"
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -2544,
+        -48
+      ],
+      "id": "bdcad35f-5992-4d8b-89a5-1ebbdb43c04a",
+      "name": "On form submission",
+      "webhookId": "9e3bfff9-b57f-408f-8414-8064628edd98"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Met lokale datum formatting:\nconst today = new Date();\nconst validationDate = today.getFullYear() + '-' + \n                      String(today.getMonth() + 1).padStart(2, '0') + '-' + \n                      String(today.getDate()).padStart(2, '0');\n\nreturn items.map(item => {\n  // Combineer ALLE documenten tot 1 string\n  let allDocuments = '';\n  \n  if (item.json.data && Array.isArray(item.json.data)) {\n    item.json.data.forEach((doc, index) => {\n      if (doc.candidates && doc.candidates[0] && doc.candidates[0].content && doc.candidates[0].content.parts && doc.candidates[0].content.parts[0]) {\n        allDocuments += `\\n\\n=== DOCUMENT ${index + 1} ===\\n`;\n        allDocuments += doc.candidates[0].content.parts[0].text;\n        allDocuments += `\\n=== END DOCUMENT ${index + 1} ===\\n`;\n      }\n    });\n  }\n  \n  return {\n    ...item.json,\n    validation_date: validationDate,\n    combined_documents: allDocuments\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1424,
+        -48
+      ],
+      "id": "518939bf-ce6b-495f-84a9-4be14e199912",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "function convertIsoToEuropean(dateStr) {\n    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(dateStr)) {\n        const [year, month, day] = dateStr.split(\"-\");\n        return `${day}/${month}/${year}`;\n    }\n    return dateStr;\n}\n\nfunction convertDatesInObject(obj) {\n    if (Array.isArray(obj)) {\n        return obj.map(convertDatesInObject);\n    } else if (typeof obj === 'object' && obj !== null) {\n        const newObj = {};\n        for (const key in obj) {\n            newObj[key] = convertDatesInObject(obj[key]);\n        }\n        return newObj;\n    } else if (typeof obj === 'string') {\n        return convertIsoToEuropean(obj);\n    } else {\n        return obj;\n    }\n}\n\nconst validationResults = [];\n\nitems.forEach(item => {\n    try {\n        const outputText = item.json.output;\n        const jsonMatch = outputText.match(/```json\\s*([\\s\\S]*?)\\s*```/);\n\n        let jsonData;\n        if (jsonMatch && jsonMatch[1]) {\n            jsonData = JSON.parse(jsonMatch[1].trim());\n        } else {\n            jsonData = JSON.parse(outputText.trim());\n        }\n\n        const convertedData = convertDatesInObject(jsonData);\n        validationResults.push(convertedData);\n\n    } catch (e) {\n        console.log('Error parsing AI output:', e.message);\n    }\n});\n\nif (validationResults.length === 0) {\n    return [{\n        json: {\n            decision: \"FAIL\",\n            reason: \"No valid validation results found from AI Agent.\",\n            action: \"reject\",\n            missing_documents: [\"Unable to determine\"],\n            recommendation: \"AI did not produce a valid validation report. Please investigate AI Agent output.\"\n        }\n    }];\n}\n\n// VERBETERD: Combineer alle documenten met documenttype-aware validatie\nfunction combineValidationResults(results) {\n    const combinedFlags = [];\n    const combinedRecommendations = [];\n    const missingDocuments = [];\n    let overallStatus = \"PASS\";\n    let totalCriticalIssues = 0;\n    \n    // Definieer documenttype prioriteiten en regels\n    const documentTypeRules = {\n        'CV': { required: true, priority: 'HIGH', criticalWeight: 3 },\n        'DIPLOMA': { required: true, priority: 'HIGH', criticalWeight: 3 },\n        'IDENTITY': { required: true, priority: 'CRITICAL', criticalWeight: 5 },\n        'TRANSCRIPT': { required: false, priority: 'MEDIUM', criticalWeight: 2 },\n        'CERTIFICATE': { required: false, priority: 'LOW', criticalWeight: 1 },\n        'COURSE': { required: false, priority: 'LOW', criticalWeight: 1 },\n        'PORTFOLIO': { required: false, priority: 'MEDIUM', criticalWeight: 2 },\n        'REFERENCE': { required: false, priority: 'LOW', criticalWeight: 1 }\n    };\n    \n    // Categoriseer documenten\n    const documentsByType = {};\n    \n    console.log(`Processing ${results.length} validation reports`);\n\n    results.forEach((report, index) => {\n        // GEFIXED: Neem de overall_status direct van het report\n        const reportStatus = report.validation_summary?.overall_status;\n        if (reportStatus === \"FAIL\") {\n            overallStatus = \"FAIL\";\n        } else if (reportStatus === \"WARNING\" && overallStatus !== \"FAIL\") {\n            overallStatus = \"WARNING\";\n        }\n\n        // Detecteer documenttype uit report of gebruik fallback\n        const docType = report.document_type || \n                       report.detected_document_type || \n                       determineDocumentType(report) ||\n                       'CERTIFICATE'; // Default naar CERTIFICATE voor dit type data\n        \n        if (!documentsByType[docType]) {\n            documentsByType[docType] = [];\n        }\n        documentsByType[docType].push({ report, index });\n        \n        // Verzamel alle flags en warnings met type-specifieke weging\n        if (report.flags_and_warnings) {\n            report.flags_and_warnings.forEach(flag => {\n                const typeRules = documentTypeRules[docType] || { criticalWeight: 1 };\n                const weightedFlag = {\n                    ...flag,\n                    document_index: index,\n                    document_type: docType,\n                    weighted_severity: calculateWeightedSeverity(flag.type, typeRules.criticalWeight)\n                };\n                combinedFlags.push(weightedFlag);\n            });\n        }\n\n        // Type-specifieke aanbevelingen\n        if (report.recommendations) {\n            const docRecommendations = Array.isArray(report.recommendations) \n                ? report.recommendations \n                : [report.recommendations];\n            docRecommendations.forEach(rec => {\n                combinedRecommendations.push(`[${docType}] ${rec}`);\n            });\n        }\n\n        // Check kritieke issues per document met type-specifieke weging\n        const typeRules = documentTypeRules[docType] || { criticalWeight: 1 };\n        const criticalIssues = (report.flags_and_warnings || []).filter(flag =>\n            [\"CRITICAL\", \"ERROR\"].includes(flag.type)\n        ).length;\n        \n        // Vermenigvuldig met gewicht gebaseerd op documenttype\n        totalCriticalIssues += criticalIssues * typeRules.criticalWeight;\n\n        // Check missing documents voor verplichte types\n        if (typeRules.required && report.mandatory_documents_check?.all_mandatory_present === \"NO\") {\n            const missing = report.mandatory_documents_check.missing_documents || [];\n            missingDocuments.push(...missing.map(doc => `${docType}: ${doc}`));\n        }\n    });\n    \n    // Helper functions\n    function determineDocumentType(report) {\n        // Probeer documenttype te detecteren uit content\n        const content = JSON.stringify(report).toLowerCase();\n        if (content.includes('curriculum') || content.includes('cv')) return 'CV';\n        if (content.includes('diploma') || content.includes('degree')) return 'DIPLOMA';\n        if (content.includes('certificate') && content.includes('course')) return 'COURSE';\n        if (content.includes('certificate')) return 'CERTIFICATE';\n        if (content.includes('transcript')) return 'TRANSCRIPT';\n        if (content.includes('identity') || content.includes('passport')) return 'IDENTITY';\n        return 'CERTIFICATE'; // Default voor dit type data\n    }\n    \n    function calculateWeightedSeverity(flagType, weight) {\n        const baseValues = { 'CRITICAL': 10, 'ERROR': 7, 'WARNING': 4, 'INFO': 1 };\n        return (baseValues[flagType] || 1) * weight;\n    }\n    \n    // Genereer type-specifieke samenvatting\n    const typeSummary = Object.keys(documentsByType).map(type => ({\n        type,\n        count: documentsByType[type].length,\n        required: documentTypeRules[type]?.required || false,\n        status: getTypeStatus(documentsByType[type])\n    }));\n\n    function getTypeStatus(documentsOfType) {\n        const statuses = documentsOfType.map(doc => doc.report.validation_summary?.overall_status);\n        if (statuses.includes('FAIL')) return 'FAIL';\n        if (statuses.includes('WARNING')) return 'WARNING';\n        return 'PASS';\n    }\n\n    // GEFIXED: Bereken het totaal aantal documenten uit de documents_validated array\n    const totalDocuments = results.reduce((total, report) => {\n        return total + (report.validation_summary?.documents_validated?.length || 0);\n    }, 0);\n\n    return {\n        validation_summary: {\n            overall_status: overallStatus,\n            total_documents: totalDocuments, // GEFIXED: Gebruik het echte aantal documenten\n            documents_processed: totalDocuments, // GEFIXED: Gebruik het echte aantal documenten\n            document_types_summary: typeSummary\n        },\n        flags_and_warnings: combinedFlags.sort((a, b) => b.weighted_severity - a.weighted_severity),\n        recommendations: combinedRecommendations,\n        mandatory_documents_check: {\n            all_mandatory_present: missingDocuments.length === 0 ? \"YES\" : \"NO\",\n            missing_documents: missingDocuments\n        },\n        critical_issues_count: totalCriticalIssues,\n        individual_reports: results,\n        document_type_breakdown: documentsByType\n    };\n}\n\n// Gebruik gecombineerde resultaten in plaats van alleen het eerste\nconst aiReport = combineValidationResults(validationResults);\n\nlet decision = \"FAIL\";\nlet action = \"reject\";\nlet recommendation = \"No recommendation.\";\n\n// GEFIXED: Gebruik de correcte overall_status uit aiReport\nconst overallStatus = aiReport?.validation_summary?.overall_status;\n\nswitch (overallStatus) {\n    case \"PASS\":\n        decision = \"PASS\";\n        action = \"approve\";\n        break;\n    case \"WARNING\":\n        decision = \"REVIEW\";\n        action = \"manual_review\";\n        break;\n    case \"FAIL\":\n        decision = \"FAIL\";\n        action = \"reject\";\n        break;\n    default:\n        decision = \"FAIL\";\n        action = \"reject\";\n}\n\nconst criticalIssues = aiReport.critical_issues_count || 0;\n\nif (criticalIssues > 0) {\n    decision = \"FAIL\";\n    action = \"reject\";\n    recommendation = `${criticalIssues} critical issue(s) found across ${aiReport.validation_summary.total_documents} documents. Please resolve and resubmit.`;\n} else {\n    recommendation = aiReport.recommendations?.join('; ') || \"No specific recommendation from AI.\";\n}\n\nconst output = {\n    decision,\n    action,\n    overall_status: overallStatus,\n    total_documents_processed: aiReport.validation_summary.total_documents, // GEFIXED: Gebruik het correcte aantal\n    document_types_found: aiReport.validation_summary.document_types_summary,\n    critical_issues_count: criticalIssues,\n    recommendation,\n    missing_documents: aiReport?.mandatory_documents_check?.missing_documents || [],\n    full_validation_report: aiReport\n};\n\nreturn [{ json: output }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        -48
+      ],
+      "id": "54d89634-c983-4e61-bda4-dc9b30e7f571",
+      "name": "json set"
+    },
+    {
+      "parameters": {
+        "jsCode": "// JSON data ophalen uit de vorige node\nconst jsonData = $input.first().json;\n\n/**\n * Extraheert de nuttige, platte data uit het complexe JSON-object.\n * @param {object} data - Het volledige JSON-object van de input.\n * @returns {object} Een plat object met de belangrijkste data voor het rapport.\n */\nfunction extractUsefulData(data) {\n    const report = data.full_validation_report?.individual_reports?.[0] || data.full_validation_report || data;\n    const validation = data.full_validation_report?.validation_summary || report.validation_summary || {};\n    \n    // Worker informatie uit verschillende mogelijke locaties in de JSON halen\n    const socialSecData = report.original_document_details?.social_security_data || {};\n    const identityData = report.original_document_details?.identity_document_data || {};\n    const workNotifData = report.original_document_details?.work_notification_data || {};\n    const safetyData = Array.isArray(report.original_document_details?.safety_certificate_data) \n        ? report.original_document_details.safety_certificate_data[0] \n        : report.original_document_details?.safety_certificate_data || {};\n    \n    return {\n        // --- BESLISSING & ALGEMENE STATUS ---\n        'Decision': data.decision || 'UNKNOWN',\n        'Overall_Status': data.overall_status || validation.overall_status || 'UNKNOWN',\n        'Validation_Date': validation.validation_date || new Date().toLocaleDateString('nl-NL'),\n        'Reference': `DOC-${Date.now()}`,\n        \n        // --- WORKER INFORMATIE ---\n        'Worker_Name': socialSecData.worker_name || \n                       `${identityData.given_names || ''} ${identityData.surname || ''}`.trim() ||\n                       workNotifData.employee_name || \n                       safetyData.holder_name || 'N/A',\n        'Birth_Date': socialSecData.birth_date || identityData.birth_date || safetyData.birth_date || 'N/A',\n        'Personal_ID': socialSecData.personal_identifier || identityData.personal_identifier || 'N/A',\n        'Nationality': socialSecData.nationality || identityData.nationality || validation.worker_nationality || 'N/A',\n        'Profession': socialSecData.profession || 'N/A',\n        \n        // --- DOCUMENT STATUS ---\n        'A1_Certificate': report.mandatory_documents_check?.social_security_document_present || 'UNKNOWN',\n        'Identity_Document': report.mandatory_documents_check?.identity_document_present || 'UNKNOWN',\n        'Work_Notification': report.mandatory_documents_check?.work_notification_present || 'UNKNOWN',\n        'Safety_Certificate': report.mandatory_documents_check?.safety_certificate_present || 'UNKNOWN',\n        'All_Documents_Present': report.mandatory_documents_check?.all_mandatory_present || 'UNKNOWN',\n        \n        // --- WERKGEGEVENS ---\n        'Work_Start_Date': socialSecData.work_period_start || workNotifData.work_period_start || 'N/A',\n        'Work_End_Date': socialSecData.work_period_end || workNotifData.work_period_end || 'N/A',\n        'Employer': workNotifData.employer_name || socialSecData.sending_company || 'N/A',\n        'Work_Location': workNotifData.work_location || validation.destination_country || 'N/A',\n        'Work_Sector': workNotifData.sector || 'N/A',\n        \n        // --- DOCUMENT GELDIGHEID ---\n        'Identity_Expiry_Date': identityData.expiry_date || report.document_validity_check?.identity_document_expiry || 'N/A',\n        'Safety_Cert_Expiry': safetyData.expiry_date || report.document_validity_check?.safety_certificate_expiry || 'N/A',\n        'Document_Validity_Status': report.document_validity_check?.validity_status || 'UNKNOWN',\n        \n        // --- CONSISTENTIE CHECKS ---\n        'Name_Consistency': report.personal_data_comparison?.name?.status || 'UNKNOWN',\n        'Birth_Date_Consistency': report.personal_data_comparison?.birth_date?.status || 'UNKNOWN',\n        'Personal_ID_Consistency': report.personal_data_comparison?.personal_identifier?.status || 'UNKNOWN',\n        'Nationality_Consistency': report.personal_data_comparison?.nationality?.status || 'UNKNOWN',\n        \n        // --- CROSS-DOCUMENT CHECKS ---\n        'Work_Periods_Align': report.cross_document_consistency?.work_periods_align || 'UNKNOWN',\n        'Employer_Consistency': report.cross_document_consistency?.employer_consistency || 'UNKNOWN',\n        'Location_Consistency': report.cross_document_consistency?.location_consistency || 'UNKNOWN',\n        'EU_Regulation_Compliance': report.cross_document_consistency?.eu_regulation_compliance || 'UNKNOWN',\n        \n        // --- ISSUES & TOTALEN ---\n        'Total_Documents_Processed': data.total_documents_processed || validation.documents_validated?.length || 0,\n        'Critical_Issues_Count': data.critical_issues_count || 0,\n        'Warning_Count': (report.flags_and_warnings || []).filter(f => f.type === 'WARNING').length,\n        'Error_Count': (report.flags_and_warnings || []).filter(f => f.type === 'ERROR').length,\n        'Critical_Count': (report.flags_and_warnings || []).filter(f => f.type === 'CRITICAL').length,\n            \n        // --- BELANGRIJKSTE ISSUES (maximaal 3) ---\n        'Primary_Issues': (report.flags_and_warnings || [])\n            .slice(0, 3)\n            .map(f => `${f.type}: ${f.message}`)\n            .join(' | ') || 'None',\n            \n        // --- AANBEVELINGEN (maximaal 2) ---\n        'Top_Recommendations': (report.recommendations || [])\n            .slice(0, 2)\n            .join(' | ') || 'None'\n    };\n}\n\n/**\n * Escapet speciale karakters in een string om het veilig te gebruiken in XML.\n * @param {string | null | undefined} unsafe - De input string.\n * @returns {string} De veilige string voor XML.\n */\nfunction escapeXml(unsafe) {\n    if (unsafe === null || unsafe === undefined) return '';\n    return String(unsafe)\n        .replace(/&/g, \"&amp;\")\n        .replace(/</g, \"&lt;\")\n        .replace(/>/g, \"&gt;\")\n        .replace(/\"/g, \"&quot;\")\n        .replace(/'/g, \"&#039;\");\n}\n\n// --- HOOFDLOGICA ---\n\n// 1. Extraheer de data\nconst reportData = extractUsefulData(jsonData);\n\n// 2. Genereer een veilige bestandsnaam\nconst workerName = reportData.Worker_Name || 'Unknown_Worker';\nconst cleanWorkerName = workerName.replace(/[^a-zA-Z0-9\\s-]/g, '').replace(/\\s+/g, '_');\nconst dateStr = new Date().toISOString().split('T')[0];\nconst fileName = `Validation_Report_${cleanWorkerName}_${dateStr}.xls`; // Gebruik .xls voor dit formaat\n\n// 3. Bouw de Excel XML-content op met een twee-kolommen layout\nconst excelXML = `<?xml version=\"1.0\"?>\n<?mso-application progid=\"Excel.Sheet\"?>\n<Workbook xmlns=\"urn:schemas-microsoft-com:office:spreadsheet\"\n xmlns:ss=\"urn:schemas-microsoft-com:office:spreadsheet\">\n <DocumentProperties xmlns=\"urn:schemas-microsoft-com:office:office\">\n  <Title>Document Validation Report</Title>\n  <Subject>Worker: ${escapeXml(workerName)}</Subject>\n  <Created>${new Date().toISOString()}</Created>\n </DocumentProperties>\n <Styles>\n  <Style ss:ID=\"Header\">\n   <Font ss:Bold=\"1\"/>\n  </Style>\n  <Style ss:ID=\"Pass\"><Interior ss:Color=\"#C6EFCE\" ss:Pattern=\"Solid\"/></Style>\n  <Style ss:ID=\"Fail\"><Interior ss:Color=\"#FFC7CE\" ss:Pattern=\"Solid\"/></Style>\n  <Style ss:ID=\"Warn\"><Interior ss:Color=\"#FFEB9C\" ss:Pattern=\"Solid\"/></Style>\n  <Style ss:ID=\"Default\"/>\n </Styles>\n <Worksheet ss:Name=\"Validation Report\">\n  <Table>\n    <Column ss:StyleID=\"Header\" ss:AutoFitWidth=\"1\"/>\n    <Column ss:AutoFitWidth=\"1\"/>\n${Object.entries(reportData).map(([key, value]) => {\n    const valStr = String(value).toUpperCase();\n    let valueStyleID = 'Default';\n    \n    // Logica voor celkleuren op de waarde-cel\n    if (valStr.includes('PASS') || valStr.includes('YES') || valStr.includes('MATCH') || valStr === 'TRUE') {\n        valueStyleID = 'Pass';\n    } else if (valStr.includes('FAIL') || valStr.includes('NO') || valStr.includes('MISMATCH') || valStr.includes('CRITICAL') || valStr === 'FALSE') {\n        valueStyleID = 'Fail';\n    } else if (valStr.includes('WARNING') || valStr.includes('REVIEW') || valStr.includes('UNKNOWN')) {\n        valueStyleID = 'Warn';\n    }\n    \n    // Genereer een rij met twee cellen: een voor de key (header) en een voor de value\n    return `    <Row>\n     <Cell><Data ss:Type=\"String\">${escapeXml(key.replace(/_/g, ' '))}</Data></Cell>\n     <Cell ss:StyleID=\"${valueStyleID}\"><Data ss:Type=\"String\">${escapeXml(String(value ?? ''))}</Data></Cell>\n    </Row>`;\n}).join('\\n')}\n  </Table>\n </Worksheet>\n</Workbook>`;\n\n// 4. Log de output voor debugging\nconsole.log(`Excel-bestand gegenereerd voor: ${workerName}`);\nconsole.log(`Bestandsnaam: ${fileName}`);\n\n// 5. Return de data met alleen het binaire Excel-bestand\nreturn {\n    json: {\n        ...jsonData, // Behoud de originele input data voor eventuele volgende nodes\n        excelGenerated: true,\n        excelFilename: fileName,\n        reportSummary: {\n            decision: reportData.Decision,\n            status: reportData.Overall_Status,\n            criticalIssues: reportData.Critical_Issues_Count,\n            totalDocuments: reportData.Total_Documents_Processed\n        }\n    },\n    binary: {\n        // Behoud eventuele bestaande binaire data van vorige nodes\n        ...($input.first().binary || {}), \n        // Voeg het nieuwe Excel-bestand toe. De property 'file' is een gangbare naam.\n        file: {\n            data: Buffer.from(excelXML, 'utf8').toString('base64'),\n            // Gebruik het correcte mimeType voor dit XML-spreadsheet formaat\n            mimeType: 'application/vnd.ms-excel', \n            fileName: fileName\n        }\n    }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        -48
+      ],
+      "id": "351594ba-1cce-49fd-9827-817874427bd9",
+      "name": "create xlsx"
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "json set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Attachments2": {
+      "main": [
+        [
+          {
+            "node": "Transform to base64",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "mail template",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "mail template1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mail template": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mail template1": {
+      "main": [
+        [
+          {
+            "node": "Send Email1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transform to base64": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Content Using Gemini Vision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Content Using Gemini Vision": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Extract Attachments2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "json set": {
+      "main": [
+        [
+          {
+            "node": "create xlsx",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create xlsx": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "be65a92c-692b-474b-ae87-1e3b081f199d",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-07-24T11:40:12.996Z",
+      "updatedAt": "2025-07-24T11:40:12.996Z",
+      "role": "workflow:owner",
+      "workflowId": "VXuIQIulp1eRWP2d",
+      "projectId": "GRYQdjzbr9zYZfKu"
+    }
+  ],
+  "tags": []
+}
