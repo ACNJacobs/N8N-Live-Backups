@@ -1,0 +1,65 @@
+{
+  "createdAt": "2025-07-30T10:07:25.433Z",
+  "updatedAt": "2025-07-30T11:48:58.000Z",
+  "id": "OVBWymQ2ThuRjfCh",
+  "name": "robotframework",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        0
+      ],
+      "id": "21db42cc-d3ca-4654-9979-6065ff9ef1ed",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "robotScript": "=\n*** Settings ***\nLibrary           SeleniumLibrary    timeout=10    implicit_wait=0.5    run_on_failure=Capture Page Screenshot\n\nSuite Setup       Set Selenium Speed    0.5s\n\n*** Variables ***\n# Login elements\n${construct_login_username}=               id:P9999_USERNAME\n${construct_login_password}=               id:P9999_PASSWORD\n${construct_login_button}=                 id:B34740940953752490\n\n# Settings page elements\n${construct_topnav_settings_button}=       id:B38060276472511646\n${construct_topnav_settings_frame}=        xpath=//iframe\n${construct_country_dropdown}=             id:P20030_COUNTRY\n${construct_country_option_nl}=            css=#P20030_COUNTRY > option:nth-child(2)\n${construct_discipline_dropdown}=          id:P20030_DISCIPLINE_ID\n${construct_discipline_option}=            css=#P20030_DISCIPLINE_ID > option:nth-child(1)\n${construct_projecttype_dropdown}=         id:P20030_PROJECT_ORDER_TYPE_ID\n${construct_projecttype_option}=           css=#P20030_PROJECT_ORDER_TYPE_ID > option:nth-child(2)\n${construct_project_text}=                 css=#P20030_PROJECT_ID .apex-item-text\n${construct_projectorder_label}=           xpath=//*[@aria-labelledby=\"P20030_PROJECT_ID_LABEL\"]\n\n# Navigation elements\n${construct_workorders_tab} =               xpath=//*[@id=\"1_navtabs\"]/li[4]/a\n${construct_workorders_tab_span}=           xpath=//ul[@id='1_navtabs']/li[4]/a/span\n${construct_tasks_tab_span}=                xpath=//ul[@id='1_navtabs']/li[1]/a/span\n${construct_workorders_heading}=            id=R27125405571817447_heading\n\n# Search elements\n${construct_search_input}=                 id:P3_SEARCH_INPUT\n${construct_search_result}=                css=.t-ContentRow-fullLink\n\n# Task elements\n${construct_task_first}=                   css=#tasks_TemplateComponent .t-ContentRow-item:nth-child(1) > .t-ContentRow-fullLink\n${construct_task_cards_link}=              xpath=//*[@id=\"R102371493976917528_Cards\"]/div/div[3]/ul/li[1]/div/a\n${construct_task_start_link}=              xpath=//li[@data-id='start']//a[contains(@class, 'a-CardView-fullLink')]\n${construct_actions_link}=                 xpath=//*[@id=\"actions_Cards\"]/div/div[3]/ul/li[3]/div/a\n${construct_action_button}=                xpath=//button[@aria-label=\"Back\"]\n\n# Frame elements\n${construct_order_details_frame}=          xpath=//iframe[@title='Order Details']\n${construct_task_details_frame}=           xpath=//iframe[contains(@src, \"task-details\")]\n${construct_scaffold_list_frame}=          xpath=//iframe[@title=\"Scaffold List\"]\n${construct_scaffold_inspection_frame}=    xpath=//iframe[@title=\"Scaffold Inspection\"]\n\n# Scaffold search elements\n${construct_scaffold_search_input}=        xpath=//*[@id=\"R103127413034527581_fr_search\"]\n${construct_scaffold_search_result}=       xpath=//*[@id=\"scaffoldlist_TemplateComponent\"]/ul/li/div/div/div/div[3]/a\n\n# Inspection elements\n${construct_inspection_next_button}=       xpath=//*[@id=\"btn-next\"]\n${construct_inspection_yes_button_1}=      xpath=//li[@data-rownum=\"1\"]//button[span[text()=\"Yes\"]]\n${construct_inspection_textarea_1}=        xpath=//li[@data-rownum=\"1\"]//textarea\n${construct_inspection_yes_button_2}=      xpath=//li[@data-rownum=\"2\"]//button[span[text()=\"Yes\"]]\n${construct_inspection_textarea_2}=        xpath=//li[@data-rownum=\"2\"]//textarea\n\n# Signature elements\n${construct_signature_canvas}=             css:#sketchpad canvas\n${construct_signature_name_input}=         xpath=//*[@id=\"P15_SIGNATURE_NAME\"]\n${construct_outcome_container}=            xpath=//*[@id=\"P15_OUTCOME_CONTAINER\"]/div[2]/div/div\n${construct_submit_button}=                xpath=//*[@id=\"B45114003076312941\"]\n\n# Data values\n${construct_project}=                      00000002 Test Automation Central\n${construct_project_order}=                000002 TA Central NL - TA Scaffolding PO Central\n${construct_search_order_number}=          7530JY\n${construct_inspection_comment_1}=         materiaal is in goede staat geen gebreken.\n${construct_inspection_comment_2}=         Ja sterk genoeg\n${construct_signature_name}=               Jacobs\n\n*** Keywords ***\nOpen Browser Naar Construct Pagina\n    # Specifieke opties voor Chrome/Edge om SSL-fouten te negeren\n    # Voor Edge, zet 'Edge' als de browser en geef de 'options' string mee\n    ${chrome_options}=    Evaluate    sys.modules['selenium.webdriver'].EdgeOptions()    sys, selenium.webdriver\n    Call Method    ${chrome_options}    add_argument    --ignore-certificate-errors\n    Call Method    ${chrome_options}    add_argument    --allow-insecure-localhost\n    # Optioneel: Voor Edge kun je ook een specifieke executable_path opgeven als de driver niet in PATH staat\n    Open Browser    https://asbtest-apps.altrad.com/ords/test/r/altrad/construct/login?request=APEX_AUTHENTICATION=TESTAUTOMATIONAUTHENTICATION    Edge    options=${chrome_options}\n    Maximize Browser Window \n\nLogin Als Testgebruiker\n    Input Text         ${construct_login_username}    TESTAUTOMATION\n    Input Text         ${construct_login_password}    TJVG4CFR9FGvzJRU5YOL\n    Click Element      ${construct_login_button}\n\nOpen Settings\n    Wait Until Element Is Visible    ${construct_topnav_settings_button}    timeout=10s\n    Click Button                     ${construct_topnav_settings_button}\n    Select Frame                     ${construct_topnav_settings_frame}\n\nSelect Country\n    Click Element      ${construct_country_dropdown}\n    Click Element      ${construct_country_option_nl}\n\nSelect Project And Project Order\n    [Documentation]    Selecteer discipline, projecttype, project en projectorder met duidelijke vertraging en juiste invoer.\n    Click Element                       ${construct_discipline_dropdown}\n    Click Element                       ${construct_discipline_option}\n    Click Element                       ${construct_projecttype_dropdown}\n    Click Element                       ${construct_projecttype_option}\n    Input Text                          ${construct_project_text}           ${construct_project}\n    Sleep                               1s\n    Press Keys                          None                                ENTER\n    Press Keys                          None                                TAB\n    Wait Until Element Is Visible       ${construct_projectorder_label}     timeout=10s\n    Press Keys                          None                                ${construct_project_order}\n    Sleep                               1s\n    Press Keys                          None                                ENTER\n    Press Keys                          None                                TAB\n    Press Keys                          None                                ENTER\n    Unselect Frame\n    Sleep                               5s\n\n*** Keywords ***\nStart Werkorder Zoeken\n    Wait Until Element Is Visible          ${construct_workorders_tab}    timeout=10s\n    Click Element                          ${construct_workorders_tab_span}\n    Wait Until Element Contains            ${construct_workorders_heading}    Workorders    timeout=10s\n    Input Text                             ${construct_search_input}    ${construct_search_order_number}\n    Sleep                                  5s\n    Click Element                          ${construct_search_result}\n    Select Frame                           ${construct_order_details_frame}\n    Execute Javascript                     window.scrollTo(0,0)\n    Click Element                          ${construct_task_first}\n    Unselect Frame\n    Select Frame                           ${construct_task_details_frame}\n    Wait Until Element Is Visible          ${construct_task_start_link}    timeout=10s\n    Click Element                          ${construct_task_start_link}\n    Wait Until Element Is Visible          ${construct_actions_link}    timeout=10s\n    Click Element                          ${construct_actions_link}\n    \n    \n    Wait Until Element Is Visible          ${construct_action_button}    timeout=10s\n    Click Element                          ${construct_action_button}\n    Unselect frame\n   \n                           \n    Select Frame                           xpath=/html/body/div[3]/div[2]/iframe\n    Click Element                          xpath=//button[@title=\"Back\"]\n    Sleep                                  5s\n    Unselect Frame\n\nGo To Tasks\n    Wait Until Element Is Visible         //*[@id=\"3_navtabs\"]/li[1]/a     timeout=10s\n    Click Element                         //*[@id=\"3_navtabs\"]/li[1]/a \n    Sleep                                 5s\n    Click Element                         ${construct_task_cards_link}\n    Unselect Frame\n    Select Frame                         ${construct_scaffold_list_frame}\n\nSearch Order    \n    Input Text                           ${construct_scaffold_search_input}    ${construct_search_order_number}\n    Press Keys                           None                                ENTER\n    Sleep                                5s\n    Click Element                        ${construct_scaffold_search_result}\n    Unselect Frame\n    Select Frame                         ${construct_scaffold_inspection_frame}\n\nScaffold Inspection\n    Click Element                        ${construct_inspection_next_button}\n    Sleep                                5s\n    Click Element                        ${construct_inspection_yes_button_1}\n    Input Text                           ${construct_inspection_textarea_1}         ${construct_inspection_comment_1}\n    Click Element                        ${construct_inspection_yes_button_2}\n    Input Text                           ${construct_inspection_textarea_2}         ${construct_inspection_comment_2}\n    Execute JavaScript                   window.scrollTo(0, document.body.scrollHeight)\n    Sleep                                5s\n\nTeken Handtekening Met Muis\n    [Documentation]    Tekent een simpele handtekening met drag and drop op het canvas\n    Wait Until Element Is Visible    ${construct_signature_canvas}    timeout=10s\n    Drag And Drop By Offset    ${construct_signature_canvas}    100    20\n    Sleep    1s\n    \nSluit Keuring    \n    Input Text        ${construct_signature_name_input}      ${construct_signature_name}\n    Click Element     ${construct_outcome_container}\n    Sleep             5s\n    Click Element     ${construct_submit_button}\n\n*** Test Cases ***\nVul Construct Formulier In En Start Werkorder\n    Open Browser Naar Construct Pagina\n    Login Als Testgebruiker\n    Open Settings\n    Select Country\n    Select Project And Project Order\n    #Start Werkorder Zoeken\n    #Go To Tasks\n    #Search Order\n    #Scaffold Inspection\n    #Teken Handtekening Met Muis\n    #Sluit Keuring"
+      },
+      "type": "n8n-nodes-robotframework.robotFramework",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        48
+      ],
+      "id": "cc4c4a3b-6bb7-4394-89d4-cd57b58721f6",
+      "name": "Robot Framework"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Robot Framework",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "1ba17c33-ca5b-4ecb-b35b-7959d0594824",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-07-30T10:07:25.435Z",
+      "updatedAt": "2025-07-30T10:07:25.435Z",
+      "role": "workflow:owner",
+      "workflowId": "OVBWymQ2ThuRjfCh",
+      "projectId": "GRYQdjzbr9zYZfKu"
+    }
+  ],
+  "tags": []
+}
