@@ -1,0 +1,204 @@
+{
+  "createdAt": "2025-05-22T18:23:36.483Z",
+  "updatedAt": "2025-09-12T14:44:14.000Z",
+  "id": "i28b7QV6xb8CbbZl",
+  "name": "PushData",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "10c4aac2-91f3-474e-a7ed-65d8282769a8",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {
+          "fileName": ""
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "3208317f-a770-4e51-8603-96e36185cc79",
+      "name": "Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ARUqguaS8bMoiyrY",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "bart",
+          "mode": "list",
+          "cachedResultName": "bart"
+        },
+        "embeddingBatchSize": 768,
+        "options": {
+          "pineconeNamespace": "scaffold"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.1,
+      "position": [
+        464,
+        0
+      ],
+      "id": "f59e9264-36b4-4f35-af8f-0712b3d013d2",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "XRHyoqGeCDrjeVTe",
+          "name": "PineconeApi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "binary",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        640,
+        176
+      ],
+      "id": "fd437ed4-cfa9-4055-9e64-2b9f39d34cfa",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 768,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        768,
+        368
+      ],
+      "id": "5d5224e8-20b3-4f5e-af2e-c560f83534d5",
+      "name": "Recursive Character Text Splitter"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        448,
+        224
+      ],
+      "id": "dad355b7-ca53-438f-8588-8aac4c379317",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "RzMqWR9wvxNArzYZ",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Twilio Trigger": {
+      "sinkId": "DG3e28f9ff7c96facf4d8758865ac91c04",
+      "subscriptionId": "DF8e5682c21b2fff24211045168197b0c1"
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "42ec595a-76b5-4d97-b4c7-2adbe2bba70a",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "createdAt": "2025-05-22T18:23:36.486Z",
+      "updatedAt": "2025-05-22T18:23:36.486Z",
+      "role": "workflow:owner",
+      "workflowId": "i28b7QV6xb8CbbZl",
+      "projectId": "GRYQdjzbr9zYZfKu"
+    }
+  ],
+  "tags": []
+}
