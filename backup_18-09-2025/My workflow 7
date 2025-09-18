@@ -1,0 +1,356 @@
+{
+  "createdAt": "2025-07-30T10:14:53.015Z",
+  "updatedAt": "2025-07-30T14:57:46.000Z",
+  "id": "kDbjVRHZ67Q7Rle0",
+  "name": "My workflow 7",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {}
+          ]
+        },
+        "joinMode": "waitForAll",
+        "options": {}
+      },
+      "id": "4e34cd03-8d96-424d-83d2-3071e287ac52",
+      "name": "Verzamel Agent Feedback2",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        -2144,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {}
+          ]
+        },
+        "joinMode": "waitForAll",
+        "options": {}
+      },
+      "id": "44ff0c2b-162a-46c9-afe0-76d19d53c33b",
+      "name": "Verzamel Agent Feedback1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        -2368,
+        432
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "0dad6f12-73a0-4fcf-9f8a-3141a24e8cdc",
+      "name": "Verstuur Rapport",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -1520,
+        336
+      ],
+      "webhookId": "7d203743-1654-47c8-9cee-69945f0f9fb6"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "09495f6b-0c80-4d76-b270-01d0bcf543af",
+      "name": "Format Rapport",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        -1728,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "chat"
+      },
+      "id": "1f940435-9511-4005-ad60-00e0e7e37595",
+      "name": "Consolidatie Agent",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1952,
+        336
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "QXikkH94Cw6TSH17",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {}
+          ]
+        },
+        "joinMode": "waitForAll",
+        "options": {}
+      },
+      "id": "367285aa-5196-49cb-b718-df3d9f2f10fa",
+      "name": "Verzamel Agent Feedback",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        -2368,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "chat"
+      },
+      "id": "4d1be9e7-94bb-4ced-be21-c1cf9656abf7",
+      "name": "Agent 4: Financieel Risico",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2592,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "chat"
+      },
+      "id": "4772377d-0095-4b16-97d7-5e0c60dc5635",
+      "name": "Agent 3: Operationeel Expert",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2592,
+        336
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "chat"
+      },
+      "id": "54829c27-94e6-4d19-a290-b176786402b9",
+      "name": "Agent 2: Commercieel Strategisch",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2592,
+        176
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "QXikkH94Cw6TSH17",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chat"
+      },
+      "id": "1824391c-10a0-4ecc-8aa2-834ed869ce82",
+      "name": "Agent 1: Juridisch Expert",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2592,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "10d634a5-476f-4a80-952b-3c714ba82867",
+      "name": "Contract Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.2,
+      "position": [
+        -2816,
+        208
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "d9e28c4f-cd01-4171-9967-7b5a2f26241b",
+      "name": "Contract Upload",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -3040,
+        208
+      ]
+    }
+  ],
+  "connections": {
+    "Verzamel Agent Feedback1": {
+      "main": [
+        [
+          {
+            "node": "Verzamel Agent Feedback2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Verzamel Agent Feedback2": {
+      "main": [
+        [
+          {
+            "node": "Consolidatie Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Rapport": {
+      "main": [
+        [
+          {
+            "node": "Verstuur Rapport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidatie Agent": {
+      "main": [
+        [
+          {
+            "node": "Format Rapport",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verzamel Agent Feedback": {
+      "main": [
+        [
+          {
+            "node": "Verzamel Agent Feedback2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 4: Financieel Risico": {
+      "main": [
+        [
+          {
+            "node": "Verzamel Agent Feedback1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Agent 3: Operationeel Expert": {
+      "main": [
+        [
+          {
+            "node": "Verzamel Agent Feedback1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent 2: Commercieel Strategisch": {
+      "main": [
+        [
+          {
+            "node": "Verzamel Agent Feedback",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Agent 1: Juridisch Expert": {
+      "main": [
+        [
+          {
+            "node": "Verzamel Agent Feedback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contract Data": {
+      "main": [
+        [
+          {
+            "node": "Agent 4: Financieel Risico",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 3: Operationeel Expert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 2: Commercieel Strategisch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Agent 1: Juridisch Expert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contract Upload": {
+      "main": [
+        [
+          {
+            "node": "Contract Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "724ad442-e972-41f7-b403-565686a9b078",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-07-30T10:14:53.017Z",
+      "updatedAt": "2025-07-30T10:14:53.017Z",
+      "role": "workflow:owner",
+      "workflowId": "kDbjVRHZ67Q7Rle0",
+      "projectId": "GRYQdjzbr9zYZfKu"
+    }
+  ],
+  "tags": []
+}
