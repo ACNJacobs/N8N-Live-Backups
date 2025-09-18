@@ -1,0 +1,207 @@
+{
+  "createdAt": "2025-08-01T07:35:58.671Z",
+  "updatedAt": "2025-08-01T08:29:25.000Z",
+  "id": "fUw8VBTnB1Wao8Pg",
+  "name": "My workflow 8",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Hotremos Scaffolding - Specific Action Items</title>\n    <style>\n        /* A4 Print-Optimized Styles */\n        body {\n            font-family: Arial, sans-serif;\n            line-height: 1.4;\n            margin: 0;\n            padding: 0;\n            color: #000;\n            background-color: white;\n            font-size: 11px;\n        }\n        .container {\n            max-width: 210mm;\n            margin: 0 auto;\n            background: white;\n            padding: 15mm;\n        }\n        .header {\n            text-align: center;\n            border-bottom: 2px solid #000;\n            padding-bottom: 10px;\n            margin-bottom: 15px;\n            page-break-after: avoid;\n        }\n        .header h1 {\n            color: #000;\n            margin: 0;\n            font-size: 18px;\n            font-weight: bold;\n        }\n        .header .subtitle {\n            color: #333;\n            font-size: 12px;\n            margin-top: 5px;\n        }\n        .section {\n            margin-bottom: 15px;\n            page-break-inside: avoid;\n        }\n        .section h2 {\n            color: #000;\n            border-left: 3px solid #000;\n            padding-left: 8px;\n            font-size: 14px;\n            font-weight: bold;\n            margin-top: 15px;\n            margin-bottom: 8px;\n            page-break-after: avoid;\n        }\n        .section h3 {\n            color: #000;\n            margin-top: 12px;\n            margin-bottom: 6px;\n            font-size: 12px;\n            font-weight: bold;\n            page-break-after: avoid;\n        }\n        .action-table {\n            width: 100%;\n            border-collapse: collapse;\n            margin: 8px 0;\n            font-size: 9px;\n            page-break-inside: avoid;\n        }\n        .action-table th {\n            background-color: #2c5aa0;\n            color: white;\n            padding: 6px 4px;\n            text-align: left;\n            font-weight: bold;\n            border: 1px solid #000;\n            font-size: 9px;\n        }\n        .action-table td {\n            padding: 6px 4px;\n            border: 1px solid #ccc;\n            vertical-align: top;\n            font-size: 9px;\n        }\n        .action-table tr:nth-child(even) {\n            background-color: #f9f9f9;\n        }\n        .hotremos-action {\n            background-color: #e8f4f8;\n            border-left: 3px solid #2c5aa0;\n        }\n        .shared-action {\n            background-color: #fff8e1;\n            border-left: 3px solid #ff9800;\n        }\n        .priority-high { \n            background-color: #000 !important; \n            color: white; \n            font-weight: bold;\n            font-size: 7px;\n            text-align: center;\n        }\n        .priority-medium { \n            background-color: #666 !important; \n            color: white; \n            font-weight: bold;\n            font-size: 7px;\n            text-align: center;\n        }\n        .priority-low { \n            background-color: #999 !important; \n            color: white; \n            font-weight: bold;\n            font-size: 7px;\n            text-align: center;\n        }\n        .hotremos-box {\n            border: 2px solid #2c5aa0;\n            padding: 8px;\n            margin: 8px 0;\n            page-break-inside: avoid;\n            background-color: #e8f4f8;\n        }\n        .hotremos-box h4 {\n            color: #2c5aa0;\n            margin-top: 0;\n            margin-bottom: 5px;\n            font-size: 11px;\n        }\n        .summary-box {\n            border: 1px solid #000;\n            padding: 8px;\n            margin: 8px 0;\n            page-break-inside: avoid;\n        }\n        .summary-box h4 {\n            color: #000;\n            margin-top: 0;\n            margin-bottom: 5px;\n            font-size: 11px;\n        }\n        .bullet-list {\n            margin: 5px 0;\n            padding-left: 15px;\n        }\n        .bullet-list li {\n            margin-bottom: 3px;\n        }\n        .highlight-hotremos {\n            background-color: #e8f4f8;\n            font-weight: bold;\n            padding: 2px 4px;\n            border: 1px solid #2c5aa0;\n        }\n        .highlight-shared {\n            background-color: #fff8e1;\n            font-weight: bold;\n            padding: 2px 4px;\n            border: 1px solid #ff9800;\n        }\n        \n        /* Print-specific styles */\n        @media print {\n            body { \n                font-size: 10px;\n                margin: 0;\n                padding: 0;\n            }\n            .container { \n                box-shadow: none;\n                margin: 0;\n                padding: 10mm;\n                max-width: none;\n            }\n            .section {\n                page-break-inside: avoid;\n                margin-bottom: 10px;\n            }\n            .action-table {\n                font-size: 8px;\n                page-break-inside: avoid;\n            }\n            .action-table th {\n                font-size: 8px;\n            }\n            .action-table td {\n                font-size: 8px;\n            }\n            .header h1 {\n                font-size: 16px;\n            }\n            .section h2 {\n                font-size: 12px;\n            }\n            .section h3 {\n                font-size: 10px;\n            }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <div class=\"header\">\n            <h1>HSE Lostock Safety Improvement Plan</h1>\n            <div class=\"subtitle\">Hotremos Scaffolding - Specific Responsibilities<br>\n            What Hotremos Must Deliver | August 2025</div>\n        </div>\n\n        <div class=\"hotremos-box\">\n            <h4>🏗️ Hotremos Scaffolding Action Items Overview</h4>\n            <p><strong>Of the 15 total action items, Hotremos has direct responsibility for 6 actions and shared responsibility for 3 actions.</strong></p>\n            <ul class=\"bullet-list\">\n                <li><span class=\"highlight-hotremos\">6 Direct Hotremos Actions</span> - Fully within Hotremos control</li>\n                <li><span class=\"highlight-shared\">3 Shared Actions</span> - Collaboration with HSE Lostock required</li>\n                <li><strong>6 Other Actions</strong> - Fully HSE Lostock responsibility</li>\n            </ul>\n        </div>\n\n        <div class=\"section\">\n            <h2>1. Direct Hotremos Responsibilities</h2>\n            <p><strong>These actions must be independently implemented and executed by Hotremos:</strong></p>\n            \n            <table class=\"action-table\">\n                <thead>\n                    <tr>\n                        <th>Item</th>\n                        <th>Action Description</th>\n                        <th>Hotremos Responsible</th>\n                        <th>Start Date</th>\n                        <th>Deadline</th>\n                        <th>Priority</th>\n                        <th>Verification Method</th>\n                    </tr>\n                </thead>\n                <tbody>\n                    <tr class=\"hotremos-action\">\n                        <td><strong>1.1</strong></td>\n                        <td><strong>Enhanced Competence Program</strong><br>Monthly competency assessments by certified Hotremos instructor. Immediate downgrade/removal for non-compliance.</td>\n                        <td>Hotremos Training Manager</td>\n                        <td>Aug 5, 2025</td>\n                        <td>Aug 30, 2025</td>\n                        <td class=\"priority-high\">HIGH</td>\n                        <td>Monthly assessment records, certification tracking database</td>\n                    </tr>\n                    <tr class=\"hotremos-action\">\n                        <td><strong>1.2</strong></td>\n                        <td><strong>Rigorous Personnel Selection Process</strong><br>Implement competency questionnaire and document verification system. Additional training for deficiencies.</td>\n                        <td>Hotremos HR Coordinator</td>\n                        <td>Aug 1, 2025</td>\n                        <td>Aug 15, 2025</td>\n                        <td class=\"priority-high\">HIGH</td>\n                        <td>Pre-employment test results, training records</td>\n                    </tr>\n                    <tr class=\"hotremos-action\">\n                        <td><strong>1.4</strong></td>\n                        <td><strong>Structured Team Management</strong><br>Form dedicated teams (10 workers + 1 supervisor) with individual safety accountability.</td>\n                        <td>Hotremos Site Supervisor</td>\n                        <td>Aug 7, 2025</td>\n                        <td>Aug 21, 2025</td>\n                        <td class=\"priority-medium\">MEDIUM</td>\n                        <td>Team allocation charts, supervisor reports</td>\n                    </tr>\n                    <tr class=\"hotremos-action\">\n                        <td><strong>1.5</strong></td>\n                        <td><strong>Team Responsibility Matrix</strong><br>Create clear accountability framework for each team's safety performance.</td>\n                        <td>Hotremos Quality Manager</td>\n                        <td>Aug 10, 2025</td>\n                        <td>Aug 24, 2025</td>\n                        <td class=\"priority-low\">LOW</td>\n                        <td>Documented responsibility matrix, team acknowledgments</td>\n                    </tr>\n                    <tr class=\"hotremos-action\">\n                        <td><strong>1.6</strong></td>\n                        <td><strong>Daily Scaffolding Inspections</strong><br>Assign dedicated scaffolding inspector for comprehensive daily checks and tagging.</td>\n                        <td>Hotremos Chief Inspector</td>\n                        <td>Aug 5, 2025</td>\n                        <td>Aug 12, 2025</td>\n                        <td class=\"priority-high\">HIGH</td>\n                        <td>Daily inspection checklists, photo documentation</td>\n                    </tr>\n                    <tr class=\"hotremos-action\">\n                        <td><strong>3.3</strong></td>\n                        <td><strong>PPE Program (Scaffolding-specific)</strong><br>Enhanced PPE compliance monitoring and replacement program for scaffolding activities.</td>\n                        <td>Hotremos Safety Officer</td>\n                        <td>Aug 8, 2025</td>\n                        <td>Aug 25, 2025</td>\n                        <td class=\"priority-high\">HIGH</td>\n                        <td>PPE compliance spot checks, replacement records</td>\n                    </tr>\n                </tbody>\n            </table>\n        </div>\n\n        <div class=\"section\">\n            <h2>2. Shared Responsibilities</h2>\n            <p><strong>These actions require close collaboration between Hotremos and HSE Lostock:</strong></p>\n            \n            <table class=\"action-table\">\n                <thead>\n                    <tr>\n                        <th>Item</th>\n                        <th>Action Description</th>\n                        <th>Hotremos Role</th>\n                        <th>HSE Lostock Role</th>\n                        <th>Deadline</th>\n                        <th>Priority</th>\n                    </tr>\n                </thead>\n                <tbody>\n                    <tr class=\"shared-action\">\n                        <td><strong>1.3</strong></td>\n                        <td><strong>Additional On-Site HSE Support</strong><br>Deploy extra HSE officer regardless of contractual staff ratios.</td>\n                        <td>Facilitate access, collaborate with additional HSE officer</td>\n                        <td>Budget approval, recruitment and deployment of additional HSE personnel</td>\n                        <td>Aug 10, 2025</td>\n                        <td class=\"priority-medium\">MEDIUM</td>\n                    </tr>\n                    <tr class=\"shared-action\">\n                        <td><strong>2.3</strong></td>\n                        <td><strong>Enhanced Hazard Identification Program</strong><br>Support operatives in hazard identification and Take 5 processes through hands-on coaching.</td>\n                        <td>Training scaffolders, implementing Take 5 procedures</td>\n                        <td>Overall program coordination, coaching support</td>\n                        <td>Sep 30, 2025</td>\n                        <td class=\"priority-medium\">MEDIUM</td>\n                    </tr>\n                    <tr class=\"shared-action\">\n                        <td><strong>3.5</strong></td>\n                        <td><strong>Contractor Safety Integration</strong><br>Strengthen contractor safety requirements and monitoring systems.</td>\n                        <td>Compliance with all contractor safety requirements, transparent reporting</td>\n                        <td>Establishing contractor safety standards, monitoring and auditing</td>\n                        <td>Sep 10, 2025</td>\n                        <td class=\"priority-medium\">MEDIUM</td>\n                    </tr>\n                </tbody>\n            </table>\n        </div>\n\n        <div class=\"section\">\n            <h2>3. Hotremos Resource Requirements</h2>\n            \n            <div class=\"summary-box\">\n                <h4>Personnel Allocation (Hotremos Side)</h4>\n                <ul class=\"bullet-list\">\n                    <li><strong>Training Manager:</strong> 0.5 FTE for competency program (1.1)</li>\n                    <li><strong>HR Coordinator:</strong> 0.2 FTE for selection process (1.2)</li>\n                    <li><strong>Chief Inspector:</strong> 1.0 FTE for daily inspections (1.6)</li>\n                    <li><strong>Team Supervisors:</strong> 1 per 10 workers (1.4)</li>\n                    <li><strong>Safety Officer:</strong> 0.3 FTE for PPE program (3.3)</li>\n                </ul>\n            </div>\n\n            <div class=\"summary-box\">\n                <h4>Estimated Costs for Hotremos</h4>\n                <ul class=\"bullet-list\">\n                    <li><strong>Additional Supervisors:</strong> €18,000 for 6 months</li>\n                    <li><strong>Training & Certification:</strong> €8,000 (competency assessments)</li>\n                    <li><strong>Inspection Equipment:</strong> €3,000 (tools, cameras, tablets)</li>\n                    <li><strong>PPE Upgrades:</strong> €5,000 (enhanced equipment)</li>\n                    <li><strong>Administration & Documentation:</strong> €2,000</li>\n                    <li><strong>Total Hotremos Investment:</strong> €36,000</li>\n                </ul>\n                <p><em>Note: Of the total project costs (£105,000), approximately 1/3 is Hotremos' responsibility.</em></p>\n            </div>\n        </div>\n\n        <div class=\"section\">\n            <h2>4. Hotremos Implementation Timeline</h2>\n            \n            <div class=\"summary-box\">\n                <h4>Week 1 (August 1-7):</h4>\n                <ul class=\"bullet-list\">\n                    <li>Start personnel selection strengthening (1.2)</li>\n                    <li>Planning competency assessment program (1.1)</li>\n                    <li>Recruitment of chief inspector (1.6)</li>\n                </ul>\n                \n                <h4>Week 2 (August 8-14):</h4>\n                <ul class=\"bullet-list\">\n                    <li>Implementation of daily inspections (1.6)</li>\n                    <li>Start PPE compliance program (3.3)</li>\n                    <li>Begin team formation (1.4)</li>\n                </ul>\n                \n                <h4>Week 3-4 (August 15-28):</h4>\n                <ul class=\"bullet-list\">\n                    <li>Completion of team structure (1.4)</li>\n                    <li>First competency assessments (1.1)</li>\n                    <li>Finalization of responsibility matrix (1.5)</li>\n                </ul>\n                \n                <h4>Month 2-3 (September-October):</h4>\n                <ul class=\"bullet-list\">\n                    <li>Full operational status of all Hotremos actions</li>\n                    <li>First performance reviews and KPI measurements</li>\n                    <li>Potential adjustments based on results</li>\n                </ul>\n            </div>\n        </div>\n\n        <div class=\"section\">\n            <h2>5. Success Metrics for Hotremos</h2>\n            \n            <div class=\"hotremos-box\">\n                <h4>🎯 Hotremos-Specific KPIs</h4>\n                <ul class=\"bullet-list\">\n                    <li><strong>Competency Pass Rate:</strong> 95%+ in monthly assessments</li>\n                    <li><strong>Daily Inspection Completion:</strong> 100% of working days</li>\n                    <li><strong>PPE Compliance (Scaffolders):</strong> 100% during spot checks</li>\n                    <li><strong>Team Supervisor Ratio:</strong> Maintained 1:10 ratio</li>\n                    <li><strong>Incident Rate (Scaffolding-related):</strong> 75% reduction</li>\n                    <li><strong>Take 5 Completion:</strong> 100% of scaffolding work begins with Take 5</li>\n                </ul>\n                \n                <p><strong>Target:</strong> All Hotremos KPIs at target level within 3 months.</p>\n            </div>\n        </div>\n\n        <div class=\"section\">\n            <h2>6. Hotremos Commitments Summary</h2>\n            \n            <div class=\"hotremos-box\">\n                <h4>🤝 What Hotremos Commits To</h4>\n                <ul class=\"bullet-list\">\n                    <li>✅ <strong>Investment of €36,000</strong> in safety improvements</li>\n                    <li>✅ <strong>6 Concrete Action Items</strong> fully implemented within deadline</li>\n                    <li>✅ <strong>3 Shared Responsibilities</strong> proactively supported</li>\n                    <li>✅ <strong>Monthly Reporting</strong> of all KPIs and progress</li>\n                    <li>✅ <strong>Complete Transparency</strong> in all safety-related activities</li>\n                    <li>✅ <strong>Continuous Improvement</strong> based on performance data</li>\n                </ul>\n                \n                <p><strong>These commitments demonstrate Hotremos' dedication to the highest safety standards and professional collaboration with HSE Lostock.</strong></p>\n            </div>\n        </div>\n\n        <div style=\"margin-top: 20px; text-align: center; color: #666; border-top: 1px solid #ccc; padding-top: 10px;\">\n            <p><strong>Hotremos Scaffolding - Specific Action Items Extract</strong><br>\n            Extracted from: HSE Lostock Enhanced Safety Improvement Plan v2.0<br>\n            Document Date: July 31, 2025 | Status: For Hotremos Review</p>\n        </div>\n    </div>\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        128,
+        80
+      ],
+      "id": "111cf4e4-0f04-48d6-889e-72480a0f0d16",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://pdfmaker.reffey.nl/forms/chromium/convert/html",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "drawing.pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        752,
+        80
+      ],
+      "id": "7d98b7cf-219a-406e-a2c0-58fb073cc6aa",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "56ddeb35-240e-44eb-87e5-d2d63bb6b6f3",
+              "name": "html",
+              "value": "={{ $json.html.base64Encode() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        80
+      ],
+      "id": "77aa1521-9ee5-478c-99ae-cde0ca9c79ce",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "toBinary",
+        "sourceProperty": "html",
+        "options": {
+          "fileName": "index.html",
+          "mimeType": "text/html"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        80
+      ],
+      "id": "a8b21d6c-77bc-4f9e-874c-729e3b3a3100",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "fromEmail": "ai@go-knowledge.nl",
+        "toEmail": "=ton.jacobs@go-knowledge.nl",
+        "subject": "={{ $('On form submission').item.json[\"Iso drawing\"].filename }}",
+        "emailFormat": "text",
+        "text": "Als ik deze gegeven opsla in een database kan ik een planning maken voor de werkplaats. Je kan alle meters van die diameter bij elkaar optellen van alle tekeningen en dat in een keer verwerken. Dit kan de productie versnellen. ",
+        "options": {
+          "attachments": "=drawing.pdf"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        912,
+        -96
+      ],
+      "id": "5e60228a-bfb0-4ead-97b9-c7e02674ac30",
+      "name": "Send email",
+      "webhookId": "6329f052-e7a7-4078-b065-1256a769bcde",
+      "credentials": {
+        "smtp": {
+          "id": "yG4Ihfi7vhKZzG49",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -192,
+        64
+      ],
+      "id": "9d4ca83f-1b47-4efb-9785-b7bed4ac5460",
+      "name": "On form submission",
+      "webhookId": "26037565-0b50-425b-9de2-7b82747e2b58"
+    }
+  ],
+  "connections": {
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "0f613020-7c48-4ccb-9e52-5b339a320948",
+  "triggerCount": 0,
+  "shared": [
+    {
+      "createdAt": "2025-08-01T07:35:58.675Z",
+      "updatedAt": "2025-08-01T07:35:58.675Z",
+      "role": "workflow:owner",
+      "workflowId": "fUw8VBTnB1Wao8Pg",
+      "projectId": "GRYQdjzbr9zYZfKu"
+    }
+  ],
+  "tags": []
+}
