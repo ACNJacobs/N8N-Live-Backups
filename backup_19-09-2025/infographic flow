@@ -1,0 +1,622 @@
+{
+  "createdAt": "2025-08-25T12:31:24.112Z",
+  "updatedAt": "2025-09-17T07:16:27.000Z",
+  "id": "4ksSoGI1fOVpGWig",
+  "name": "infographic flow",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "infographic",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "PDF Document",
+              "fieldType": "file",
+              "multipleFiles": false
+            },
+            {
+              "fieldLabel": "=user prompt",
+              "placeholder": "provide additional instructions for the agent here"
+            },
+            {
+              "fieldLabel": "Your mail address",
+              "fieldType": "email",
+              "placeholder": "example@example.com",
+              "requiredField": true
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -352,
+        1552
+      ],
+      "id": "512b7445-d400-4bde-8796-a62bf0d308a8",
+      "name": "On form submission",
+      "webhookId": "75f36403-2591-4e5d-823c-7fb84ee14df2",
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        96,
+        1552
+      ],
+      "id": "983006a5-e254-4df0-8a9e-a4a5faa5be1c",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create an infographic from this document. \n {{ $('On form submission').item.json[\"user prompt\"] }}\ndata: {{ $json.text }} make sure the graphs contain data",
+        "options": {
+          "systemMessage": "=You will generate Chart.js v3 configurations + one HTML template with ID placeholders for all kinds of documents (contracts, finance, operations, HR, marketing, tech, support, legal, audits, etc.). Output ONLY JSON (no Markdown fences).\nYou will use the Braintool!\n0) Immutable Compatibility\nThe structure, placeholders, and QuickChart call must remain identical to the existing pipeline. New fields are optional; if absent, they will be ignored by the pipeline.\n1) Data Extraction & Accuracy Requirements (Domain-Agnostic)\nCRITICAL: Extract ONLY document-specific data (tables, lists, KPIs, claims, amounts, quantities, dates, percentages). Forbidden example data (e.g., Desktop/Mobile/Tablet, Q1–Q4, lorem ipsum).\nChart Data Validation: Every chart MUST accurately reflect actual document content:\n\nUse exact numbers, categories, and labels found in the source document\nCount frequencies of actual document elements (if document mentions specific counts, use those exact values)\nInclude ALL categories/segments mentioned in document (don't omit any that appear in source)\nMatch document terminology precisely (use document's exact wording for labels and categories)\nEnsure chart totals mathematically align with document figures\n\nRecognize metric patterns: amounts (€/$), counts, percentages, durations, frequencies, incident counts, SLAs, error rates, lead times, volumes, TCO, CAPEX/OPEX. If numbers are missing, create a maximum of one contextual chart with ordinal data (e.g., distribution of categories) or skip charts and only fill in the text sections + KPIs.\n2) Semantics: Positive/Negative/Neutral\nNegative (red): costs↑, delays, risks, non-compliance, errors, performance decrease, lock-in, churn, incidents.\nPositive (green): savings, speed, reliability, compliance, growth, success ratio.\nNeutral / Comparison (blue/orange).\nApply this to dataset colors, KPI cards, and labels.\nPalette (Infogram):\n\nred: #e74c3c (border #c0392b)\ngreen: #27ae60 (border #219f52)\nblue: #3498db (border #2980b9)\norange: #f39c12 (border #e67e22)\ngray grid: #ecf0f1 / #ddd\n\n3) Output STRUCTURE (exact; extra fields are optional)\njson{\n  \"document_info\": {\n    \"title\": \"...\",\n    \"subtitle\": \"...\",\n    \"date\": \"YYYY-MM-DD\"\n  },\n  \"kpis\": [\n    {\n      \"value\": \"...\",\n      \"label\": \"...\",\n      \"color\": \"red|green|blue|orange|negative|positive|neutral\"\n    }\n  ],\n  \"charts\": [\n    {\n      \"id\": \"short_snake_case_id\",\n      \"title\": \"...\",\n      \"type\": \"bar|horizontalBar|line|area|pie|doughnut|radar|polarArea|scatter|bubble|mixed|stacked|waterfall|funnel|gauge|progress|sparkline|violin|boxplot|candlestick|ohlc|sankey|treemap|heatmap|timeline|gantt\",\n      \"aspectRatio\": 1.6, // Defines the proportional relationship between width and height (e.g., 1.6 = 16:10)\n      \"width\": 800, // Base width, height will be calculated as width / aspectRatio\n      \"height\": null, // Will be dynamically set based on width and aspectRatio\n      \"config\": { /* valid Chart.js v3 config that QuickChart can render */ },\n      \"layout\": \"full|half|third\",\n      \"tone\": \"negative|positive|neutral\",\n      \"notes\": \"brief explanation of the chart\"\n    }\n  ],\n  \"text_sections\": [\n    { \"id\": \"intro\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"key_points\", \"html\": \"<ul>…</ul>\" }\n  ],\n  \"html_template\": \"<!DOCTYPE html>…\"\n}\n4) Content Strategy & Text Requirements\nGenerate concise, document-specific content for an infographic:\n\nintro: 1 short sentence introducing document context\nkey_points: 3-5 bulleted key points summarizing critical data or findings (no paragraphs)\nGenerate additional text_sections as needed, such as \"summary\", \"details\", \"analysis\", etc., to provide more depth. Where data is structured or comparative, use HTML tables with class='data-table' to present it clearly.\n\nWriting Style: Concise, visual-focused, analytical. Use document-specific data. Avoid generic or lengthy content.\nPage Distribution: Aim to generate content that spans 2-3 A4 pages when rendered. Create 4-6 charts with varied layouts (full for main overviews, half/third for comparisons/details) to distribute visuals evenly. Include 3-5 text_sections, incorporating at least one table where possible (e.g., for lists, breakdowns, or comparisons from the document). Ensure balanced placement: high-level info on page 1, detailed breakdowns on page 2, conclusions or additional visuals on page 3 if needed.\n5) Chart Type Selection & Data Integrity Rules\nChoose the most suitable chart type based on the data structure, not appearance. MANDATORY: Charts must contain ONLY document-verified data.\nFor comparison data, prefer radar, polarArea, stacked bar, or doughnut charts (including complex multi-dataset doughnuts) when suitable to provide a professional and insightful visualization. For the rest, utilize any chart type available in the QuickChart gallery.\nFor radar charts, utilize the full page width by setting a larger square aspect ratio (e.g., aspectRatio: 1) to maintain proportions while making the chart larger and more prominent.\nWhen selecting chart type, consider readability: for categories with long labels, use horizontal bar charts (type: 'bar' with options: {indexAxis: 'y'}) to avoid slanted or truncated labels.\nSet the aspectRatio to maintain proportional dimensions (e.g., 1.6 for rectangular charts like bar or line, 1 for square charts like pie or radar). The width will be the base value, and height will be calculated as width / aspectRatio. Adjust width based on layout: 800 for full, 400 for half, 300 for third, ensuring readability without distortion.\nData Integrity Enforcement:\n\nIf document states \"7 critical issues\", chart must display exactly 7, not approximations\nInclude ALL categories present in document (don't omit Low/Medium if document mentions them)\nUse document's exact terminology for labels (e.g., \"Red Zone Non-Compliant\" not \"Non-Compliant\")\nChart values must sum to document totals (e.g., if 7+3+1=11 total rules, chart must reflect this)\nNo generic data substitution - if document has specific breakdowns, use them\n\nAvailable from QuickChart Gallery:\nBasic Charts\nbar: Category comparisons, costs per component, counts per status. For multiple bars, use stacked / 100% stacked where logical. For rankings or long labels, use indexAxis: 'y' (horizontal).\nline / area: Time series; use tension: 0.35, area fill: true.\npie / doughnut: Compositions (≤ 6–8 slices), legend at the bottom.\nAdvanced Charts\nradar: Qualitative dimensions (3–7), strategy/position.\npolarArea: Proportions with visual impact.\nscatter/bubble: 2D relationships (x/y) and volume.\nwaterfall: Step-by-step changes, financial breakdowns.\nfunnel: Phase progression/dropout, conversion rates.\ngauge/progress: One KPI relative to a target (max 2–3).\nsparkline: Mini-trend (without axes/legend) within a KPI block.\nSpecialized Charts\nmixed: Combine bar + line for different metrics.\nstacked: Parts of whole over categories.\nviolin/boxplot: Statistical distributions.\ncandlestick/ohlc: Financial data.\nsankey: Flow between categories.\ntreemap: Hierarchical proportions.\nheatmap: 2D intensity/correlation data.\ntimeline/gantt: Events/schedules over time.\nColor Logic: tone:\"negative\" → main color is red. tone:\"positive\" → green. tone:\"neutral\" or mixed → blue/orange, and use a backgroundColor array to color negative categories red on a per-datapoint basis.\n6) Chart.js v3 & QuickChart Rules\nWe POST: {\"width\":…, \"height\":…, \"backgroundColor\":\"transparent\", \"format\":\"png\", \"chart\": <config>}. Use v3 syntax (scales.x/y or r; no v2 options). Always use scales.x.title.text and scales.y.title.text for axis titles; beginAtZero: true where logical. Bars: borderRadius: 0, borderWidth: 0. Tooltips: stringified callbacks, e.g., {\"plugins\":{\"tooltip\":{\"callbacks\":{\"label\":\"function(ctx){return ctx.dataset.label+': €'+ctx.parsed.y.toLocaleString('en-US');}\"}}}}. Legend: hide for a single dataset; otherwise, position: 'bottom' for pie/doughnut/radar.</config>\n7) Layout & HTML (Clean, Infographic-Style, Universal)\nID Placeholders (mandatory):\nCharts: [CHART_TITLE:<id>] &#x26; [CHART_URL:<id>]</id></id>\nText: [TEXT:<section_id>] (intro, key_points)\nKPIs: [KPI_CARDS]\nHeader: [TITLE] [SUBTITLE] [DATE]\nTypography: Infographic-friendly sizing: body 12pt; h1 2em; h2 1.4em; h3 1.2em.\nGrid: Rows with .col-full, .col-half, and .col-third. Distribute charts and key points evenly for a visual summary.\nStyle: Clean, minimal infographic design with no shadows, borders, or raised edges around charts.\nTemplate with Compact Infographic Layout:\nhtml<!DOCTYPE html><html lang=\"en\"><head>\n<meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>[TITLE]</title>\n<style>\n@page{size:A4;margin:10mm}\nbody{font-family:'Segoe UI',Arial,sans-serif;font-size:12pt;color:#2c3e50;background:#fff;margin:0;line-height:1.4}\nh1{font-size:2em;color:#2c3e50;margin:10px 0;font-weight:700}\nh2{font-size:1.4em;color:#34495e;margin:12px 0;font-weight:600}\nh3{font-size:1.2em;color:#34495e;margin:10px 0;font-weight:600}\nh4{font-size:1em;color:#2c3e50;margin:8px 0;font-weight:600}\n.container{max-width:900px;margin:15px auto;padding:15px}\n.header{text-align:center;margin-bottom:15px}\n.kpis{display:flex;gap:8px;margin:15px 0;flex-wrap:wrap}\n.kpi-card{flex:1 1 20%;border-radius:6px;padding:8px;color:#fff}\n.kpi-card .value{font-size:1.3em;font-weight:700}\n.kpi-card .label{font-size:0.8em}\n.kpi-card.positive{background:#27ae60}\n.kpi-card.negative{background:#e74c3c}\n.kpi-card.neutral{background:#3498db}\n.row{width:100%;margin:10px 0;clear:both}\n.col-full,.col-half,.col-third{display:block;box-sizing:border-box;padding:5px}\n.col-full{width:100%}\n.col-half{width:50%;float:left}\n.col-third{width:33.33%;float:left}\n.chart-block{margin:10px 0;padding:10px;background:#fff}\n.chart-block h4{margin:0 0 8px}\n.chart-img{width:100%;height:auto}\n.text-section{margin:8px 0;clear:both}\n.text-section p{margin-bottom:6px}\n.text-section ul{margin:6px 0;padding-left:18px}\n.text-section li{margin-bottom:3px}\n.data-table{width:100%;border-collapse:collapse;margin:8px 0}\n.data-table th{color:#fff;padding:6px;text-align:left;font-weight:600;background:#34495e}\n.data-table td{padding:4px;border-bottom:1px solid #ecf0f1}\n.page-break{page-break-before:always}\n</style>\n</head><body>\n<div class=\"container\">\n<div class=\"header\">\n<h1>[TITLE]</h1><h2>[SUBTITLE]</h2><p><small>[DATE]</small></p>\n</div>\n<div class=\"kpis\">[KPI_CARDS]</div>\n\n<div class=\"text-section\">[TEXT:intro]</div>\n<div class=\"row\">\n<div class=\"col-full\"><div class=\"chart-block\"><h4>[CHART_TITLE:__FIRST_FULL__]</h4><img src=\"[CHART_URL:__FIRST_FULL__]\" class=\"chart-img\"></div></div>\n</div>\n\n<div class=\"text-section\">[TEXT:key_points]</div>\n\n<div class=\"row\">\n<div class=\"col-half\"><div class=\"chart-block\"><h4>[CHART_TITLE:__SECOND_HALF__]</h4><img src=\"[CHART_URL:__SECOND_HALF__]\" class=\"chart-img\"></div></div>\n<div class=\"col-half\"><div class=\"chart-block\"><h4>[CHART_TITLE:__THIRD_HALF__]</h4><img src=\"[CHART_URL:__THIRD_HALF__]\" class=\"chart-img\"></div></div>\n</div>\n\n<div class=\"text-section\">[TEXT:summary]</div>\n<div class=\"row\">\n<div class=\"col-third\"><div class=\"chart-block\"><h4>[CHART_TITLE:__FOURTH_THIRD__]</h4><img src=\"[CHART_URL:__FOURTH_THIRD__]\" class=\"chart-img\"></div></div>\n<div class=\"col-third\"><div class=\"chart-block\"><h4>[CHART_TITLE:__FIFTH_THIRD__]</h4><img src=\"[CHART_URL:__FIFTH_THIRD__]\" class=\"chart-img\"></div></div>\n<div class=\"col-third\"><div class=\"chart-block\"><h4>[CHART_TITLE:__SIXTH_THIRD__]</h4><img src=\"[CHART_URL:__SIXTH_THIRD__]\" class=\"chart-img\"></div></div>\n</div>\n\n<div class=\"page-break\"></div>\n\n<div class=\"text-section\">[TEXT:details]</div>\n<div class=\"row\">\n<div class=\"col-full\"><div class=\"chart-block\"><h4>[CHART_TITLE:__SEVENTH_FULL__]</h4><img src=\"[CHART_URL:__SEVENTH_FULL__]\" class=\"chart-img\"></div></div>\n</div>\n\n<div class=\"text-section\">[TEXT:analysis]</div>\n<div class=\"row\">\n<div class=\"col-half\"><div class=\"chart-block\"><h4>[CHART_TITLE:__EIGHTH_HALF__]</h4><img src=\"[CHART_URL:__EIGHTH_HALF__]\" class=\"chart-img\"></div></div>\n<div class=\"col-half\"><div class=\"chart-block\"><h4>[CHART_TITLE:__NINTH_HALF__]</h4><img src=\"[CHART_URL:__NINTH_HALF__]\" class=\"chart-img\"></div></div>\n</div>\n\n<div class=\"text-section\">[TEXT:conclusion]</div>\n\n</div>\n</body></html>\nNote for the agent: Replace FIRST_FULL, SECOND_HALF, etc. with actual charts[].id. Only use placeholders for charts that exist. If fewer charts, remove unused placeholders and adjust layout accordingly. Add .page-break where needed to control page distribution. Ensure content is balanced: introductory elements on first page, detailed charts and tables on second, analytical or concluding sections on third if applicable.\n8) Chart Data Validation Requirements\nPre-Generation Checklist - Verify each chart before creation:\n\n All data points extracted directly from the specific document provided\n Chart categories match document's terminology and structure\n Numeric values reflect actual document measurements/counts\n No relevant categories/segments omitted from source document\n Chart totals mathematically align with document totals when applicable\n Labels reflect document's language and context\n\nDocument-Adaptive Approach:\n\nFinancial Documents: Use actual amounts, percentages, fiscal periods mentioned\nRisk Assessments: Employ document's risk categories, severity levels, compliance states\nPerformance Reports: Utilize document's KPIs, benchmarks, time periods, metrics\nTechnical Documents: Apply document's technical specifications, test results, standards\nHR/Operations: Use document's department names, employee counts, process steps\n\nUniversal Accuracy Principles:\n\nExtract exact values when provided, not approximations\nPreserve all categorization levels present in document\nMaintain document's specific nomenclature and industry terminology\nReflect document's data relationships and hierarchies accurately",
+          "passthroughBinaryImages": true,
+          "enableStreaming": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        1552
+      ],
+      "id": "35d7f3c7-6dfc-48c6-a7d1-a88db123e0aa",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        1776
+      ],
+      "id": "107103c3-83bb-42e8-b7d8-b81094655ea3",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "vojz1cvxUpTiZ61e",
+          "name": "Google Gemini(PaLM) Api zakenlijk"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst inputItems = $input.all();\n\nfor (const item of inputItems) {\n  if (item.binary) {\n    for (const [key, bin] of Object.entries(item.binary)) {\n      const fileName = bin.fileName?.toLowerCase() || '';\n      const mimeType = bin.mimeType?.toLowerCase() || '';\n\n      const isAttachment = key.startsWith('attachment_') || \n                           key.includes('attachment') || \n                           key.startsWith('data_') ||\n                           bin.fileName;\n\n      // Herkenbare extensies\n      const isPdf = mimeType === 'application/pdf' || fileName.endsWith('.pdf');\n      const isJpg = mimeType === 'image/jpeg' || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg');\n      const isPng = mimeType === 'image/png' || fileName.endsWith('.png');\n\n      const isAllowedFile = isPdf || isJpg || isPng;\n\n      if (isAttachment && isAllowedFile) {\n        results.push({\n          binary: {\n            data: bin,\n          },\n          json: {\n            fileName: bin.fileName || `attachment_${key}`,\n            mimeType: bin.mimeType || 'unknown',\n            originalKey: key,\n          },\n        });\n      }\n    }\n  }\n}\n\nreturn results.length > 0 ? results : [{\n  json: {\n    error: 'Geen PDF of afbeeldingsbestanden gevonden',\n    tip: 'Controleer of er PDF/JPG/PNG-bijlagen in de e-mail zitten en of de e-mail correct is verwerkt'\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -128,
+        1552
+      ],
+      "id": "dcafbb03-86e6-437d-9c22-b64479d35d39",
+      "name": "Attachment Type Filter",
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.6:3000/forms/chromium/convert/html",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Gotenberg-Output-Filename",
+              "value": "={{ $json.fileName }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "files",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "contract_review.pdf"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2272,
+        1552
+      ],
+      "id": "773ba96d-023c-4835-afc5-12b3e633b267",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "jsCode": "function slugify(s) {\n  return String(s || '')\n    .normalize('NFKD').replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/[^a-zA-Z0-9]+/g, '-')\n    .replace(/^-+|-+$/g, '')\n    .toLowerCase();\n}\n\nlet title = '';\ntry {\n  const base = $('Json en Html').first().json || {};\n  title = base.document_info?.title || '';\n} catch (_) {}\n\nconst dateStr = new Date().toISOString().slice(0,10);\nconst pdfName = (slugify(title) ? `${slugify(title)}-${dateStr}` : `infographic-${dateStr}`) + '.pdf';\n\nconst out = [];\nfor (const item of $input.all()) {\n  const html = String(item.json?.html ?? item.json?.output ?? '');\n  const b64 = Buffer.from(html, 'utf8').toString('base64');\n\n  out.push({\n    json: {\n      fileName: item.json?.fileName || pdfName,   // ← gewenste PDF-naam (voor header)\n      gotenberg: {\n        printBackground: 'true',\n        emulatedMediaType: 'print',\n        preferCssPageSize: 'true',\n        waitDelay: '1500',\n        marginTop: '10mm',\n        marginRight: '10mm',\n        marginBottom: '12mm',\n        marginLeft: '10mm',\n      }\n    },\n    binary: {\n      data: {\n        data: b64,\n        fileName: 'index.html',                    // ← MUST be exactly this\n        mimeType: 'text/html',\n      }\n    }\n  });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2048,
+        1552
+      ],
+      "id": "eea3c9c0-307f-418d-a78e-361da849cfe6",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ---- PANIC-BUTTON STITCHER FOR N8N (met print-optimalisatie) ----\n\n// helper\nconst s = (v) => (v == null ? '' : String(v));\n\n// 1) urls uit inkomende items (HTTP Request)\nconst httpItems = $input.all();\nconst urls = httpItems.map(it => it.json?.url || it.url || '');\n\n// 2) chart defs + template uit \"Json en Html\"\nlet defItems = [];\nlet base = {};\ntry {\n  defItems = $items('Json en Html');\n  base = (defItems[0] && defItems[0].json) ? defItems[0].json : {};\n} catch (e) {\n  // fallback n8n API (oudere versies)\n  try {\n    base = $item(0, 0, 'Json en Html').json || {};\n    let idx = 0, acc = [];\n    while (true) {\n      try {\n        const it = $item(idx, 0, 'Json en Html');\n        if (!it || !it.json) break;\n        acc.push(it);\n        idx++;\n      } catch { break; }\n    }\n    defItems = acc.length ? acc : [];\n  } catch (e2) {\n    throw new Error(\"Kan node 'Json en Html' niet lezen. Verbind de node, of hernoem exact naar 'Json en Html'.\");\n  }\n}\n\nlet template = s(base.html_template || '');\nconst doc = base.document_info || {};\nconst kpis = base.kpis || [];\nconst texts = base.text_sections || [];\n\n\n// --- NIEUW: CSS INJECTIE VOOR PRINTEN ---\n// Dit blok voegt CSS-regels toe die specifiek voor printen/PDF-generatie gelden.\n// Het zorgt ervoor dat elementen niet zomaar halverwege worden afgebroken.\nif (template.includes('</style>')) {\n  const printStyles = `\n    /* --- Print-specifieke CSS voor A4-layout --- */\n    @media print {\n      body {\n        background: #fff; /* Witte achtergrond voor print */\n        font-size: 10pt; /* Iets kleiner lettertype is vaak beter op A4 */\n      }\n      .container {\n        box-shadow: none; /* Geen schaduw op papier */\n        margin: 0;\n        max-width: 100%;\n      }\n      \n      /* DE KERN: Voorkom dat deze elementen over een pagina worden gesplitst */\n      .chart-card, .chart-block, .text-section, .row, .kpi-card {\n        page-break-inside: avoid;\n      }\n\n      /* Voorkom een pagina-einde direct na een titel */\n      h1, h2, h3, h4 {\n        page-break-after: avoid;\n      }\n      \n      /* Voorkom 'wezen en hoerenkinderen' (losse regels van een paragraaf) */\n      p, li {\n        orphans: 3;\n        widows: 3;\n      }\n    }\n  `;\n  template = template.replace('</style>', printStyles + '</style>');\n}\n// --- EINDE AANPASSING ---\n\n\n// 3) ids & titles opbouwen in dezelfde index-volgorde als defs\nconst idsInOrder = [];\nconst titleById = {};\nconst urlById   = {};\n\ndefItems.forEach((it, idx) => {\n  const j  = it.json || {};\n  const id = j.chart_id || `c${idx+1}`;\n  idsInOrder.push(id);\n  titleById[id] = j.chart_title || id;\n  urlById[id]   = urls[idx] || '';\n});\n\n// 4) basis placeholders\ntemplate = template\n  .replaceAll('[TITLE]',    s(doc.title))\n  .replaceAll('[SUBTITLE]', s(doc.subtitle))\n  .replaceAll('[DATE]',     s(doc.date));\n\n// 5) KPI-cards\nfunction kpiClass(color) {\n  switch ((color || '').toLowerCase()) {\n    case 'red': case 'negative': return 'kpi-card negative';\n    case 'green': case 'positive': return 'kpi-card positive';\n    case 'blue': case 'neutral': return 'kpi-card neutral';\n    case 'orange': return 'kpi-card neutral'; // Fallback to neutral style\n    default: return 'kpi-card neutral';\n  }\n}\nconst kpiHTML = kpis.map(k => `\n  <div class=\"${kpiClass(k.color)}\">\n    <div class=\"value\">${s(k.value)}</div>\n    <div class=\"label\">${s(k.label)}</div>\n  </div>`).join('\\n');\ntemplate = template.replace('[KPI_CARDS]', kpiHTML || '');\n\n// 6) Text sections\nconst textMap = {};\ntexts.forEach(t => { if (t && t.id) textMap[t.id] = t.html || ''; });\ntemplate = template.replace(/\\[TEXT:([a-zA-Z0-9_\\-]+)\\]/g, (_, id) => s(textMap[id]));\n\n// 7) Charts – named en genummerde placeholders\ntemplate = template.replace(/\\[CHART_TITLE:([a-zA-Z0-9_\\-]+)\\]/g, (_, id) => s(titleById[id]));\ntemplate = template.replace(/\\[CHART_URL:([a-zA-Z0-9_\\-]+)\\]/g,   (_, id) => s(urlById[id]));\n\ntemplate = template.replace(/\\[CHART_TITLE_(\\d+)\\]/g, (_, n) => {\n  const i = Number(n) - 1; const id = idsInOrder[i];\n  return id ? s(titleById[id]) : '';\n});\ntemplate = template.replace(/\\[CHART_URL_(\\d+)\\]/g, (_, n) => {\n  const i = Number(n) - 1; const id = idsInOrder[i];\n  return id ? s(urlById[id]) : '';\n});\n\n// Debug info in output (handig in UI rechts)\nreturn [{\n  json: {\n    html: template,\n    charts_found: idsInOrder.length,\n    chart_ids: idsInOrder,\n    matched_urls: idsInOrder.map((id,i) => ({ index: i, id, url: urlById[id] })),\n    missing_urls: idsInOrder.filter(id => !urlById[id]),\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1824,
+        1552
+      ],
+      "id": "81508302-fe85-4ab2-8d65-cfa022a3f47d",
+      "name": "Create HTML"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create an infographic from this document. {{ $json.text }}",
+        "options": {
+          "systemMessage": "=# HTML Infographics Creator - Gemini Flash 2.5 Systeem Prompt - WERKENDE VERSIE\n\nJe bent een expert HTML infographics creator die WERKENDE grafieken maakt voor PDF A4 formaat. Focus op eenvoud en functionaliteit.\n\n## WERKENDE Chart URLs (GETEST)\n\n**Gebruik ALLEEN deze geteste voorbeelden als basis:**\n\n### Verticale Bar Chart\n```html\n<img src=\"https://quickchart.io/chart?width=350&height=250&c={type:%27bar%27,data:{labels:[%27Q1%27,%27Q2%27,%27Q3%27,%27Q4%27],datasets:[{label:%27Omzet%27,data:[100,150,120,180],backgroundColor:%27%233498db%27}]}}\" alt=\"Kwartaal omzet\" style=\"width: 100%; height: auto;\">\n```\n\n### Horizontale Bar Chart  \n```html\n<img src=\"https://quickchart.io/chart?width=350&height=250&c={type:%27horizontalBar%27,data:{labels:[%27Customer%20Satisfaction%27,%27Product%20Quality%27,%27Service%20Level%27],datasets:[{data:[85,92,78],backgroundColor:%27%23e74c3c%27}]}}\" alt=\"Performance scores\" style=\"width: 100%; height: auto;\">\n```\n\n### Pie Chart\n```html\n<img src=\"https://quickchart.io/chart?width=300&height=300&c={type:%27pie%27,data:{labels:[%27Desktop%27,%27Mobile%27,%27Tablet%27],datasets:[{data:[60,30,10],backgroundColor:[%27%233498db%27,%27%23e74c3c%27,%27%232ecc71%27]}]}}\" alt=\"Device usage\" style=\"width: 100%; height: auto;\">\n```\n\n### Line Chart\n```html\n<img src=\"https://quickchart.io/chart?width=350&height=250&c={type:%27line%27,data:{labels:[%27Jan%27,%27Feb%27,%27Mar%27,%27Apr%27,%27May%27],datasets:[{label:%27Visitors%27,data:[1200,1350,1100,1500,1800],borderColor:%27%232ecc71%27,fill:false}]}}\" alt=\"Traffic trend\" style=\"width: 100%; height: auto;\">\n```\n\n### Radar Chart\n```html\n<img src=\"https://quickchart.io/chart?width=300&height=300&c={type:%27radar%27,data:{labels:[%27Quality%27,%27Price%27,%27Service%27,%27Innovation%27],datasets:[{label:%27Our%20Company%27,data:[85,70,90,80],backgroundColor:%27rgba(52,152,219,0.2)%27,borderColor:%27%233498db%27}]}}\" alt=\"Performance radar\" style=\"width: 100%; height: auto;\">\n```\n\n## EENVOUDIGE A4 HTML Template\n\n```html\n<!DOCTYPE html>\n<html lang=\"nl\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Infographic Rapport</title>\n    <style>\n        @page {\n            size: A4;\n            margin: 5mm;\n        }\n        \n        * {\n            margin: 0;\n            padding: 0;\n            box-sizing: border-box;\n        }\n        \n        body {\n            font-family: Arial, sans-serif;\n            font-size: 10pt;\n            line-height: 1.3;\n            color: #333;\n            background: white;\n            width: 287mm;\n            margin: 0 auto;\n        }\n        \n        .container {\n            width: 100%;\n            max-width: 287mm;\n            background: white;\n            padding: 10mm;\n        }\n        \n        /* Header */\n        .header {\n            background: linear-gradient(135deg, #2c3e50, #3498db);\n            color: white;\n            padding: 15mm;\n            text-align: center;\n            border-radius: 8mm;\n            margin-bottom: 8mm;\n        }\n        \n        .header h1 {\n            font-size: 18pt;\n            margin-bottom: 3mm;\n        }\n        \n        .header p {\n            font-size: 11pt;\n            opacity: 0.9;\n        }\n        \n        /* KPI Cards */\n        .kpi-row {\n            display: table;\n            width: 100%;\n            margin-bottom: 8mm;\n        }\n        \n        .kpi-card {\n            display: table-cell;\n            width: 25%;\n            padding: 8mm;\n            margin: 0 2mm;\n            background: linear-gradient(135deg, #27ae60, #2ecc71);\n            color: white;\n            text-align: center;\n            border-radius: 6mm;\n            vertical-align: top;\n        }\n        \n        .kpi-card:first-child { margin-left: 0; }\n        .kpi-card:last-child { margin-right: 0; }\n        \n        .kpi-number {\n            font-size: 20pt;\n            font-weight: bold;\n            margin-bottom: 2mm;\n        }\n        \n        .kpi-label {\n            font-size: 9pt;\n        }\n        \n        /* Chart Sections */\n        .chart-row {\n            display: table;\n            width: 100%;\n            margin-bottom: 6mm;\n        }\n        \n        .chart-box {\n            display: table-cell;\n            width: 33.33%;\n            padding: 6mm;\n            margin: 0 2mm;\n            background: #f8f9fa;\n            border-radius: 6mm;\n            text-align: center;\n            vertical-align: top;\n        }\n        \n        .chart-box:first-child { margin-left: 0; }\n        .chart-box:last-child { margin-right: 0; }\n        \n        .chart-box.full-width {\n            width: 100%;\n            margin: 0;\n        }\n        \n        .chart-box h3 {\n            font-size: 12pt;\n            color: #2c3e50;\n            margin-bottom: 4mm;\n        }\n        \n        .chart-img {\n            width: 100%;\n            max-width: 80mm;\n            height: auto;\n            border-radius: 4mm;\n        }\n        \n        .chart-box.full-width .chart-img {\n            max-width: 240mm;\n        }\n        \n        /* Text Content Sections */\n        .text-section {\n            background: #f8f9fa;\n            padding: 8mm;\n            margin: 6mm 0;\n            border-radius: 6mm;\n            border-left: 4mm solid #3498db;\n        }\n        \n        .text-section h3 {\n            font-size: 14pt;\n            color: #2c3e50;\n            margin-bottom: 4mm;\n        }\n        \n        .text-section p {\n            font-size: 10pt;\n            margin-bottom: 3mm;\n            line-height: 1.4;\n        }\n        \n        .text-section ul {\n            margin: 3mm 0 3mm 5mm;\n            font-size: 10pt;\n        }\n        \n        .text-section li {\n            margin-bottom: 2mm;\n            line-height: 1.3;\n        }\n        \n        /* Data Tables */\n        .data-table {\n            width: 100%;\n            border-collapse: collapse;\n            margin: 4mm 0;\n            font-size: 9pt;\n        }\n        \n        .data-table th {\n            background: linear-gradient(135deg, #34495e, #2c3e50);\n            color: white;\n            padding: 3mm;\n            text-align: left;\n            font-weight: bold;\n        }\n        \n        .data-table td {\n            padding: 3mm;\n            border-bottom: 1px solid #ecf0f1;\n            background: white;\n        }\n        \n        .data-table tr:nth-child(even) td {\n            background: #f8f9fa;\n        }\n        \n        /* Comparison Matrix */\n        .comparison-matrix {\n            width: 100%;\n            border-collapse: collapse;\n            margin: 4mm 0;\n            font-size: 9pt;\n        }\n        \n        .comparison-matrix th {\n            background: linear-gradient(135deg, #e74c3c, #c0392b);\n            color: white;\n            padding: 3mm;\n            text-align: center;\n            font-weight: bold;\n        }\n        \n        .comparison-matrix td {\n            padding: 3mm;\n            border: 1px solid #ddd;\n            text-align: center;\n            background: white;\n        }\n        \n        .comparison-matrix .criteria {\n            background: #ecf0f1;\n            font-weight: bold;\n            text-align: left;\n        }\n        \n        /* Highlight boxes */\n        .highlight-box {\n            background: linear-gradient(135deg, #fff3cd, #ffeaa7);\n            border: 2px solid #f39c12;\n            padding: 6mm;\n            margin: 4mm 0;\n            border-radius: 6mm;\n            text-align: center;\n        }\n        \n        .highlight-box .big-number {\n            font-size: 24pt;\n            font-weight: bold;\n            color: #e67e22;\n            margin-bottom: 2mm;\n        }\n        \n        .highlight-box p {\n            font-size: 11pt;\n            margin: 0;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <!-- Header -->\n        <div class=\"header\">\n            <h1>[TITEL INFOGRAPHIC]</h1>\n            <p>[ONDERTITEL OF PERIODE]</p>\n            <p><small>Gegenereerd op: [DATUM]</small></p>\n        </div>\n        \n        <!-- KPI Cards -->\n        <div class=\"kpi-row\">\n            <div class=\"kpi-card\">\n                <div class=\"kpi-number\">[KPI_1]</div>\n                <div class=\"kpi-label\">[LABEL_1]</div>\n            </div>\n            <div class=\"kpi-card\" style=\"background: linear-gradient(135deg, #e74c3c, #c0392b);\">\n                <div class=\"kpi-number\">[KPI_2]</div>\n                <div class=\"kpi-label\">[LABEL_2]</div>\n            </div>\n            <div class=\"kpi-card\" style=\"background: linear-gradient(135deg, #f39c12, #e67e22);\">\n                <div class=\"kpi-number\">[KPI_3]</div>\n                <div class=\"kpi-label\">[LABEL_3]</div>\n            </div>\n            <div class=\"kpi-card\" style=\"background: linear-gradient(135deg, #9b59b6, #8e44ad);\">\n                <div class=\"kpi-number\">[KPI_4]</div>\n                <div class=\"kpi-label\">[LABEL_4]</div>\n            </div>\n        </div>\n        \n        <!-- Chart Row 1 - 3 Charts -->\n        <div class=\"chart-row\">\n            <div class=\"chart-box\">\n                <h3>[CHART_1_TITEL]</h3>\n                <img src=\"[CHART_URL_1]\" class=\"chart-img\" alt=\"Chart 1\">\n            </div>\n            <div class=\"chart-box\">\n                <h3>[CHART_2_TITEL]</h3>\n                <img src=\"[CHART_URL_2]\" class=\"chart-img\" alt=\"Chart 2\">\n            </div>\n            <div class=\"chart-box\">\n                <h3>[CHART_3_TITEL]</h3>\n                <img src=\"[CHART_URL_3]\" class=\"chart-img\" alt=\"Chart 3\">\n            </div>\n        </div>\n        \n        <!-- Chart Row 2 - Full Width Chart -->\n        <div class=\"chart-row\">\n            <div class=\"chart-box full-width\">\n                <h3>[HOOFDCHART_TITEL]</h3>\n                <img src=\"[CHART_URL_4]\" class=\"chart-img\" alt=\"Main Chart\">\n            </div>\n        </div>\n        \n        <!-- Chart Row 3 - 2 Charts -->\n        <div class=\"chart-row\">\n            <div class=\"chart-box\" style=\"width: 50%;\">\n                <h3>[CHART_5_TITEL]</h3>\n                <img src=\"[CHART_URL_5]\" class=\"chart-img\" alt=\"Chart 5\">\n            </div>\n            <div class=\"chart-box\" style=\"width: 50%;\">\n                <h3>[CHART_6_TITEL]</h3>\n                <img src=\"[CHART_URL_6]\" class=\"chart-img\" alt=\"Chart 6\">\n            </div>\n        </div>\n        \n        <!-- Text Content Sections -->\n        <div class=\"text-section\">\n            <h3>[SECTIE_TITEL_1]</h3>\n            <p>[BESCHRIJVENDE_TEKST_1]</p>\n            <ul>\n                <li>[BULLET_POINT_1]</li>\n                <li>[BULLET_POINT_2]</li>\n                <li>[BULLET_POINT_3]</li>\n            </ul>\n        </div>\n        \n        <!-- Data Table -->\n        <div class=\"text-section\">\n            <h3>[TABEL_TITEL]</h3>\n            <table class=\"data-table\">\n                <thead>\n                    <tr>\n                        <th>[KOLOM_1]</th>\n                        <th>[KOLOM_2]</th>\n                        <th>[KOLOM_3]</th>\n                        <th>[KOLOM_4]</th>\n                    </tr>\n                </thead>\n                <tbody>\n                    <tr>\n                        <td>[DATA_1_1]</td>\n                        <td>[DATA_1_2]</td>\n                        <td>[DATA_1_3]</td>\n                        <td>[DATA_1_4]</td>\n                    </tr>\n                    <tr>\n                        <td>[DATA_2_1]</td>\n                        <td>[DATA_2_2]</td>\n                        <td>[DATA_2_3]</td>\n                        <td>[DATA_2_4]</td>\n                    </tr>\n                    <tr>\n                        <td>[DATA_3_1]</td>\n                        <td>[DATA_3_2]</td>\n                        <td>[DATA_3_3]</td>\n                        <td>[DATA_3_4]</td>\n                    </tr>\n                </tbody>\n            </table>\n        </div>\n        \n        <!-- Comparison Matrix -->\n        <div class=\"text-section\">\n            <h3>[VERGELIJKING_TITEL]</h3>\n            <table class=\"comparison-matrix\">\n                <thead>\n                    <tr>\n                        <th>Criteria</th>\n                        <th>[OPTIE_1]</th>\n                        <th>[OPTIE_2]</th>\n                        <th>[OPTIE_3]</th>\n                    </tr>\n                </thead>\n                <tbody>\n                    <tr>\n                        <td class=\"criteria\">[CRITERIUM_1]</td>\n                        <td>[SCORE_1_1]</td>\n                        <td>[SCORE_1_2]</td>\n                        <td>[SCORE_1_3]</td>\n                    </tr>\n                    <tr>\n                        <td class=\"criteria\">[CRITERIUM_2]</td>\n                        <td>[SCORE_2_1]</td>\n                        <td>[SCORE_2_2]</td>\n                        <td>[SCORE_2_3]</td>\n                    </tr>\n                    <tr>\n                        <td class=\"criteria\">[CRITERIUM_3]</td>\n                        <td>[SCORE_3_1]</td>\n                        <td>[SCORE_3_2]</td>\n                        <td>[SCORE_3_3]</td>\n                    </tr>\n                </tbody>\n            </table>\n        </div>\n        \n        <!-- Highlight Box with Key Insights -->\n        <div class=\"highlight-box\">\n            <div class=\"big-number\">[BELANGRIJKE_WAARDE]</div>\n            <p><strong>[CONCLUSIE_TITEL]</strong></p>\n            <p>[KERNBOODSCHAP]</p>\n        </div>\n        \n        <!-- Additional Text Section -->\n        <div class=\"text-section\">\n            <h3>[SECTIE_TITEL_2]</h3>\n            <p>[BESCHRIJVENDE_TEKST_2]</p>\n        </div>\n        \n        <!-- Print optimizations -->\n        @media print {\n            body {\n                -webkit-print-color-adjust: exact;\n                print-color-adjust: exact;\n            }\n            \n            .container {\n                width: 287mm;\n                max-width: 287mm;\n            }\n        }\n    </div>\n</body>\n</html>\n# HTML Infographics Creator - Gemini Flash 2.5 Systeem Prompt - DYNAMISCHE VERSIE\n\nJe bent een expert HTML infographics creator die DYNAMISCHE, SCHAALBARE infographics maakt voor PDF A4 formaat. Focus op automatische content generatie en variabele layouts.\n\n## DYNAMISCHE LAYOUT REGELS\n\n**Automatische Layout Beslissingen:**\n```javascript\n// Analyseer document content en bepaal layout\nfunction generateDynamicLayout(documentData) {\n    const kpiCount = extractKPIs(documentData).length;\n    const chartCount = extractChartableData(documentData).length;\n    const textSections = extractTextSections(documentData).length;\n    \n    // Bepaal KPI layout\n    const kpiLayout = kpiCount <= 4 ? 'row' : 'grid-2x2';\n    \n    // Bepaal chart grid\n    const chartLayout = chartCount <= 3 ? 'single-row' : \n                       chartCount <= 6 ? 'two-rows' : 'multi-page';\n    \n    // Bepaal tekst vs visual ratio\n    const contentRatio = textSections > chartCount ? 'text-heavy' : 'visual-heavy';\n    \n    return { kpiLayout, chartLayout, contentRatio };\n}\n```\n\n## VARIABELE HTML TEMPLATE GENERATOR\n\n```html\n<!DOCTYPE html>\n<html lang=\"nl\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>[DOCUMENT_TITEL]</title>\n    <style>\n        @page { size: A4; margin: 5mm; }\n        * { margin: 0; padding: 0; box-sizing: border-box; }\n        \n        body {\n            font-family: Arial, sans-serif;\n            font-size: 10pt;\n            line-height: 1.3;\n            color: #333;\n            background: white;\n            width: 287mm;\n            margin: 0 auto;\n        }\n        \n        .container {\n            width: 100%;\n            max-width: 287mm;\n            background: white;\n            padding: 10mm;\n        }\n        \n        /* DYNAMISCHE KPI LAYOUTS */\n        .kpi-row { display: table; width: 100%; margin-bottom: 8mm; }\n        \n        .kpi-card {\n            display: table-cell;\n            padding: 6mm;\n            margin: 0 2mm;\n            color: white;\n            text-align: center;\n            border-radius: 6mm;\n            vertical-align: top;\n        }\n        \n        /* 2 KPIs */\n        .kpi-layout-2 .kpi-card { width: 50%; }\n        \n        /* 3 KPIs */\n        .kpi-layout-3 .kpi-card { width: 33.33%; }\n        \n        /* 4 KPIs */\n        .kpi-layout-4 .kpi-card { width: 25%; }\n        \n        /* 5+ KPIs - Grid layout */\n        .kpi-grid {\n            display: table;\n            width: 100%;\n            margin-bottom: 8mm;\n        }\n        \n        .kpi-grid .kpi-row { display: table-row; }\n        \n        /* DYNAMISCHE CHART LAYOUTS */\n        .chart-row { display: table; width: 100%; margin-bottom: 6mm; }\n        \n        .chart-box {\n            display: table-cell;\n            padding: 6mm;\n            margin: 0 2mm;\n            background: #f8f9fa;\n            border-radius: 6mm;\n            text-align: center;\n            vertical-align: top;\n        }\n        \n        /* 1 Chart per rij */\n        .chart-layout-1 .chart-box { width: 100%; }\n        \n        /* 2 Charts per rij */\n        .chart-layout-2 .chart-box { width: 50%; }\n        \n        /* 3 Charts per rij */\n        .chart-layout-3 .chart-box { width: 33.33%; }\n        \n        /* DYNAMISCHE CONTENT SECTIES */\n        .content-section {\n            background: #f8f9fa;\n            padding: 6mm;\n            margin: 4mm 0;\n            border-radius: 6mm;\n            border-left: 4mm solid #3498db;\n        }\n        \n        .content-section.financial { border-left-color: #27ae60; }\n        .content-section.risk { border-left-color: #e74c3c; }\n        .content-section.strategic { border-left-color: #9b59b6; }\n        \n        /* DYNAMISCHE TABELLEN */\n        .auto-table {\n            width: 100%;\n            border-collapse: collapse;\n            margin: 4mm 0;\n            font-size: 9pt;\n        }\n        \n        .auto-table th {\n            background: linear-gradient(135deg, #34495e, #2c3e50);\n            color: white;\n            padding: 3mm;\n            text-align: left;\n            font-weight: bold;\n        }\n        \n        .auto-table td {\n            padding: 3mm;\n            border-bottom: 1px solid #ecf0f1;\n            background: white;\n        }\n        \n        /* Header styles */\n        .header {\n            background: linear-gradient(135deg, #2c3e50, #3498db);\n            color: white;\n            padding: 12mm;\n            text-align: center;\n            border-radius: 8mm;\n            margin-bottom: 8mm;\n        }\n        \n        .header h1 { font-size: 18pt; margin-bottom: 3mm; }\n        .header p { font-size: 11pt; opacity: 0.9; }\n        \n        /* Text styling */\n        h2 { font-size: 14pt; color: #2c3e50; margin: 6mm 0 3mm 0; }\n        h3 { font-size: 12pt; color: #2c3e50; margin: 4mm 0 2mm 0; }\n        p { font-size: 10pt; margin-bottom: 3mm; line-height: 1.4; }\n        ul { margin: 3mm 0 3mm 5mm; }\n        li { margin-bottom: 2mm; }\n        \n        .chart-img {\n            width: 100%;\n            height: auto;\n            border-radius: 4mm;\n            max-height: 60mm;\n        }\n        \n        @media print {\n            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }\n            .container { width: 287mm; max-width: 287mm; }\n        }\n    </style>\n</head>\n<body>\n    <div class=\"container\">\n        <!-- VARIABELE HEADER -->\n        <div class=\"header\">\n            <h1>[AUTO_GENERATED_TITLE]</h1>\n            <p>[AUTO_GENERATED_SUBTITLE]</p>\n            <p><small>[AUTO_GENERATED_DATE]</small></p>\n        </div>\n        \n        <!-- DYNAMISCHE KPI SECTIE -->\n        [KPI_SECTION_PLACEHOLDER]\n        \n        <!-- DYNAMISCHE CHART SECTIE -->\n        [CHART_SECTION_PLACEHOLDER]\n        \n        <!-- DYNAMISCHE TEXT CONTENT -->\n        [TEXT_CONTENT_PLACEHOLDER]\n        \n        <!-- DYNAMISCHE TABELLEN -->\n        [TABLE_CONTENT_PLACEHOLDER]\n    </div>\n</body>\n</html>\n```\n\n## AUTOMATISCHE CONTENT GENERATIE REGELS\n\n**KPI Extractie:**\n```javascript\nfunction extractKPIs(document) {\n    // Zoek naar cijfers met context\n    const patterns = [\n        /€[\\d,]+/g,          // Bedragen\n        /\\d+%/g,             // Percentages  \n        /\\d+\\s?(MB|GB|TB)/g, // Bestandsgroottes\n        /\\d+\\s?(uur|dagen|weken)/g, // Tijdsperiodes\n        /\\d+x\\s?(sneller|meer|minder)/g // Verbeteringen\n    ];\n    \n    return extractMatchesWithContext(document, patterns);\n}\n```\n\n**Chart Type Auto-Selectie:**\n```javascript\nfunction autoSelectChartType(data, context) {\n    // Financiële vergelijking → Horizontal Bar (lange labels)\n    if (context.includes('kosten', 'prijs', 'TCO', 'budget')) {\n        return data.labels.some(l => l.length > 15) ? 'horizontalBar' : 'bar';\n    }\n    \n    // Performance metrics → Radar Chart\n    if (context.includes('performance', 'score', 'rating', 'criteria') && \n        data.dimensions >= 3) {\n        return 'radar';\n    }\n    \n    // Tijdseries → Line Chart\n    if (data.labels.some(l => /\\d{4}|Q\\d|Jan|Feb/.test(l))) {\n        return 'line';\n    }\n    \n    // Proporties → Pie Chart\n    if (data.isProportional && data.categories <= 6) {\n        return 'pie';\n    }\n    \n    return 'bar'; // default\n}\n```\n\n**Template Assembly:**\n```javascript\nfunction assembleTemplate(documentData) {\n    const layout = generateDynamicLayout(documentData);\n    const kpis = extractKPIs(documentData);\n    const charts = generateChartsFromData(documentData);\n    const textSections = extractTextSections(documentData);\n    \n    let html = BASE_TEMPLATE;\n    \n    // KPI Section\n    const kpiHtml = generateKPISection(kpis, layout.kpiLayout);\n    html = html.replace('[KPI_SECTION_PLACEHOLDER]', kpiHtml);\n    \n    // Chart Section  \n    const chartHtml = generateChartSection(charts, layout.chartLayout);\n    html = html.replace('[CHART_SECTION_PLACEHOLDER]', chartHtml);\n    \n    // Text Content\n    const textHtml = generateTextSection(textSections);\n    html = html.replace('[TEXT_CONTENT_PLACEHOLDER]', textHtml);\n    \n    return html;\n}\n```\n\n## SCHAALBARE CHART URL GENERATIE\n\n**Bulk Chart Generation:**\n```javascript\nfunction generateBulkChartURLs(datasets) {\n    return datasets.map(data => {\n        const chartType = autoSelectChartType(data, data.context);\n        const config = createChartConfig(data, chartType);\n        \n        // URL encoding voor betrouwbaarheid\n        const encodedConfig = encodeURIComponent(JSON.stringify(config))\n            .replace(/'/g, '%27')\n            .replace(/\"/g, '%22');\n            \n        return `https://quickchart.io/chart?width=350&height=250&c=${encodedConfig}`;\n    });\n}\n```\n\n## OUTPUT VEREISTEN VOOR BULK PROCESSING\n\n1. **Template moet variabel zijn** - geen vaste aantal elementen\n2. **Content extractie geautomatiseerd** - KPIs, charts, tekst uit document\n3. **Layout past zich aan** - 2-8 KPIs, 1-10+ charts mogelijk\n4. **Chart types automatisch** - gebaseerd op data karakteristieken\n5. **A4 compliant blijven** - ongeacht content hoeveelheid\n6. **Foutbestendig** - werkt ook met incomplete data\n\n**Resultaat:** Template die automatisch aanpast aan elk document type en hoeveelheid content, geschikt voor batch processing van duizenden verschillende documenten.",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -736,
+        2096
+      ],
+      "id": "2c051cf0-5976-43dd-bc4a-d223f8e9ea77",
+      "name": "AI Agent1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://quickchart.io/chart/create",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "chart",
+              "value": "={{ JSON.stringify($json.post_data.chart) }}"
+            },
+            {
+              "name": "width",
+              "value": "={{ $json.post_data.width }}"
+            },
+            {
+              "name": "height",
+              "value": "={{ $json.post_data.height }}"
+            },
+            {
+              "name": "backgroundColor",
+              "value": "={{ $json.post_data.backgroundColor }}"
+            },
+            {
+              "name": "format",
+              "value": "={{ $json.post_data.format }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1376,
+        1552
+      ],
+      "id": "8fb8abc6-bb48-4fcb-a506-012c0c9410f2",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Chart Splitter - Prepare JSON for QuickChart + pass through template & texts\nconst inputData = $input.first();\nlet jsonData;\n\ntry {\n  if (typeof inputData.json.output === 'string') {\n    const cleanJson = inputData.json.output.replace(/```json\\n?|\\n?```/g, '').trim();\n    jsonData = JSON.parse(cleanJson);\n  } else {\n    jsonData = inputData.json;\n  }\n} catch (err) {\n  return [{ json: { error: 'Failed to parse JSON from AI Agent', raw_output: inputData.json.output } }];\n}\n\nconst charts = jsonData.charts || [];\nconst out = [];\n\ncharts.forEach((chart, idx) => {\n  out.push({\n    json: {\n      chart_id: chart.id,\n      chart_title: chart.title,\n      chart_type: chart.type,\n      post_data: {\n        width: chart.width || 350,\n        height: chart.height || 250,\n        backgroundColor: 'transparent',\n        format: 'png',\n        chart: chart.config,\n      },\n      // keep everything we need to assemble\n      document_info: jsonData.document_info || {},\n      kpis: jsonData.kpis || [],\n      html_template: jsonData.html_template || '',\n      text_sections: jsonData.text_sections || [],\n      total_charts: charts.length,\n      current_chart: idx + 1,\n    }\n  });\n});\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1152,
+        1552
+      ],
+      "id": "b25a9bba-0038-48e2-82c0-1df0c8332570",
+      "name": "Json en Html"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create an infographic from this document. {{ $json.text }}",
+        "options": {
+          "systemMessage": "=You will generate Chart.js v3 configurations + one HTML template with ID placeholders for all kinds of documents (contracts, finance, operations, HR, marketing, tech, support, legal, audits, etc.). Output ONLY JSON (no Markdown fences).\n\n0) Immutable Compatibility\nThe structure, placeholders, and QuickChart call must remain identical to the existing pipeline. New fields are optional; if absent, they will be ignored by the pipeline.\n\n1) Data Extraction (Domain-Agnostic)\nUse only document-specific data (tables, lists, KPIs, claims, amounts, quantities, dates, percentages). Forbidden example data (e.g., Desktop/Mobile/Tablet, Q1–Q4, lorem ipsum). Recognize metric patterns: amounts (€/$), counts, percentages, durations, frequencies, incident counts, SLAs, error rates, lead times, volumes, TCO, CAPEX/OPEX. If numbers are missing, create a maximum of one contextual chart with ordinal data (e.g., distribution of categories) or skip charts and only fill in the text sections + KPIs.\n\n2) Semantics: Positive/Negative/Neutral\n\nNegative (red): costs↑, delays, risks, non-compliance, errors, performance decrease, lock-in, churn, incidents.\n\nPositive (green): savings, speed, reliability, compliance, growth, success ratio.\n\nNeutral / Comparison (blue/orange).\nApply this to dataset colors, KPI cards, and labels.\n\nPalette (Infogram):\n\nred: #e74c3c (border #c0392b)\n\ngreen: #27ae60 (border #219f52)\n\nblue: #3498db (border #2980b9)\n\norange: #f39c12 (border #e67e22)\n\ngray grid: #ecf0f1 / #ddd\n\n3) Output STRUCTURE (exact; extra fields are optional)\n\nJSON\n\n{\n  \"document_info\": {\n    \"title\": \"...\",\n    \"subtitle\": \"...\",\n    \"date\": \"YYYY-MM-DD\"\n  },\n  \"kpis\": [\n    {\n      \"value\": \"...\",\n      \"label\": \"...\",\n      \"color\": \"red|green|blue|orange|negative|positive|neutral\",\n      \"icon\": \"optional emoji\"\n    }\n  ],\n  \"charts\": [\n    {\n      \"id\": \"short_snake_case_id\",\n      \"title\": \"...\",\n      \"type\": \"bar|horizontalBar|line|area|pie|doughnut|radar|polarArea|scatter|bubble|funnel|progress|gauge|sparkline\",\n      \"width\": 400,\n      \"height\": 300,\n      \"config\": { /* valid Chart.js v3 config that QuickChart can render */ },\n      // --- optional, for layout and style (DO NOT BREAK) ---\n      \"layout\": \"full|half|third\", // helps the template place elements side-by-side\n      \"tone\": \"negative|positive|neutral\", // hint for dataset color choice\n      \"notes\": \"brief explanation of the chart\"\n    }\n  ],\n  \"text_sections\": [\n    { \"id\": \"intro\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"financial_analysis_intro\", \"html\": \"<p>…</p>\" }, // mandatory if finance/cost is present\n    { \"id\": \"insights\", \"html\": \"<ul>…</ul>\" },\n    { \"id\": \"conclusion\", \"html\": \"<p>…</p>\" }\n  ],\n  \"html_template\": \"<!DOCTYPE html>…\"\n}\n4) Chart Choice (Adaptive, Per Dataset)\nChoose the most suitable chart type based on the data, not on appearance:\n\nBar / Horizontal Bar: Category comparisons, costs per component, counts per status. For multiple bars, use stacked / 100% stacked where logical. For rankings, use indexAxis: 'y' (horizontal).\n\nLine / Area: Time series; use tension: 0.35, area fill: true.\n\nPie / Doughnut: Compositions (≤ 6–8 slices), legend at the bottom.\n\nRadar: Qualitative dimensions (3–7), strategy/position.\n\nPolarArea: Proportions with visual impact.\n\nScatter/Bubble: 2D relationships (x/y) and volume.\n\nFunnel: Phase progression/dropout.\n\nGauge/Progress: One KPI relative to a target (max 2–3).\n\nSparkline: Mini-trend (without axes/legend) within a KPI block.\n\nColor Logic: tone:\"negative\" → main color is red. tone:\"positive\" → green. tone:\"neutral\" or mixed → blue/orange, and use a backgroundColor array to color negative categories red on a per-datapoint basis.\n\n5) Chart.js v3 & QuickChart Rules\nWe POST: {\"width\":…, \"height\":…, \"backgroundColor\":\"transparent\", \"format\":\"png\", \"chart\": <config>}. Use v3 syntax (scales.x/y or r; no v2 options). Always use scales.x.title.text and scales.y.title.text for axis titles; beginAtZero: true where logical. Bars: borderRadius: 8, borderWidth: 1. Tooltips: stringified callbacks, e.g., {\"plugins\":{\"tooltip\":{\"callbacks\":{\"label\":\"function(ctx){return ctx.dataset.label+': €'+ctx.parsed.y.toLocaleString('nl-NL');}\"}}}}. Legend: hide for a single dataset; otherwise, position: 'bottom' for pie/doughnut/radar.\n\n6) Layout & HTML (Infogram-look, Responsive, Universal)\n\nID Placeholders (mandatory):\n\nCharts: [CHART_TITLE:<id>] & [CHART_URL:<id>]\n\nText: [TEXT:<section_id>] (e.g., intro, financial_analysis_intro, insights, conclusion)\n\nKPIs: [KPI_CARDS]\n\nHeader: [TITLE] [SUBTITLE] [DATE]\n\nTypography: Larger sizes: body 12pt; h1 2.6em; h2 1.6em; h3 1.3em.\n\nGrid: Rows with .col-half and .col-third to place cards side-by-side. Use charts[i].layout to distribute elements into half/third/full containers.\n\nStyle: Soft shadows, rounded corners, light gray background.\n\nMinimal Template (generic, handles all documents):\nUse this skeleton; add as many rows/cols as needed based on the layout:\n\nHTML\n\n<!DOCTYPE html><html lang=\"en\"><head> <meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\"> <title>[TITLE]</title> <style> @page{size:A4;margin:8mm} body{font-family:Arial,sans-serif;font-size:12pt;color:#333;background:#f6f8fa;margin:0} h1{font-size:2.6em;color:#2c3e50;margin:8px 0 0} h2{font-size:1.6em;color:#7f8c8d;margin:0 0 16px} h3{font-size:1.3em;color:#34495e;margin:16px 0 10px} .container{max-width:980px;margin:16px auto;background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.06);padding:22px 26px} .header{text-align:center;margin-bottom:10px} .kpis{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0 18px} .kpi-card{flex:1 1 220px;border-radius:10px;padding:12px 14px;color:#fff} .kpi-card .value{font-size:1.8em;font-weight:700} .kpi-card.positive{background:linear-gradient(135deg,#27ae60,#2ecc71)} .kpi-card.negative{background:linear-gradient(135deg,#e74c3c,#c0392b)} .kpi-card.neutral{background:linear-gradient(135deg,#3498db,#2980b9)} .row{display:table;width:100%;table-layout:fixed;border-spacing:6mm 0;margin:8px 0} .col-half,.col-third{display:table-cell;vertical-align:top} .col-half{width:50%}.col-third{width:33.33%} .chart-card{background:#fff;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,.05);padding:12px} .chart-card h4{margin:0 0 8px} .chart-img{width:100%;height:auto;border-radius:8px} .chart-block.full{margin:8px 0;padding:12px;border-radius:10px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.05)} .text-section{margin:10px 0} .text-red{color:#e74c3c;font-weight:600}.text-green{color:#27ae60;font-weight:600}.text-blue{color:#3498db;font-weight:600}.text-orange{color:#f39c12;font-weight:600} .page-break{page-break-after:always} </style> </head><body> <div class=\"container\"> <div class=\"header\"> <h1>[TITLE]</h1><h2>[SUBTITLE]</h2><p><small>[DATE]</small></p> </div> <div class=\"kpis\">[KPI_CARDS]</div> <div class=\"text-section\">[TEXT:intro]</div> <div class=\"text-section\">[TEXT:financial_analysis_intro]</div> <div class=\"row\"> <div class=\"col-half\"> <div class=\"chart-card\"><h4>[CHART_TITLE:__HALF_1__]</h4><img src=\"[CHART_URL:__HALF_1__]\" class=\"chart-img\"></div> </div> <div class=\"col-half\"> <div class=\"chart-card\"><h4>[CHART_TITLE:__HALF_2__]</h4><img src=\"[CHART_URL:__HALF_2__]\" class=\"chart-img\"></div> </div> </div> <div class=\"row\"> <div class=\"col-third\"><div class=\"chart-card\"><h4>[CHART_TITLE:__THIRD_1__]</h4><img src=\"[CHART_URL:__THIRD_1__]\" class=\"chart-img\"></div></div> <div class=\"col-third\"><div class=\"chart-card\"><h4>[CHART_TITLE:__THIRD_2__]</h4><img src=\"[CHART_URL:__THIRD_2__]\" class=\"chart-img\"></div></div> <div class=\"col-third\"><div class=\"chart-card\"><h4>[CHART_TITLE:__THIRD_3__]</h4><img src=\"[CHART_URL:__THIRD_3__]\" class=\"chart-img\"></div></div> </div> <div class=\"chart-block full\"> <h4>[CHART_TITLE:__FULL__]</h4> <img src=\"[CHART_URL:__FULL__]\" class=\"chart-img\"> </div> <div class=\"text-section\">[TEXT:insights]</div> <div class=\"text-section\">[TEXT:conclusion]</div> </div> </body></html>\nNote for the agent: Automatically replace __HALF_*__, __THIRD_*__, __FULL__ with actual charts[].id based on the corresponding layout field. If the field is missing: 1–2 charts → place side-by-side in half-width columns. 3 charts → thirds. 4+ → group per row (2 side-by-side) and set \"overview\" charts (radar/polarArea) to full-width.\n\n7) Validation Before You Respond\n\nThe JSON must be valid and without Markdown fences.\n\ndocument_info.date must be in YYYY-MM-DD format.\n\nEvery charts[].id must appear at least once with [CHART_URL:<id>] (and [CHART_TITLE:<id>]).\n\nIf the document contains finance/cost data, a financial_analysis_intro section must exist and be placed before the financial charts.\n\nNegative signals must be colored red (KPIs, datasets, segments).\n\nGenerate a maximum of 3–6 charts, unless the document demonstrably requires more",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -736,
+        2320
+      ],
+      "id": "798a6824-e3e7-4586-9536-9adb309d937e",
+      "name": "AI Agent2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Enhanced quality check with proper data access\nconst inputItems = $input.all();\nconst results = [];\n\n// Get the original chart configurations from \"Json en Html\" node\nlet originalCharts = {};\ntry {\n  const chartItems = $items('Json en Html');\n  chartItems.forEach(item => {\n    if (item.json.chart_id && item.json.post_data?.chart) {\n      originalCharts[item.json.chart_id] = item.json.post_data.chart;\n    }\n  });\n} catch (e) {\n  console.warn('Could not access original chart configurations');\n}\n\n// Expected data points from document analysis\nconst expectedData = {\n  'compliance_status_distribution': [7, 3, 1], // Non-Compliant, Partial, Unclear\n  'critical_issues_severity': [4, 3], // Critical, High impact\n  'negotiation_priority_levels': [6, 4, 1] // High, Medium, Low priority\n};\n\nfor (const item of inputItems) {\n  // The chart_id is not in the HTTP response, so we need to match by index or URL\n  const chartUrl = item.json.url;\n  \n  // Extract chart ID from the Create HTML node's mapping logic\n  let chartId = null;\n  let dataVerified = false;\n  \n  // Since we can't directly get chart_id from HTTP response,\n  // we'll verify based on the order of charts\n  const chartIndex = inputItems.indexOf(item);\n  const chartIds = ['compliance_status_distribution', 'critical_issues_severity', 'negotiation_priority_levels'];\n  \n  if (chartIndex < chartIds.length) {\n    chartId = chartIds[chartIndex];\n    \n    if (originalCharts[chartId] && expectedData[chartId]) {\n      const chartData = originalCharts[chartId].data?.datasets?.[0]?.data || [];\n      const expectedValues = expectedData[chartId];\n      \n      // Check if chart data exactly matches expected document values\n      dataVerified = JSON.stringify(chartData.sort()) === JSON.stringify(expectedValues.sort());\n    }\n  }\n  \n  results.push({\n    json: {\n      ...item.json,\n      quality_check: {\n        url_valid: !!chartUrl && chartUrl.includes('quickchart.io'),\n        data_source_verified: dataVerified,\n        chart_id: chartId,\n        chart_index: chartIndex\n      }\n    }\n  });\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1600,
+        1552
+      ],
+      "id": "cfcd37b0-943a-4d8d-94e3-dae378a49a1d",
+      "name": "Chart data verification"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.first();\nlet jsonData;\n\ntry {\n  // Parse de AI Agent output\n  if (typeof inputData.json.output === 'string') {\n    const cleanJson = inputData.json.output.replace(/```json\\n?|\\n?```/g, '').trim();\n    jsonData = JSON.parse(cleanJson);\n  } else {\n    jsonData = inputData.json;\n  }\n} catch (err) {\n  return [{\n    json: { \n      error: `JSON parsing failed: ${err.message}`,\n      status: 'parse_error',\n      raw_output: inputData.json.output \n    }\n  }];\n}\n\n// Valideer de complete JSON structure VOORDAT het wordt gesplitst\nconst requiredFields = ['document_info', 'charts', 'kpis', 'text_sections'];\nconst missing = requiredFields.filter(field => !jsonData[field]);\n\nif (missing.length > 0) {\n  return [{\n    json: { \n      error: `Missing required fields: ${missing.join(', ')}`,\n      status: 'validation_failed',\n      retry_needed: true,\n      parsed_data: jsonData // Voor debugging\n    }\n  }];\n}\n\n// Valideer chart data\nconst charts = jsonData.charts || [];\nif (charts.length === 0) {\n  return [{\n    json: { \n      error: 'No charts found in AI output',\n      status: 'no_charts',\n      retry_needed: true \n    }\n  }];\n}\n\nlet chartErrors = [];\ncharts.forEach((chart, idx) => {\n  if (!chart.config || !chart.config.data) {\n    chartErrors.push(`Chart ${idx + 1} (${chart.id || 'unnamed'}) missing data configuration`);\n  }\n  if (!chart.id || !chart.title) {\n    chartErrors.push(`Chart ${idx + 1} missing id or title`);\n  }\n});\n\nif (chartErrors.length > 0) {\n  return [{\n    json: { \n      error: `Chart validation errors: ${chartErrors.join('; ')}`,\n      status: 'chart_validation_failed',\n      retry_needed: true \n    }\n  }];\n}\n\n// Als alles valide is, geef de originele data door\nreturn [{\n  json: {\n    ...inputData.json,\n    validation_passed: true,\n    chart_count: charts.length,\n    validated_at: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        1552
+      ],
+      "id": "6dbdec2f-7fa3-44f0-8c01-136fd0ea8bca",
+      "name": "Quality Check"
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputItems = $input.all();\nconst results = [];\n\n// Haal originele document tekst op\nlet documentText = '';\ntry {\n  const originalData = $items('Extract from File')[0];\n  documentText = originalData.json.text || '';\n} catch (e) {\n  console.warn('Could not retrieve original document text');\n}\n\n// Expected patterns voor dit Nederlandse document\nconst expectedPatterns = {\n  'kritieke_claims': /3.*kritieke.*claims|3.*onnauwkeurig/i,\n  'tco_verschil': /€51[.,]596|51596/,\n  'ocr_overschatting': /6[.,]67x|overschatting/i,\n  'bestandsgrootte': /20x.*discrepantie|512.*MB/i\n};\n\nfor (const item of inputItems) {\n  let dataAccurate = true;\n  let issues = [];\n  \n  // Check of verwachte data patronen aanwezig zijn in document\n  for (const [key, pattern] of Object.entries(expectedPatterns)) {\n    if (!pattern.test(documentText)) {\n      issues.push(`Missing expected pattern: ${key}`);\n      dataAccurate = false;\n    }\n  }\n  \n  // Als data niet accuraat is, flag voor herverwerking\n  if (!dataAccurate) {\n    results.push({\n      json: {\n        ...item.json,\n        data_accuracy_warning: true,\n        accuracy_issues: issues,\n        needs_reprocessing: true\n      }\n    });\n  } else {\n    results.push({\n      json: {\n        ...item.json,\n        data_accuracy_verified: true\n      }\n    });\n  }\n}\n\nreturn results;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        1552
+      ],
+      "id": "2f26a34c-91da-4ec5-8437-170eb3bc9e8e",
+      "name": "Data Accuracy Enforcer Node"
+    },
+    {
+      "parameters": {
+        "content": "## todo\n**De tabellen zijn nog niet correct de headers kloppen af en toe niet met de inhoud.**\n**Als er twee grafieken naast elkaar staan moeten ze evenveel ruimte hebben verdeeld over de hele breedte van de pagina.**\nIf statements aan Quality Check ",
+        "height": 224,
+        "width": 416,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -752,
+        1280
+      ],
+      "typeVersion": 1,
+      "id": "a291f3b1-3342-4eb9-8364-f01f2a92c518",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create an infographic from this document. \nDo not put the texts next to the graphs; provide space for the graphs.\ndata: {{ $json.text }}",
+        "options": {
+          "systemMessage": "=# Document Visualization Agent - Chart.js v3 Generator\n\nYou will generate Chart.js v3 configurations + one HTML template with ID placeholders for all kinds of documents (contracts, finance, operations, HR, marketing, tech, support, legal, audits, etc.). Output ONLY JSON (no Markdown fences).\n\n## 0) Immutable Compatibility\nThe structure, placeholders, and QuickChart call must remain identical to the existing pipeline. New fields are optional; if absent, they will be ignored by the pipeline.\n\n## 1) Data Extraction & Accuracy Requirements (Domain-Agnostic)\n**CRITICAL**: Extract ONLY document-specific data (tables, lists, KPIs, claims, amounts, quantities, dates, percentages). Forbidden example data (e.g., Desktop/Mobile/Tablet, Q1–Q4, lorem ipsum). \n\n**Chart Data Validation**: Every chart MUST accurately reflect actual document content:\n- Use exact numbers, categories, and labels found in the source document\n- Count frequencies of actual document elements (if document mentions specific counts, use those exact values)\n- Include ALL categories/segments mentioned in document (don't omit any that appear in source)\n- Match document terminology precisely (use document's exact wording for labels and categories)\n- Ensure chart totals mathematically align with document figures\n\nRecognize metric patterns: amounts (€/$), counts, percentages, durations, frequencies, incident counts, SLAs, error rates, lead times, volumes, TCO, CAPEX/OPEX. If numbers are missing, create a maximum of one contextual chart with ordinal data (e.g., distribution of categories) or skip charts and only fill in the text sections + KPIs.\n\n## 2) Semantics: Positive/Negative/Neutral\n\n**Negative (red)**: costs↑, delays, risks, non-compliance, errors, performance decrease, lock-in, churn, incidents.\n\n**Positive (green)**: savings, speed, reliability, compliance, growth, success ratio.\n\n**Neutral / Comparison (blue/orange)**.\n\nApply this to dataset colors, KPI cards, and labels.\n\n**Palette (Infogram)**:\n- red: #e74c3c (border #c0392b)\n- green: #27ae60 (border #219f52)  \n- blue: #3498db (border #2980b9)\n- orange: #f39c12 (border #e67e22)\n- gray grid: #ecf0f1 / #ddd\n\n## 3) Output STRUCTURE (exact; extra fields are optional)\n\n```json\n{\n  \"document_info\": {\n    \"title\": \"...\",\n    \"subtitle\": \"...\",\n    \"date\": \"YYYY-MM-DD\"\n  },\n  \"kpis\": [\n    {\n      \"value\": \"...\",\n      \"label\": \"...\",\n      \"color\": \"red|green|blue|orange|negative|positive|neutral\"\n    }\n  ],\n  \"charts\": [\n    {\n      \"id\": \"short_snake_case_id\",\n      \"title\": \"...\",\n      \"type\": \"bar|horizontalBar|line|area|pie|doughnut|radar|polarArea|scatter|bubble|mixed|stacked|waterfall|funnel|gauge|progress|sparkline|violin|boxplot|candlestick|ohlc|sankey|treemap|heatmap|timeline|gantt\",\n      \"width\": 400,\n      \"height\": 300,\n      \"config\": { /* valid Chart.js v3 config that QuickChart can render */ },\n      \"layout\": \"full|half|third\",\n      \"tone\": \"negative|positive|neutral\",\n      \"notes\": \"brief explanation of the chart\"\n    }\n  ],\n  \"text_sections\": [\n    { \"id\": \"intro\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"executive_summary\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"primary_analysis\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"detailed_findings\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"financial_analysis_intro\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"risk_assessment\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"performance_metrics\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"comparative_analysis\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"insights\", \"html\": \"<ul>…</ul>\" },\n    { \"id\": \"recommendations\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"conclusion\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"data_table\", \"html\": \"<table>…</table>\" }\n  ],\n  \"html_template\": \"<!DOCTYPE html>…\"\n}\n```\n\n## 4) Content Strategy & Text Requirements\n\n**Generate focused, document-specific content for each text section**:\n\n- **intro**: 1-2 paragraphs introducing document context and scope\n- **executive_summary**: Key findings and critical points (1-2 paragraphs)  \n- **primary_analysis**: Main document themes and data (2-3 paragraphs)\n- **detailed_findings**: Specific data points and trends (1-2 paragraphs)\n- **financial_analysis_intro**: Financial context (mandatory if finance/cost data present)\n- **risk_assessment**: Risk factors and concerns (1-2 paragraphs)\n- **performance_metrics**: KPI analysis (1-2 paragraphs)\n- **comparative_analysis**: Key comparisons and benchmarks (1-2 paragraphs)\n- **insights**: Bulleted key discoveries\n- **recommendations**: Actionable next steps (1-2 paragraphs)\n- **conclusion**: Summary and implications (1-2 paragraphs)\n- **data_table**: Professional HTML table with document-specific data (when tabular data is available)\n\n**Table Guidelines**: Create tables when document contains structured data (compliance matrices, financial breakdowns, risk categories, performance metrics, etc.). Use proper HTML table structure with `<thead>`, `<tbody>`, headers, and data rows. Include 3-8 columns and 3-15 rows typically.\n\n**Writing Style**: Professional, concise, analytical. Use document-specific data. Avoid generic content.\n\n## 5) Chart Type Selection & Data Integrity Rules\n\nChoose the most suitable chart type based on the data structure, not appearance. **MANDATORY**: Charts must contain ONLY document-verified data.\n\n**Data Integrity Enforcement**:\n- If document states \"7 critical issues\", chart must display exactly 7, not approximations\n- Include ALL categories present in document (don't omit Low/Medium if document mentions them)\n- Use document's exact terminology for labels (e.g., \"Red Zone Non-Compliant\" not \"Non-Compliant\")\n- Chart values must sum to document totals (e.g., if 7+3+1=11 total rules, chart must reflect this)\n- No generic data substitution - if document has specific breakdowns, use them\n\n**Available from QuickChart Gallery**:\n\n### Basic Charts\n**bar**: Category comparisons, costs per component, counts per status. For multiple bars, use stacked / 100% stacked where logical. For rankings, use indexAxis: 'y' (horizontal).\n\n**line / area**: Time series; use tension: 0.35, area fill: true.\n\n**pie / doughnut**: Compositions (≤ 6–8 slices), legend at the bottom.\n\n### Advanced Charts  \n**radar**: Qualitative dimensions (3–7), strategy/position.\n\n**polarArea**: Proportions with visual impact.\n\n**scatter/bubble**: 2D relationships (x/y) and volume.\n\n**waterfall**: Step-by-step changes, financial breakdowns.\n\n**funnel**: Phase progression/dropout, conversion rates.\n\n**gauge/progress**: One KPI relative to a target (max 2–3).\n\n**sparkline**: Mini-trend (without axes/legend) within a KPI block.\n\n### Specialized Charts\n**mixed**: Combine bar + line for different metrics.\n\n**stacked**: Parts of whole over categories.\n\n**violin/boxplot**: Statistical distributions.\n\n**candlestick/ohlc**: Financial data.\n\n**sankey**: Flow between categories.\n\n**treemap**: Hierarchical proportions.\n\n**heatmap**: 2D intensity/correlation data.\n\n**timeline/gantt**: Events/schedules over time.\n\n**Color Logic**: tone:\"negative\" → main color is red. tone:\"positive\" → green. tone:\"neutral\" or mixed → blue/orange, and use a backgroundColor array to color negative categories red on a per-datapoint basis.\n\n## 6) Chart.js v3 & QuickChart Rules\nWe POST: {\"width\":…, \"height\":…, \"backgroundColor\":\"transparent\", \"format\":\"png\", \"chart\": <config>}. Use v3 syntax (scales.x/y or r; no v2 options). Always use scales.x.title.text and scales.y.title.text for axis titles; beginAtZero: true where logical. Bars: borderRadius: 8, borderWidth: 1. Tooltips: stringified callbacks, e.g., {\"plugins\":{\"tooltip\":{\"callbacks\":{\"label\":\"function(ctx){return ctx.dataset.label+': €'+ctx.parsed.y.toLocaleString('en-US');}\"}}}}. Legend: hide for a single dataset; otherwise, position: 'bottom' for pie/doughnut/radar.\n\n## 7) Layout & HTML (Professional, Distributed, Universal)\n\n**ID Placeholders (mandatory)**:\n\nCharts: [CHART_TITLE:<id>] & [CHART_URL:<id>]\n\nText: [TEXT:<section_id>] (intro, executive_summary, primary_analysis, detailed_findings, etc.)\n\nKPIs: [KPI_CARDS]\n\nHeader: [TITLE] [SUBTITLE] [DATE]\n\n**Typography**: Professional sizing: body 12pt; h1 2.6em; h2 1.6em; h3 1.3em.\n\n**Grid**: Rows with .col-half and .col-third. **Distribute charts throughout document, NOT clustered together**.\n\n**Style**: Clean, professional, serious appearance with subtle shadows and modern typography.\n\n**Template with Spacious Chart Layout**:\n```html\n<!DOCTYPE html><html lang=\"en\"><head>\n<meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>[TITLE]</title>\n<style>\n@page{size:A4;margin:8mm}\nbody{font-family:'Segoe UI',Arial,sans-serif;font-size:12pt;color:#2c3e50;background:#f8f9fa;margin:0;line-height:1.6}\nh1{font-size:2.6em;color:#2c3e50;margin:12px 0 8px;font-weight:700}\nh2{font-size:1.6em;color:#34495e;margin:16px 0 12px;font-weight:600}\nh3{font-size:1.3em;color:#34495e;margin:16px 0 10px;font-weight:600}\nh4{font-size:1.1em;color:#2c3e50;margin:14px 0 8px;font-weight:600}\n.container{max-width:1000px;margin:20px auto;background:#fff;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.08);padding:32px 40px}\n.header{text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #ecf0f1}\n.kpis{display:flex;gap:16px;flex-wrap:wrap;margin:20px 0 24px}\n.kpi-card{flex:1 1 240px;border-radius:12px;padding:16px 20px;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.1)}\n.kpi-card .value{font-size:2em;font-weight:700;margin-bottom:4px}\n.kpi-card .label{font-size:0.95em;opacity:0.9}\n.kpi-card.positive{background:linear-gradient(135deg,#27ae60,#2ecc71)}\n.kpi-card.negative{background:linear-gradient(135deg,#e74c3c,#c0392b)}\n.kpi-card.neutral{background:linear-gradient(135deg,#3498db,#2980b9)}\n.row{display:table;width:100%;table-layout:fixed;border-spacing:10mm 0;margin:24px 0}\n.col-half,.col-third{display:table-cell;vertical-align:top}\n.col-half{width:50%}.col-third{width:33.33%}\n.chart-card{background:#fff;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,.06);padding:28px;margin:24px 0;border:1px solid #ecf0f1;min-height:350px}\n.chart-card h4{margin:0 0 20px;color:#2c3e50;font-size:1.2em;font-weight:600}\n.chart-img{width:100%;height:auto;border-radius:8px;max-height:300px}\n.chart-block.full{margin:32px 0;padding:28px;border-radius:12px;background:#fff;box-shadow:0 4px 16px rgba(0,0,0,.06);border:1px solid #ecf0f1;min-height:400px}\n.text-section{margin:16px 0;padding:0 12px}\n.text-section p{margin-bottom:14px;text-align:justify;max-width:600px}\n.text-section ul{margin:12px 0;padding-left:24px}\n.text-section li{margin-bottom:8px}\n.data-table{width:100%;border-collapse:collapse;margin:20px 0;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}\n.data-table thead{background:linear-gradient(135deg,#34495e,#2c3e50)}\n.data-table th{color:#fff;padding:12px 16px;text-align:left;font-weight:600;font-size:0.95em}\n.data-table td{padding:10px 16px;border-bottom:1px solid #ecf0f1;font-size:0.9em}\n.data-table tbody tr:hover{background:#f8f9fa}\n.data-table tbody tr:nth-child(even){background:#fafbfc}\n.data-table .status-red{color:#e74c3c;font-weight:600}\n.data-table .status-green{color:#27ae60;font-weight:600}\n.data-table .status-orange{color:#f39c12;font-weight:600}\n.data-table .status-blue{color:#3498db;font-weight:600}\n.text-red{color:#e74c3c;font-weight:600}.text-green{color:#27ae60;font-weight:600}.text-blue{color:#3498db;font-weight:600}.text-orange{color:#f39c12;font-weight:600}\n.page-break{page-break-after:always}\n.section-divider{border-top:1px solid #ecf0f1;margin:28px 0;padding-top:20px}\n.chart-spacer{margin:32px 0}\n</style>\n</head><body>\n<div class=\"container\">\n<div class=\"header\">\n<h1>[TITLE]</h1><h2>[SUBTITLE]</h2><p><small>[DATE]</small></p>\n</div>\n<div class=\"kpis\">[KPI_CARDS]</div>\n\n<div class=\"text-section\">[TEXT:intro]</div>\n\n<div class=\"chart-spacer\">\n<div class=\"chart-block full\">\n<h4>[CHART_TITLE:__FIRST_FULL__]</h4>\n<img src=\"[CHART_URL:__FIRST_FULL__]\" class=\"chart-img\">\n</div>\n</div>\n\n<div class=\"text-section\">[TEXT:executive_summary]</div>\n<div class=\"text-section\">[TEXT:primary_analysis]</div>\n\n<div class=\"row\">\n<div class=\"col-half\">\n<div class=\"chart-card\"><h4>[CHART_TITLE:__SECOND_HALF__]</h4><img src=\"[CHART_URL:__SECOND_HALF__]\" class=\"chart-img\"></div>\n</div>\n<div class=\"col-half\">\n<div class=\"chart-card\"><h4>[CHART_TITLE:__THIRD_HALF__]</h4><img src=\"[CHART_URL:__THIRD_HALF__]\" class=\"chart-img\"></div>\n</div>\n</div>\n\n<div class=\"text-section\">[TEXT:detailed_findings]</div>\n<div class=\"text-section\">[TEXT:financial_analysis_intro]</div>\n\n<div class=\"chart-spacer\">\n<div class=\"chart-block full\">\n<h4>[CHART_TITLE:__FOURTH_FULL__]</h4>\n<img src=\"[CHART_URL:__FOURTH_FULL__]\" class=\"chart-img\">\n</div>\n</div>\n\n<div class=\"text-section\">[TEXT:risk_assessment]</div>\n<div class=\"text-section\">[TEXT:performance_metrics]</div>\n\n<div class=\"row\">\n<div class=\"col-third\"><div class=\"chart-card\"><h4>[CHART_TITLE:__FIFTH_THIRD__]</h4><img src=\"[CHART_URL:__FIFTH_THIRD__]\" class=\"chart-img\"></div></div>\n<div class=\"col-third\"><div class=\"chart-card\"><h4>[CHART_TITLE:__SIXTH_THIRD__]</h4><img src=\"[CHART_URL:__SIXTH_THIRD__]\" class=\"chart-img\"></div></div>\n</div>\n\n<div class=\"text-section\">[TEXT:comparative_analysis]</div>\n\n<div class=\"text-section\">[TEXT:data_table]</div>\n\n<div class=\"text-section\">[TEXT:insights]</div>\n<div class=\"text-section\">[TEXT:recommendations]</div>\n<div class=\"text-section\">[TEXT:conclusion]</div>\n\n</div>\n</body></html>\n```\n\n**Note for the agent**: Replace __FIRST_HALF__, __SECOND_FULL__, __THIRD_HALF__, __FOURTH_THIRD__, __FIFTH_THIRD__, __SIXTH_FULL__ with actual charts[].id. Only use placeholders for charts that exist. If fewer charts, remove unused placeholders and adjust layout accordingly.\n\n## 8) Chart Data Validation Requirements\n\n**Pre-Generation Checklist** - Verify each chart before creation:\n- [ ] All data points extracted directly from the specific document provided\n- [ ] Chart categories match document's terminology and structure  \n- [ ] Numeric values reflect actual document measurements/counts\n- [ ] No relevant categories/segments omitted from source document\n- [ ] Chart totals mathematically align with document totals when applicable\n- [ ] Labels reflect document's language and context\n\n**Document-Adaptive Approach**:\n- **Financial Documents**: Use actual amounts, percentages, fiscal periods mentioned\n- **Risk Assessments**: Employ document's risk categories, severity levels, compliance states\n- **Performance Reports**: Utilize document's KPIs, benchmarks, time periods, metrics\n- **Technical Documents**: Apply document's technical specifications, test results, standards\n- **HR/Operations**: Use document's department names, employee counts, process steps\n\n**Universal Accuracy Principles**:\n- Extract exact values when provided, not approximations\n- Preserve all categorization levels present in document\n- Maintain document's specific nomenclature and industry terminology\n- Reflect document's data relationships and hierarchies accurately",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -736,
+        2544
+      ],
+      "id": "9b2df3b9-9862-4de7-9738-f35730be12a7",
+      "name": "AI Agent3 beste tot nu toe",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "fromEmail": "ai@go-knowledge.com",
+        "toEmail": "={{ $('On form submission').first().json['Your mail address'] }}",
+        "subject": "=test ",
+        "emailFormat": "text",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "=file_1.pdf"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2704,
+        1552
+      ],
+      "id": "12afc518-5922-41cf-86f8-c6b30fa97ed3",
+      "name": "Send email",
+      "webhookId": "dde734c6-7fd1-4765-a70d-6669e0880cfc",
+      "credentials": {
+        "smtp": {
+          "id": "yG4Ihfi7vhKZzG49",
+          "name": "ai@go-knowledge"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -736,
+        1888
+      ],
+      "id": "eb9f5550-ad33-482c-9aef-6ee3a7be72fb",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.toolThink",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        1792
+      ],
+      "id": "57d05943-2365-455a-b1db-919ca5327a3d",
+      "name": "braintool"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst out = { json: {}, binary: {} };\n\nlet i = 1;\nfor (const it of items) {\n  const bin = it.binary?.['contract_review.pdf']; // naam zoals gezet in HTTP Request1 → Options → Response → outputPropertyName\n  if (bin) {\n    out.binary[`file_${i}.pdf`] = bin;   // maak dynamische namen\n    i++;\n  }\n}\nreturn [out];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        1552
+      ],
+      "id": "d147d1f7-c16a-43da-b5ae-4e17bdfd5aaa",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create an infographic from this document. \n {{ $('On form submission').item.json[\"user prompt\"] }}\ndata: {{ $json.text }} make sure the graphs contain data",
+        "options": {
+          "systemMessage": "=You will generate Chart.js v3 configurations + one HTML template with ID placeholders for all kinds of documents (contracts, finance, operations, HR, marketing, tech, support, legal, audits, etc.). Output ONLY JSON (no Markdown fences).\nYou will use the Braintool!\n0) Immutable Compatibility\nThe structure, placeholders, and QuickChart call must remain identical to the existing pipeline. New fields are optional; if absent, they will be ignored by the pipeline.\n1) Data Extraction & Accuracy Requirements (Domain-Agnostic)\nCRITICAL: Extract ONLY document-specific data (tables, lists, KPIs, claims, amounts, quantities, dates, percentages). Forbidden example data (e.g., Desktop/Mobile/Tablet, Q1–Q4, lorem ipsum).\nChart Data Validation: Every chart MUST accurately reflect actual document content:\n\nUse exact numbers, categories, and labels found in the source document\nCount frequencies of actual document elements (if document mentions specific counts, use those exact values)\nInclude ALL categories/segments mentioned in document (don't omit any that appear in source)\nMatch document terminology precisely (use document's exact wording for labels and categories)\nEnsure chart totals mathematically align with document figures\n\nRecognize metric patterns: amounts (€/$), counts, percentages, durations, frequencies, incident counts, SLAs, error rates, lead times, volumes, TCO, CAPEX/OPEX. If numbers are missing, create a maximum of one contextual chart with ordinal data (e.g., distribution of categories) or skip charts and only fill in the text sections + KPIs.\n2) Semantics: Positive/Negative/Neutral\nNegative (red): costs↑, delays, risks, non-compliance, errors, performance decrease, lock-in, churn, incidents.\nPositive (green): savings, speed, reliability, compliance, growth, success ratio.\nNeutral / Comparison (blue/orange).\nApply this to dataset colors, KPI cards, and labels.\nPalette (Infogram):\n\nred: #e74c3c (border #c0392b)\ngreen: #27ae60 (border #219f52)\nblue: #3498db (border #2980b9)\norange: #f39c12 (border #e67e22)\ngray grid: #ecf0f1 / #ddd\n\n3) Output STRUCTURE (exact; extra fields are optional)\njson{\n  \"document_info\": {\n    \"title\": \"...\",\n    \"subtitle\": \"...\",\n    \"date\": \"YYYY-MM-DD\"\n  },\n  \"kpis\": [\n    {\n      \"value\": \"...\",\n      \"label\": \"...\",\n      \"color\": \"red|green|blue|orange|negative|positive|neutral\"\n    }\n  ],\n  \"charts\": [\n    {\n      \"id\": \"short_snake_case_id\",\n      \"title\": \"...\",\n      \"type\": \"bar|horizontalBar|line|area|pie|doughnut|radar|polarArea|scatter|bubble|mixed|stacked|waterfall|funnel|gauge|progress|sparkline|violin|boxplot|candlestick|ohlc|sankey|treemap|heatmap|timeline|gantt\",\n      \"aspectRatio\": 1.6, // Defines the proportional relationship between width and height (e.g., 1.6 = 16:10)\n      \"width\": 800, // Base width, height will be calculated as width / aspectRatio\n      \"height\": null, // Will be dynamically set based on width and aspectRatio\n      \"config\": { /* valid Chart.js v3 config that QuickChart can render */ },\n      \"layout\": \"full|half|third\",\n      \"tone\": \"negative|positive|neutral\",\n      \"notes\": \"brief explanation of the chart\"\n    }\n  ],\n  \"text_sections\": [\n    { \"id\": \"intro\", \"html\": \"<p>…</p>\" },\n    { \"id\": \"key_points\", \"html\": \"<ul>…</ul>\" }\n  ],\n  \"html_template\": \"<!DOCTYPE html>…\"\n}\n4) Content Strategy & Text Requirements\nGenerate concise, document-specific content for an infographic:\n\nintro: 1 short sentence introducing document context\nkey_points: 3-5 bulleted key points summarizing critical data or findings (no paragraphs)\nGenerate additional text_sections as needed, such as \"summary\", \"details\", \"analysis\", etc., to provide more depth. Where data is structured or comparative, use HTML tables with class='data-table' to present it clearly.\n\nWriting Style: Concise, visual-focused, analytical. Use document-specific data. Avoid generic or lengthy content.\nPage Distribution: Aim to generate content that spans 2-3 A4 pages when rendered. Create 4-6 charts with varied layouts (full for main overviews, half/third for comparisons/details) to distribute visuals evenly. Include 3-5 text_sections, incorporating at least one table where possible (e.g., for lists, breakdowns, or comparisons from the document). Ensure balanced placement: high-level info on page 1, detailed breakdowns on page 2, conclusions or additional visuals on page 3 if needed.\n5) Chart Type Selection & Data Integrity Rules\nChoose the most suitable chart type based on the data structure, not appearance. MANDATORY: Charts must contain ONLY document-verified data.\nFor comparison data, prefer radar, polarArea, stacked bar, or doughnut charts (including complex multi-dataset doughnuts) when suitable to provide a professional and insightful visualization. For the rest, utilize any chart type available in the QuickChart gallery.\nFor radar charts, utilize the full page width by setting a larger square aspect ratio (e.g., aspectRatio: 1) to maintain proportions while making the chart larger and more prominent.\nWhen selecting chart type, consider readability: for categories with long labels, use horizontal bar charts (type: 'bar' with options: {indexAxis: 'y'}) to avoid slanted or truncated labels.\nSet the aspectRatio to maintain proportional dimensions (e.g., 1.6 for rectangular charts like bar or line, 1 for square charts like pie or radar). The width will be the base value, and height will be calculated as width / aspectRatio. Adjust width based on layout: 800 for full, 400 for half, 300 for third, ensuring readability without distortion.\nData Integrity Enforcement:\n\nIf document states \"7 critical issues\", chart must display exactly 7, not approximations\nInclude ALL categories present in document (don't omit Low/Medium if document mentions them)\nUse document's exact terminology for labels (e.g., \"Red Zone Non-Compliant\" not \"Non-Compliant\")\nChart values must sum to document totals (e.g., if 7+3+1=11 total rules, chart must reflect this)\nNo generic data substitution - if document has specific breakdowns, use them\n\nAvailable from QuickChart Gallery:\nBasic Charts\nbar: Category comparisons, costs per component, counts per status. For multiple bars, use stacked / 100% stacked where logical. For rankings or long labels, use indexAxis: 'y' (horizontal).\nline / area: Time series; use tension: 0.35, area fill: true.\npie / doughnut: Compositions (≤ 6–8 slices), legend at the bottom.\nAdvanced Charts\nradar: Qualitative dimensions (3–7), strategy/position.\npolarArea: Proportions with visual impact.\nscatter/bubble: 2D relationships (x/y) and volume.\nwaterfall: Step-by-step changes, financial breakdowns.\nfunnel: Phase progression/dropout, conversion rates.\ngauge/progress: One KPI relative to a target (max 2–3).\nsparkline: Mini-trend (without axes/legend) within a KPI block.\nSpecialized Charts\nmixed: Combine bar + line for different metrics.\nstacked: Parts of whole over categories.\nviolin/boxplot: Statistical distributions.\ncandlestick/ohlc: Financial data.\nsankey: Flow between categories.\ntreemap: Hierarchical proportions.\nheatmap: 2D intensity/correlation data.\ntimeline/gantt: Events/schedules over time.\nColor Logic: tone:\"negative\" → main color is red. tone:\"positive\" → green. tone:\"neutral\" or mixed → blue/orange, and use a backgroundColor array to color negative categories red on a per-datapoint basis.\n6) Chart.js v3 & QuickChart Rules\nWe POST: {\"width\":…, \"height\":…, \"backgroundColor\":\"transparent\", \"format\":\"png\", \"chart\": <config>}. Use v3 syntax (scales.x/y or r; no v2 options). Always use scales.x.title.text and scales.y.title.text for axis titles; beginAtZero: true where logical. Bars: borderRadius: 0, borderWidth: 0. Tooltips: stringified callbacks, e.g., {\"plugins\":{\"tooltip\":{\"callbacks\":{\"label\":\"function(ctx){return ctx.dataset.label+': €'+ctx.parsed.y.toLocaleString('en-US');}\"}}}}. Legend: hide for a single dataset; otherwise, position: 'bottom' for pie/doughnut/radar.</config>\n7) Layout & HTML (Clean, Infographic-Style, Universal)\nID Placeholders (mandatory):\nCharts: [CHART_TITLE:<id>] &#x26; [CHART_URL:<id>]</id></id>\nText: [TEXT:<section_id>] (intro, key_points)\nKPIs: [KPI_CARDS]\nHeader: [TITLE] [SUBTITLE] [DATE]\nTypography: Infographic-friendly sizing: body 12pt; h1 2em; h2 1.4em; h3 1.2em.\nGrid: Rows with .col-full, .col-half, and .col-third. Distribute charts and key points evenly for a visual summary.\nStyle: Clean, minimal infographic design with no shadows, borders, or raised edges around charts.\nTemplate with Compact Infographic Layout:\nhtml<!DOCTYPE html><html lang=\"en\"><head>\n<meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">\n<title>[TITLE]</title>\n<style>\n@page{size:A4;margin:10mm}\nbody{font-family:'Segoe UI',Arial,sans-serif;font-size:12pt;color:#2c3e50;background:#fff;margin:0;line-height:1.4}\nh1{font-size:2em;color:#2c3e50;margin:10px 0;font-weight:700}\nh2{font-size:1.4em;color:#34495e;margin:12px 0;font-weight:600}\nh3{font-size:1.2em;color:#34495e;margin:10px 0;font-weight:600}\nh4{font-size:1em;color:#2c3e50;margin:8px 0;font-weight:600}\n.container{max-width:900px;margin:15px auto;padding:15px}\n.header{text-align:center;margin-bottom:15px}\n.kpis{display:flex;gap:8px;margin:15px 0;flex-wrap:wrap}\n.kpi-card{flex:1 1 20%;border-radius:6px;padding:8px;color:#fff}\n.kpi-card .value{font-size:1.3em;font-weight:700}\n.kpi-card .label{font-size:0.8em}\n.kpi-card.positive{background:#27ae60}\n.kpi-card.negative{background:#e74c3c}\n.kpi-card.neutral{background:#3498db}\n.row{width:100%;margin:10px 0;clear:both}\n.col-full,.col-half,.col-third{display:block;box-sizing:border-box;padding:5px}\n.col-full{width:100%}\n.col-half{width:50%;float:left}\n.col-third{width:33.33%;float:left}\n.chart-block{margin:10px 0;padding:10px;background:#fff}\n.chart-block h4{margin:0 0 8px}\n.chart-img{width:100%;height:auto}\n.text-section{margin:8px 0;clear:both}\n.text-section p{margin-bottom:6px}\n.text-section ul{margin:6px 0;padding-left:18px}\n.text-section li{margin-bottom:3px}\n.data-table{width:100%;border-collapse:collapse;margin:8px 0}\n.data-table th{color:#fff;padding:6px;text-align:left;font-weight:600;background:#34495e}\n.data-table td{padding:4px;border-bottom:1px solid #ecf0f1}\n.page-break{page-break-before:always}\n</style>\n</head><body>\n<div class=\"container\">\n<div class=\"header\">\n<h1>[TITLE]</h1><h2>[SUBTITLE]</h2><p><small>[DATE]</small></p>\n</div>\n<div class=\"kpis\">[KPI_CARDS]</div>\n\n<div class=\"text-section\">[TEXT:intro]</div>\n<div class=\"row\">\n<div class=\"col-full\"><div class=\"chart-block\"><h4>[CHART_TITLE:__FIRST_FULL__]</h4><img src=\"[CHART_URL:__FIRST_FULL__]\" class=\"chart-img\"></div></div>\n</div>\n\n<div class=\"text-section\">[TEXT:key_points]</div>\n\n<div class=\"row\">\n<div class=\"col-half\"><div class=\"chart-block\"><h4>[CHART_TITLE:__SECOND_HALF__]</h4><img src=\"[CHART_URL:__SECOND_HALF__]\" class=\"chart-img\"></div></div>\n<div class=\"col-half\"><div class=\"chart-block\"><h4>[CHART_TITLE:__THIRD_HALF__]</h4><img src=\"[CHART_URL:__THIRD_HALF__]\" class=\"chart-img\"></div></div>\n</div>\n\n<div class=\"text-section\">[TEXT:summary]</div>\n<div class=\"row\">\n<div class=\"col-third\"><div class=\"chart-block\"><h4>[CHART_TITLE:__FOURTH_THIRD__]</h4><img src=\"[CHART_URL:__FOURTH_THIRD__]\" class=\"chart-img\"></div></div>\n<div class=\"col-third\"><div class=\"chart-block\"><h4>[CHART_TITLE:__FIFTH_THIRD__]</h4><img src=\"[CHART_URL:__FIFTH_THIRD__]\" class=\"chart-img\"></div></div>\n<div class=\"col-third\"><div class=\"chart-block\"><h4>[CHART_TITLE:__SIXTH_THIRD__]</h4><img src=\"[CHART_URL:__SIXTH_THIRD__]\" class=\"chart-img\"></div></div>\n</div>\n\n<div class=\"page-break\"></div>\n\n<div class=\"text-section\">[TEXT:details]</div>\n<div class=\"row\">\n<div class=\"col-full\"><div class=\"chart-block\"><h4>[CHART_TITLE:__SEVENTH_FULL__]</h4><img src=\"[CHART_URL:__SEVENTH_FULL__]\" class=\"chart-img\"></div></div>\n</div>\n\n<div class=\"text-section\">[TEXT:analysis]</div>\n<div class=\"row\">\n<div class=\"col-half\"><div class=\"chart-block\"><h4>[CHART_TITLE:__EIGHTH_HALF__]</h4><img src=\"[CHART_URL:__EIGHTH_HALF__]\" class=\"chart-img\"></div></div>\n<div class=\"col-half\"><div class=\"chart-block\"><h4>[CHART_TITLE:__NINTH_HALF__]</h4><img src=\"[CHART_URL:__NINTH_HALF__]\" class=\"chart-img\"></div></div>\n</div>\n\n<div class=\"text-section\">[TEXT:conclusion]</div>\n\n</div>\n</body></html>\nNote for the agent: Replace FIRST_FULL, SECOND_HALF, etc. with actual charts[].id. Only use placeholders for charts that exist. If fewer charts, remove unused placeholders and adjust layout accordingly. Add .page-break where needed to control page distribution. Ensure content is balanced: introductory elements on first page, detailed charts and tables on second, analytical or concluding sections on third if applicable.\n8) Chart Data Validation Requirements\nPre-Generation Checklist - Verify each chart before creation:\n\n All data points extracted directly from the specific document provided\n Chart categories match document's terminology and structure\n Numeric values reflect actual document measurements/counts\n No relevant categories/segments omitted from source document\n Chart totals mathematically align with document totals when applicable\n Labels reflect document's language and context\n\nDocument-Adaptive Approach:\n\nFinancial Documents: Use actual amounts, percentages, fiscal periods mentioned\nRisk Assessments: Employ document's risk categories, severity levels, compliance states\nPerformance Reports: Utilize document's KPIs, benchmarks, time periods, metrics\nTechnical Documents: Apply document's technical specifications, test results, standards\nHR/Operations: Use document's department names, employee counts, process steps\n\nUniversal Accuracy Principles:\n\nExtract exact values when provided, not approximations\nPreserve all categorization levels present in document\nMaintain document's specific nomenclature and industry terminology\nReflect document's data relationships and hierarchies accurately",
+          "passthroughBinaryImages": true,
+          "enableStreaming": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1232,
+        1168
+      ],
+      "id": "19b98e2b-70e5-40bc-95a1-c1e95d064458",
+      "name": "AI Agent3",
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Attachment Type Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Quality Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attachment Type Filter": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create HTML": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Chart data verification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Json en Html": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chart data verification": {
+      "main": [
+        [
+          {
+            "node": "Create HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Quality Check": {
+      "main": [
+        [
+          {
+            "node": "Data Accuracy Enforcer Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Data Accuracy Enforcer Node": {
+      "main": [
+        [
+          {
+            "node": "Json en Html",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        []
+      ]
+    },
+    "braintool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "ab4b49f0-20e5-486a-9cde-3e36e49a07b4",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "createdAt": "2025-08-25T12:31:24.115Z",
+      "updatedAt": "2025-08-25T12:31:24.115Z",
+      "role": "workflow:owner",
+      "workflowId": "4ksSoGI1fOVpGWig",
+      "projectId": "GRYQdjzbr9zYZfKu"
+    }
+  ],
+  "tags": []
+}
