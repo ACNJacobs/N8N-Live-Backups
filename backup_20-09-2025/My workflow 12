@@ -1,0 +1,300 @@
+{
+  "createdAt": "2025-09-19T08:31:37.684Z",
+  "updatedAt": "2025-09-19T13:42:24.000Z",
+  "id": "My5e9EHcrh7Gh9Yf",
+  "name": "My workflow 12",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://api.bitvavo.com/v2/markets",
+        "options": {}
+      },
+      "id": "2d220e1e-c3ce-4d18-852a-f90745f5987f",
+      "name": "HTTP: /markets1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 2
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -256,
+        160
+      ],
+      "id": "b1874f62-8f6e-49aa-8763-e756a6668a1f",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Market Data:\n{{ JSON.stringify($json.data) }} ",
+        "options": {
+          "systemMessage": "=You are a decision-making engine for a crypto trading bot. Your sole purpose is to analyze a list of scored coins and return a single, valid JSON object based on a strict set of rules. You do not explain, you only execute.\nLOGICAL STEPS TO FOLLOW:\n\nAnalyze the input: Receive the list of all scored coins.\nSort: Sort the entire list of coins in DESCENDING order based on their score (highest score first).\nSelect: Take the top 3 coins from the sorted list.\nAllocate: Distribute €115 across these 3 coins based on their relative scores. Higher scores should receive proportionally more capital.\nGenerate Output: Use these top 3 coins to generate the rebalance JSON object according to the format below.\n\nPORTFOLIO CONTEXT:\n\nTotal Value: €120 (all in existing positions).\nAvailable Cash: €0.\nThe \"sell_all\" action will free up €120 for reinvestment.\nInvestment capital for new buys is €115 (€120 minus a mandatory €5 reserve).\n\nALLOCATION STRATEGY:\n\nDistribute the €115 investment capital proportionally based on the scores of the top 3 coins.\nExample: If top 3 coins have scores of 9, 6, and 3 (total=18), allocate: 9/18 × €115 = €57.50, 6/18 × €115 = €38.33, 3/18 × €115 = €19.17\nRound amounts to whole euros, ensuring the total equals €115.\n\nREQUIRED OUTPUT FORMAT:\nYour entire response MUST be ONLY the following valid JSON object. Do not add any text, notes, or markdown around it.\njson{\n  \"decision\": \"rebalance\",\n  \"step_1_sell\": {\n    \"action\": \"sell_all\",\n    \"amount_eur\": 120,\n    \"reasoning\": \"Freeing up capital to invest in the current best available opportunities.\"\n  },\n  \"step_2_buy\": [\n    {\"coin\": \"COIN_NAME_1\", \"amount_eur\": XX, \"score\": X.X},\n    {\"coin\": \"COIN_NAME_2\", \"amount_eur\": XX, \"score\": X.X},\n    {\"coin\": \"COIN_NAME_3\", \"amount_eur\": XX, \"score\": X.X}\n  ],\n  \"total_to_invest\": 115,\n  \"reasoning\": \"Allocated €115 proportionally across top 3 coins based on their relative scores.\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        544,
+        160
+      ],
+      "id": "632ddb3c-3f68-4067-93c2-9a6ca8a17093",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-pro",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        544,
+        368
+      ],
+      "id": "a804f643-d139-42bf-8ff8-c1c0d54e6805",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "vojz1cvxUpTiZ61e",
+          "name": "Google Gemini(PaLM) Api zakenlijk"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a5118cea-5ae3-4780-a4d0-47baf1160619",
+              "leftValue": "={{ $json.output }}",
+              "rightValue": "hold",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "8cd7e522-cf2e-4b32-ada6-e984083b89bb",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1104,
+        160
+      ],
+      "id": "2bbe701a-bbef-41b4-bee2-be1a4dff602b",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        384,
+        176
+      ],
+      "id": "e16c2caa-6461-44fd-b39e-7d150dfc29a7",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "url": "https://api.bitvavo.com/v2/ticker/24h",
+        "options": {}
+      },
+      "id": "18bfe195-3ce6-408d-8085-048ddf6efef0",
+      "name": "HTTP: /markets2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "market",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        176,
+        176
+      ],
+      "id": "58db89c3-c645-41fa-bb5b-f537f694769d",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pak de ruwe tekst-output van de AI Agent node\nconst rawOutput = $json.output;\n\n// Gebruik een regular expression om het JSON-gedeelte te vinden\n// Dit zoekt naar alles wat tussen de eerste '{' en de laatste '}' staat\nconst jsonMatch = rawOutput.match(/\\{[\\s\\S]*\\}/);\n\n// Controleer of er een JSON-match is\nif (jsonMatch && jsonMatch[0]) {\n  try {\n    // Zet de gevonden JSON-tekst om naar een echt data-object\n    const parsedJson = JSON.parse(jsonMatch[0]);\n    \n    // Geef het schone, bruikbare object terug\n    return parsedJson;\n  } catch (error) {\n    // Mocht het omzetten mislukken, geef dan een error terug\n    return { error: 'Kon JSON niet parsen', original: rawOutput };\n  }\n}\n\n// Als er helemaal geen JSON gevonden kan worden in de tekst\nreturn { error: 'Geen JSON gevonden in AI output', original: rawOutput };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        160
+      ],
+      "id": "2487d02f-20ba-4583-b046-25fb72f481ae",
+      "name": "Code in JavaScript",
+      "executeOnce": false
+    }
+  ],
+  "connections": {
+    "HTTP: /markets1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "HTTP: /markets1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP: /markets2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP: /markets2": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Schedule Trigger1": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "0bd1d908-93a8-43bc-ba2a-ddbc8b3f96ed",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "createdAt": "2025-09-19T08:31:37.687Z",
+      "updatedAt": "2025-09-19T08:31:37.687Z",
+      "role": "workflow:owner",
+      "workflowId": "My5e9EHcrh7Gh9Yf",
+      "projectId": "GRYQdjzbr9zYZfKu"
+    }
+  ],
+  "tags": []
+}
