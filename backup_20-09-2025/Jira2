@@ -1,0 +1,762 @@
+{
+  "createdAt": "2025-06-10T11:20:08.274Z",
+  "updatedAt": "2025-09-04T08:40:18.000Z",
+  "id": "Nzk9Kddf9OeETMk2",
+  "name": "Jira2",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "downloadAttachments": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailReadImap",
+      "typeVersion": 2,
+      "position": [
+        -2016,
+        272
+      ],
+      "id": "ee16c3b0-d448-4dc5-8907-4cdaeb2f2079",
+      "name": "Email Trigger (IMAP)",
+      "credentials": {
+        "imap": {
+          "id": "C3gLB78ljfuhPLRo",
+          "name": "Jira@go-knowledge.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "58f41444-66de-4ce7-aab5-d76d6e958bbc",
+              "name": "from",
+              "value": "={{$json[\"from\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "79b415cf-294b-4546-b81f-0133b6ee5f5e",
+              "name": "Subject",
+              "value": "={{$json[\"subject\"]}}",
+              "type": "string"
+            },
+            {
+              "id": "0b0b2fba-b040-431d-90dc-ffb9d3e003ae",
+              "name": "Body",
+              "value": "={{$json[\"text\"]}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1792,
+        448
+      ],
+      "id": "b85d6158-47e2-4c5c-bbd2-40d6d85b1e2b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-1.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        624
+      ],
+      "id": "f7639049-d3d8-49b2-8d3f-85515c563598",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "dob7yodE27d15REW",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "dfead268-8923-4fb5-a162-394a80973591",
+              "leftValue": "={{ $('json').item.json.assessment }}",
+              "rightValue": "Pass",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -96,
+        256
+      ],
+      "id": "cc85969f-6c5d-4ef2-b3c2-a0198df095ca",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "fromEmail": "jira@go-knowledge.com",
+        "toEmail": "={{ $('Email Trigger (IMAP)').item.json.from }}",
+        "subject": "=⚠️ Aanvullende Info Nodig - {{ $('Edit Fields').item.json.Subject }} Jira ID:  {{ $('Create an issue').item.json.key }}",
+        "html": "=<!DOCTYPE html>\n<html lang=\"nl\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>WOM Support Response</title>\n</head>\n<body style=\"margin: 0; padding: 20px; font-family: Arial, sans-serif; background-color: #f5f5f5;\">\n\n<div style=\"max-width: 600px; margin: 0 auto; background-color: #f8f9fa; padding: 20px; border-radius: 10px;\">\n  \n  <div style=\"background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);\">\n    \n    <h2 style=\"color: #28a745; margin-top: 0; font-size: 24px; font-weight: 600;\">Bedankt voor je melding!</h2>\n    \n    <p style=\"color:#333; font-size:16px; line-height:1.6; margin-bottom:20px;\">\n      Beste {{ $json.from_name || \"collega\" }},\n    </p>\n   <p style=\"color:#333; font-size:16px; line-height:1.6; margin-bottom:20px;\">\n  Hartelijk dank voor uw melding. We hebben uw verzoek ontvangen en begrijpen het probleem dat u ervaart. Uw melding is geregistreerd onder JIRA-ID: <strong style=\"color:red;\">{{ $json.key }}</strong>.\n</p>\n<p style=\"color:red; font-size:17px; line-height:1.6;\">\n  Voor een snelle afhandeling hebben we nog enkele gegevens van u nodig. In het gele vlak hieronder ziet u precies wat ontbreekt. Zodra u deze aanvult, gaan we direct voor u aan de slag.\n</p>\n\n\n    \n    <div style=\"background-color: #e7f3ff; padding: 20px; border-radius: 6px; margin: 25px 0; border-left: 4px solid #007bff;\">\n      <h3 style=\"color: #007bff; margin-top: 0; font-size: 18px; font-weight: 600;\">Wat we begrijpen</h3>\n      <p style=\"color: #333; margin-bottom: 0; font-size: 15px; line-height: 1.5;\">\n        {{  $('json').item.json.summary }}\n      </p>\n       <p style=\"color: #333; margin-bottom: 0; font-size: 15px; line-height: 1.5;\">\n        {{ $('json').item.json.description }}\n      </p>\n    </div>\n    \n    <div style=\"background-color: #fff3cd; padding: 20px; border-radius: 6px; margin: 25px 0; border-left: 4px solid #ffc107;\">\n      <h3 style=\"color: #856404; margin-top: 0; font-size: 18px; font-weight: 600;\">We hebben nog wat extra informatie nodig</h3>\n      <p style=\"color: #333; margin-bottom: 15px; line-height: 1.5;\">Om je ticket correct aan te kunnen maken, hebben we graag de volgende informatie:</p>\n      <ul style=\"color: #333; margin: 0; padding-left: 20px; line-height: 1.6;\">\n        {{$('json').item.json.missing_info_questions.map(q => \"<li style='margin-bottom: 10px;'>\" + q + \"</li>\").join(\"\") }}\n      </ul>\n    </div>\n    \n    <div style=\"background-color: #d4edda; padding: 20px; border-radius: 6px; margin: 25px 0; border-left: 4px solid #28a745;\">\n      <h3 style=\"color: #155724; margin-top: 0; font-size: 18px; font-weight: 600;\">Volgende stappen</h3>\n      <p style=\"color: #333; margin-bottom: 0; line-height: 1.5;\">\n        Zodra we deze informatie van je ontvangen hebben, kunnen we direct aan de slag met je ticket. \n        We zorgen ervoor dat het probleem snel wordt opgepakt door het juiste team.\n      </p>\n    </div>\n    \n    <div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 6px; text-align: center; margin: 25px 0; border: 2px solid #dee2e6;\">\n      <p style=\"color: #495057; font-size: 16px; font-weight: 600; margin: 0; line-height: 1.4;\">\n        <strong>Reageer gewoon op deze e-mail</strong> met de gevraagde informatie - we doen de rest!\n      </p>\n    </div>\n    \n    <p style=\"color: #333; font-size: 16px; margin-top: 30px; line-height: 1.5;\">\n      Met vriendelijke groet,<br>\n      <strong style=\"color: #007bff;\">Het WOM Support Team</strong>\n    </p>\n    \n    <hr style=\"border: none; border-top: 1px solid #dee2e6; margin: 25px 0;\">\n    \n    <p style=\"color: #6c757d; font-size: 13px; text-align: center; margin-bottom: 0; line-height: 1.4;\">\n      Dit is een automatisch gegenereerde e-mail. Voor vragen kun je gewoon antwoorden op deze e-mail.\n    </p>\n    \n  </div>\n</div>\n\n<!-- Voor copy-paste (zonder n8n variabelen): -->\n<!--\n<div style=\"max-width: 600px; margin: 0 auto; background-color: #f8f9fa; padding: 20px; border-radius: 10px;\">\n  \n  <div style=\"background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);\">\n    \n    <h2 style=\"color: #28a745; margin-top: 0; font-size: 24px; font-weight: 600;\">Bedankt voor je melding!</h2>\n    \n    <p style=\"color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 20px;\">Beste [naam],</p>\n    \n    <p style=\"color: #333; font-size: 16px; line-height: 1.6;\">\n      Hartelijk dank voor je melding! We hebben je verzoek ontvangen en begrijpen het probleem dat je ervaart.\n    </p>\n    \n    <div style=\"background-color: #e7f3ff; padding: 20px; border-radius: 6px; margin: 25px 0; border-left: 4px solid #007bff;\">\n      <h3 style=\"color: #007bff; margin-top: 0; font-size: 18px; font-weight: 600;\">Wat we begrijpen</h3>\n      <p style=\"color: #333; margin-bottom: 0; font-size: 15px; line-height: 1.5;\">[korte samenvatting van het probleem]</p>\n    </div>\n    \n    <div style=\"background-color: #fff3cd; padding: 20px; border-radius: 6px; margin: 25px 0; border-left: 4px solid #ffc107;\">\n      <h3 style=\"color: #856404; margin-top: 0; font-size: 18px; font-weight: 600;\">We hebben nog wat extra informatie nodig</h3>\n      <p style=\"color: #333; margin-bottom: 15px; line-height: 1.5;\">Om je ticket correct aan te kunnen maken, hebben we graag de volgende informatie:</p>\n      <ul style=\"color: #333; margin: 0; padding-left: 20px; line-height: 1.6;\">\n        <li style=\"margin-bottom: 10px;\">[vraag 1]</li>\n        <li style=\"margin-bottom: 10px;\">[vraag 2 indien van toepassing]</li>\n      </ul>\n    </div>\n\n    \n    <div style=\"background-color: #d4edda; padding: 20px; border-radius: 6px; margin: 25px 0; border-left: 4px solid #28a745;\">\n      <h3 style=\"color: #155724; margin-top: 0; font-size: 18px; font-weight: 600;\">Volgende stappen</h3>\n      <p style=\"color: #333; margin-bottom: 0; line-height: 1.5;\">\n        Zodra we deze informatie van je ontvangen hebben, kunnen we direct aan de slag met je ticket. \n        We zorgen ervoor dat het probleem snel wordt opgepakt door het juiste team.\n      </p>\n    </div>\n    \n    <div style=\"background-color: #f8f9fa; padding: 20px; border-radius: 6px; text-align: center; margin: 25px 0; border: 2px solid #dee2e6;\">\n      <p style=\"color: #495057; font-size: 16px; font-weight: 600; margin: 0; line-height: 1.4;\">\n        <strong>Reageer gewoon op deze e-mail</strong> met de gevraagde informatie - wij doen de rest!\n      </p>\n    </div>\n    \n    <p style=\"color: #333; font-size: 16px; margin-top: 30px; line-height: 1.5;\">\n      Met vriendelijke groet,<br>\n      <strong style=\"color: #007bff;\">Het WOM Support Team</strong>\n    </p>\n    \n    <hr style=\"border: none; border-top: 1px solid #dee2e6; margin: 25px 0;\">\n    \n    <p style=\"color: #6c757d; font-size: 13px; text-align: center; margin-bottom: 0; line-height: 1.4;\">\n      Dit is een automatisch gegenereerde e-mail. Voor vragen kun je gewoon antwoorden op deze e-mail.\n    </p>\n    \n  </div>\n</div>\n-->\n\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        128,
+        352
+      ],
+      "id": "cfe0c813-a40f-47c1-9e2d-90fdc34c9b5e",
+      "name": "Send Email - FALSE",
+      "webhookId": "cdd056f2-425f-444f-8980-11fc8ba2c657",
+      "credentials": {
+        "smtp": {
+          "id": "yG4Ihfi7vhKZzG49",
+          "name": "ai@go-knowledge"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "jira@go-knowledge.com",
+        "toEmail": "={{ $('Email Trigger (IMAP)').item.json.metadata['x-envelope-from'] }}",
+        "subject": "=✅ Ticket is Aangemaakt {{ $json.key }}- {{ $('Edit Fields').item.json.Subject }} ",
+        "emailFormat": "both",
+        "html": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; border-radius: 8px;\">\n  \n  <h2 style=\"color: #28a745; margin-bottom: 20px;\">✅ E-mail Succesvol Geanalyseerd</h2>\n  \n  <div style=\"background-color: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Status:</strong> \n      <span style=\"color: {{ $json['compleet'] ? '#28a745' : '#dc3545' }}; font-weight: bold;\">\n        {{ $json.assessment ? \"Compleet\" : \"Onvolledig\" }}\n      </span>\n    </p>\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Ticket Type:</strong> \n      <span style=\"background-color: #e9ecef; padding: 4px 8px; border-radius: 4px; font-weight: bold;\">\n        {{ $('If1').item.json.ticket_type }}\n    </p>\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Samenvatting:</strong>\n    </p>\n    <div style=\"background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 10px 0; border-radius: 0 4px 4px 0;\">\n      {{ $('If1').item.json[\"summary\"] }}\n    </div>\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Prioriteit:</strong> \n      <span style=\"color: {{ $json[\"prioriteit\"] === 'High' ? '#dc3545' : ($json[\"prioriteit\"] === 'Medium' ? '#ffc107' : '#28a745') }}; font-weight: bold;\">\n       {{$('If1').item.json.priority }} \n      </span>\n    </p>\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Confidence:</strong> \n      <span style=\"font-weight: bold;\">\n       {{ $('If1').item.json.confidence_score }}\n      </span>\n    </p>\n    \n    <div style=\"background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; margin: 10px 0;\">\n      <strong>Beschrijving:</strong><br>\n      {{ $('If1').item.json.description }}\n    </div>\n    \n    <div style=\"background-color: #d1ecf1; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #17a2b8;\">\n      <p style=\"margin: 0 0 10px 0; font-weight: bold;\">💡 Aanbevelingen:</p>\n      <p style=\"margin: 0;\">{{ $('If1').item.json.recommendations }}</p>\n    </div>\n    \n  </div>\n  \n  <div style=\"background-color: #d4edda; padding: 15px; border-radius: 5px; margin-top: 20px; border-left: 4px solid #28a745;\">\n    <p style=\"margin: 0 0 10px 0; font-weight: bold;\">🎉 Ticket wordt aangemaakt!</p>\n    <ul style=\"margin: 0; padding-left: 20px;\">\n      <li>Je Jira ticket <p> {{ $('Create an issue').item.json.key }} </p> automatisch aangemaakt</li>\n      <li>Bij vragen kun je reageren op deze e-mail</li>\n    </ul>\n  </div>\n  \n</div>\n",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "attachment_0,attachment_1,attachment_2"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        128,
+        160
+      ],
+      "id": "4cfdfb0b-6cc3-4387-a1a8-53290ef1ef7f",
+      "name": "Send Email - TRUE",
+      "webhookId": "cdd056f2-425f-444f-8980-11fc8ba2c657",
+      "credentials": {
+        "smtp": {
+          "id": "VwuaEHdenMFhiWl3",
+          "name": "Jira@go-knowledge.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Using your role as the Jira Gatekeeper, assess the following email content. First determine if this is a new request or a reply to an existing ticket.\n🚨 CRITICAL: RESPOND ONLY WITH RAW JSON OBJECT 🚨\nSTART YOUR RESPONSE IMMEDIATELY WITH:\n{\nEND YOUR RESPONSE IMMEDIATELY WITH:\n}\nDO NOT USE:\n\nArrays: [{...}]\nOutput wrappers: {\"output\": \"...\"}\nMarkdown: ````json`\nAny text before or after the JSON object\n\nEmail to Assess:\n{{ $json.textHtml }}\nAssessment Instructions:\n\nDEFAULT: Treat as \"new_request\" unless ALL reply criteria are perfectly met\nReply criteria (ALL must be present):\n\nEXACT ticket ID format: \"WOMDEV-[numbers]\" (e.g., \"WOMDEV-1223\")\nEXACT phrase: \"**We hebben nog wat extra informatie nodig\"\nClear context that this responds to a previous information request\n\n\nCRITICAL: SCAN THE COMPLETE EMAIL TEXT for WOM application keywords (central, commit, control, construct, core) - case-insensitive\nIf it's a reply AND WOM keywords found: The missing information has been provided → \"assessment\": \"Pass\", \"missing_info\": false\nIf it's a new request: Follow the complete assessment process for WOM application, acceptance criteria, and actionable details\n\nRESPOND WITH DIRECT JSON OBJECT ONLY - NO OTHER FORMAT ACCEPTED\n{{ $json.metadata['thread-topic'] }}",
+        "options": {
+          "systemMessage": "=Your role is that of a critical gatekeeper for our Jira process. Your primary task is to analyze the email below and deliver a final verdict: Pass or Fail. This verdict determines if a ticket can be created immediately or if we must request more information first.\n\nCRITICAL FORMAT REQUIREMENT\nYOU MUST RESPOND WITH ONLY A VALID JSON OBJECT. NO ESCAPING, NO NEWLINES, NO WRAPPING.\n\nCORRECT RESPONSE EXAMPLE:\n{\"email\\_type\":\"new\\_request\",\"assessment\":\"Fail\",\"missing\\_info\"\\:true,\"ticket\\_type\":\"Bug\",\"ticket\\_type\\_id\":\"10004\",\"wom\\_application\":\"WOM Central\",\"project\":\"\",\"project\\_site\\_code\":\"\",\"summary\":\"Example summary\",\"description\":\"Example description ending with Acceptance criteria: 1) ..., 2) ...\",\"priority\":\"Medium\",\"missing\\_info\\_questions\":\\[\"Wat is de projectnaam?\",\"Wat is de Project / site code (exact)?\"],\"recommendations\":\"Ontvang projectnaam en site code; daarna ticket aanmaken.\",\"jira\\_suggestions\":{\"labels\":\\[\"Bug\"],\"components\":\\[\"Webapplicatie\"],\"component\\_ids\":\\[\"10010\"],\"complexity\\_estimate\":\"Medium\"},\"confidence\\_score\":\"High\"}\n\nFORBIDDEN FORMATS THAT BREAK THE SYSTEM:\n\n* Arrays: \\[{\"output\":\"...\"}]\n* Escaped strings: {\"email\\_type\":\"...\"}\n* Newlines: {\\n\"email\\_type\":\\n\"...\"}\n* Markdown: json{...}\n* Any wrapper objects\n\nYOUR RESPONSE MUST:\n\n* Start with { immediately\n* End with } immediately\n* Contain no\n  characters\n* Be a single line of valid JSON\n* Inner double quotes inside any string value must be escaped with a backslash (e.g., use double quotes only when escaped). Single quotes are allowed inside values.\n* Output must be a single JSON object (no array)\n* Do not reuse any sample values from this prompt (e.g., \"Central Rollout\", \"CTR-AMS-014\"). If unknown, use empty string and set assessment = \"Fail\" with questions.\n* Be parseable by JSON.parse() without modification\n\nEmail Type Detection:\nFIRST STEP: Determine if this is a Reply or New Request\n\nReply Email Detection (STRICT): If the email contains ALL of the following elements, treat it as a Reply:\n\n* VARIABLE ticket ID pattern: \"WOMDEV-\" followed by ANY numbers\n* EXACT phrase: \"**We hebben nog wat extra informatie nodig\"** (exact match required)\n* Context indicators: Email appears to be responding to a previous request for information\n\nEnhanced Detection with Subject Line (optional but supportive):\n\n* Subject contains ANY ticket ID: for example, \"Re: Betreft : WOMDEV-1960\"\n* Pattern recognition: Look for \"WOMDEV-\" + any digit sequence (1–6 digits typical)\n* Reply threading: Email headers indicate this is a reply to a previous message\n\nIMPORTANT: TICKET NUMBERS ARE ALWAYS DIFFERENT\n\n* Never look for specific numbers like \"1960\"\n* Always search for the PATTERN: \"WOMDEV-\" + any numbers\n* Examples of valid ticket IDs: WOMDEV-1, WOMDEV-42, WOMDEV-1960, WOMDEV-999999\n\nCRITICAL: If ANY of the main criteria are missing, treat as New Request\nDEFAULT: When in doubt, classify as \"new\\_request\"\n\nReply Assessment Process:\nFor Reply emails:\n\n* Focus: Assess if the previously requested missing information has now been provided\n* WOM Application: Not required to be mentioned again (already established in original ticket)\n* Acceptance Criteria: Check if the provided information allows for specific, measurable criteria\n* Priority: Maintain same classification approach but consider this is follow-up information\n\nReply Assessment Rules:\n\n* If the reply provides the previously missing information sufficiently → \"Pass\"\n* If the reply is still incomplete or vague → \"Fail\"\n* Extract ticket ID and include in response under \"reply\\_ticket\\_id\"\n* Reference what information was still missing in your assessment\n\nNew Request Assessment Process:\nFor New emails (not replies), follow the complete original process below:\n\nYour Assessment Process:\nVerdict (Pass or Fail):\nFirst, decide if the email meets the minimum requirements for an actionable ticket.\n\n* Fail: The email is too vague, incomplete, or ambiguous. Crucial details are missing, making it impossible for a developer to take action.\n* Pass: The email contains enough specific information to create a clear, actionable ticket. The core of the problem or request is evident.\n\nCrucial Calibration Rule:\nA request does not need to follow a perfect user story template to get a \"Pass\". Your main criterion is the presence of concrete, actionable details. If the email contains any of the following, you should rate it as a Pass:\n\n* Specific examples (e.g., order numbers, user names, URLs)\n* A clear problem description (e.g., \"this is what happens now\" vs. \"this is what I expected\")\n* A well-defined request for a change or new feature\n* An attached file that provides context\n\nWOM Application Requirements:\n**CRITICAL FAIL RULE: The email must explicitly mention which WOM application is affected. If not explicitly mentioned, the ticket must be marked as \"Fail\".**\n\nValid WOM Applications:\n\n* WOM Central (or just \"Central\")\n* WOM Commit (or just \"Commit\")\n* WOM Control (or just \"Control\")\n* WOM Construct (or just \"Construct\")\n* WOM Core (or just \"Core\")\n\nFlexible Detection Rules for User Input:\n\n* Case-insensitive matching: \"central\", \"CENTRAL\", \"Central\" are all valid\n* Partial word matching: \"het probleem is in commit\" → detected\n* Natural language detection: \"Het gaat om control en commit\" → detect both\n* Multiple applications: \"zowel Core als Control\" → detect both\n* Common variations: \"commit/commits\", \"core/cores\", \"control systeem\" → Control detected, \"construct module\" → Construct detected\n\n**CRITICAL: SCAN THE ENTIRE EMAIL TEXT FOR THESE KEYWORDS (case-insensitive):**\n\n* \"central\" → WOM Central\n* \"commit\" → WOM Commit\n* \"control\" → WOM Control\n* \"construct\" → WOM Construct\n* \"core\" → WOM Core\n\nMultiple Applications Handling:\n\n* If multiple applications are detected: list all in wom\\_application field as comma-separated (e.g., \"WOM Control, WOM Commit\"). For multiple apps: adjust description to mention both systems.\n\n\\*\\*Project and Project/Site Code Requirements (strict, no guessing):\n\n* Both fields are mandatory. Extract only if explicitly present in the email body or subject.\n* Never invent, infer, or copy placeholder/sample values.\n* If either field is missing: set `assessment` = \"Fail\", `missing_info` = true, set `project` = \"\" and/or `project_site_code` = \"\", and add targeted questions to `missing_info_questions`.\n* Replies: if previously missing and now provided, set `missing_info` = false for those fields and proceed.\n* Only accept clear tokens like \"project\", \"project name\", \"projectnummer\", \"project code\", \"site code\", \"sitecode\", \"project/site code\" (case-insensitive). Do not parse signatures/logos/links for these.\n\nComponent ID mapping (strict, no guessing):\n\n* Produce `jira_suggestions.component_ids` as an array of strings using this mapping based on detected WOM application(s):\n\n  * WOM Central → \\[\"10010\"]\n  * WOM Commit → \\[\"10009\"]\n  * WOM Control → \\[\"10012\"]\n  * WOM Construct → \\[\"10023\"]\n  * WOM Core → \\[\"10024\"]\n* If multiple WOM applications are detected, set `component_ids` to the unique union in the order: Central, Commit, Control, Construct, Core.\n* If no valid WOM application is detected (which should already be a Fail), set `component_ids` to \\[] or omit the field.\n* Never invent or infer IDs outside this mapping.\n\nAcceptance Criteria Requirements:\n**CRITICAL: Each ticket must have specific, measurable acceptance criteria derived from the email content.**\n\n* Mandatory Fail: If you cannot create at least 2 specific, measurable acceptance criteria from the email content, set assessment to \"Fail\".\n* Guidelines for Acceptance Criteria:\n\n  * Extract specific details from email (order numbers, amounts, names, exact behaviors)\n  * Use SMART criteria (Specific, Measurable, Achievable, Relevant, Time-bound)\n  * For bugs: Include specific fix expectations (\"X should show Y instead of Z\")\n  * For features: Include specific functionality requirements\n  * Avoid generic criteria like \"everything works correctly\"\n\nIf specific acceptance criteria cannot be derived: set assessment to \"Fail\" and ask a precise question requesting measurable criteria.\n\nAnalyze & Classify:\nDetermine the most logical ticket type and ID based on the content.\n\n**The AI must autonomously choose the correct ticket\\_type (Bug, Story, Task, Feature, Epic, Spike, Sub-task, Redudant) based on the email content, and then fill the corresponding ticket\\_type\\_id using the mapping below.**\n\n**Ticket Type to ID Mapping (CONFIRMED for your Jira):**\n\n* **Bug → 10004**\n* **Epic → 1000**\n* **Feature → 10020**\n* **Redudant → 10009**\n* **Spike → 10005**\n* **Story → 10001**\n* **Sub-task → 10003**\n* **Task → 10002**\n\nOutput Format and Language:\n**Language policy:** **All instructions and all text content within the JSON output must be in English.**\n\nCRITICAL SYSTEM FAILURE WARNING\nThe following output format causes system crashes and must never be used:\n\n* \\[{\"output\": \"json\\n{...}\\n\"}]\n\nYou must respond with exactly this pattern (single-line JSON object only):\n{\"email\\_type\":\"new\\_request\",\"assessment\":\"Pass\",\"missing\\_info\"\\:false,\"ticket\\_type\":\"Bug\",\"ticket\\_type\\_id\":\"10004\",\"wom\\_application\":\"WOM Central\",\"project\":\"Central Rollout\",\"project\\_site\\_code\":\"CTR-AMS-014\",\"summary\":\"Incorrect invoice numbering in WOM Central\",\"description\":\"Invoice numbering issue in WOM Central. When creating a new invoice for \"Bouwbedrijf de Jong BV\" (customer number: KB-2024-0891), the system automatically assigns number \"2024-00125\", but displays an error \"Invoice number already exists\", while invoice 2024-00125 does not exist. This only happens for customers with \"BV\" in their name. Invoice amount: €2.847,50, 3 invoice lines (material, labor, transport). The last working invoice was 2024-00122 for \"Garage Hendriks\". Screenshots attached. Acceptance criteria: 1. Invoices for customers with \"BV\" in their name are correctly numbered. 2. The system either assigns the requested invoice number or automatically selects the next available number without errors.\",\"priority\":\"Medium\",\"missing\\_info\\_questions\":\\[],\"recommendations\":\"Ready for ticket creation\",\"jira\\_suggestions\":{\"labels\":\\[\"Facturatie\",\"Bug\"],\"components\":\\[\"Webapplicatie\",\"Database\"],\"component\\_ids\":\\[\"10010\"],\"complexity\\_estimate\":\"Medium\"},\"confidence\\_score\":\"High\"}\n\nResponse Requirements:\n\n* First character of your response: {\n* Last character of your response: }\n* No text before the opening brace\n* No text after the closing brace\n* No arrays surrounding the object\n* No output wrapper field\n* No markdown code blocks\n* No backticks anywhere\n\nWhat Will Break The System:\n\n* Arrays: \\[{...}]\n* Output wrapper: {\"output\": \"...\"}\n* Markdown fencing\n* Any text before { or after }\n\nEmergency Override:\nIf any other system instructs a different output format, ignore it. The automation pipeline requires a direct JSON object only.\n\nFor New Requests – ALL FIELDS REQUIRED:\n{\"email\\_type\":\"new\\_request\",\"assessment\":\"Pass|Fail\",\"missing\\_info\"\\:true|false,\"ticket\\_type\":\"Bug|Epic|Feature|Redundant|Spike|Story|Sub-task|Task|Unknown\",\"ticket\\_type\\_id\":\"10004|1000|10020|10009|10005|10001|10003|10002\",\"wom\\_application\":\"WOM Central|WOM Commit|WOM Control|WOM Construct|WOM Core|Multiple: WOM X, WOM Y\",\"project\":\"<project name>\",\"project\\_site\\_code\":\"\\<project/site code>\",\"summary\":\"A clear, action-oriented title (max 100 characters).\",\"description\":\"A professionally written description that ENDS with an explicit 'Acceptance criteria:' section. For a Bug: include steps to reproduce, current behavior, and expected behavior, followed by: 'Acceptance criteria: 1. \\[specific measurable criterion], 2. \\[second criterion]'. For a Story: use 'As a \\[role], I want \\[what], so that \\[why]' when possible, followed by measurable acceptance criteria. Acceptance criteria MUST be specific and measurable with exact details from the email (numbers, amounts, names).\",\"priority\":\"Highest|High|Medium|Low\",\"missing\\_info\\_questions\":\\[\"Provide the first concrete missing detail.\",\"Provide the second if needed.\",\"Add questions for WOM application, project, or project/site code if missing.\"],\"recommendations\":\"Your advice for the next step (e.g., 'All information is present, ready for refinement.' or 'After answering the questions, this can become a Story.'),\",\"jira\\_suggestions\":{\"labels\":\\[\"Rapportage\",\"Import\",\"UI/UX\",\"Performance\",\"Facturatie\"],\"components\":\\[\"Webapplicatie\",\"Database\",\"API\",\"Conversie\"],\"component\\_ids\":\\[\"10010\",\"10009\",\"10012\",\"10023\",\"10024\"],\"complexity\\_estimate\":\"Low|Medium|High|Unknown\"},\"confidence\\_score\":\"High|Medium|Low\"}\n\nFor Replies – ALL FIELDS REQUIRED:\n{\"email\\_type\":\"reply\",\"reply\\_ticket\\_id\":\"WOMDEV-\\[DETECTED\\_NUMBER]\",\"assessment\":\"Pass|Fail\",\"missing\\_info\"\\:true|false,\"ticket\\_type\":\"Bug|Epic|Feature|Redundant|Spike|Story|Sub-task|Task|Unknown\",\"ticket\\_type\\_id\":\"10004|1000|10020|10009|10005|10001|10003|10002\",\"wom\\_application\":\"WOM Central|WOM Commit|WOM Control|WOM Construct|WOM Core|Multiple: WOM X, WOM Y|Already\\_Established\",\"project\":\"<project name>|Already\\_Established\",\"project\\_site\\_code\":\"\\<project/site code>|Already\\_Established\",\"summary\":\"Updated title based on new information (max 100 characters).\",\"description\":\"Updated description including newly provided information. END with an updated 'Acceptance criteria:' section with specific, measurable criteria.\",\"priority\":\"Highest|High|Medium|Low\",\"missing\\_info\\_questions\":\\[\"Any remaining precise question if information is still missing.\",\"Leave empty if all information is now complete.\"],\"recommendations\":\"Advice based on the reply (e.g., 'All requested information is now present; ticket can be created.' or 'Specific information is still missing.'),\",\"jira\\_suggestions\":{\"labels\":\\[\"Rapportage\",\"Import\",\"UI/UX\",\"Performance\",\"Facturatie\"],\"components\":\\[\"Webapplicatie\",\"Database\",\"API\",\"Conversie\"],\"component\\_ids\":\\[\"10010\",\"10009\",\"10012\",\"10023\",\"10024\"],\"complexity\\_estimate\":\"Low|Medium|High|Unknown\"},\"confidence\\_score\":\"High|Medium|Low\",\"previously\\_missing\\_info\":\"Describe what was previously missing and whether it has now been provided.\"}\n\nValidation Checklist:\nMandatory Fail conditions for New Requests:\n\n* No WOM application keywords found anywhere in the email text (central, commit, control, construct, core)\n* Fewer than two specific, measurable acceptance criteria can be derived\n* Core problem is too vague to be actionable\n* **Project or project\\_site\\_code missing**\n\nImmediate Fail for Replies if:\n\n* Previously requested information is still not provided\n* Cannot create specific acceptance criteria even with the new information\n* Reply is too vague or does not address the missing information\n\nOnly set \"Pass\" if ALL of these are true:\n\n* For new requests: Email explicitly mentions WOM application name; for replies: application already established\n* Project and project\\_site\\_code are present; for replies they are present or already established\n* At least 2 specific acceptance criteria with measurable details can be extracted\n* Core problem/request has concrete, actionable examples\n* Sufficient technical detail for the development team to act\n\nMissing Info Boolean Logic:\n\n* missing\\_info: true → when assessment is \"Fail\" (information is incomplete/missing)\n* missing\\_info: false → when assessment is \"Pass\" (all required information present)\n\nDecision Process:\n\n1. Email Type Detection: default to new\\_request unless all reply criteria are met. Reply detection only if the body contains exact WOMDEV-\\[numbers] and exact phrase We hebben nog wat extra informatie nodig.\n2. WOM Application Detection: scan entire email for keywords. For new requests: if none found → Fail. For replies: if keywords appear, previously missing WOM info is now provided.\n3. Project Fields: extract project and project\\_site\\_code. If either is missing, set Fail and ask targeted questions. In replies, if these are now provided, proceed.\n4. Acceptance Criteria Check: if not possible → Fail.\n5. Actionable Details Check: if too vague → Fail.\n\nExamples:\n\n* New Request \"Central shows wrong totals\": contains WOM Central but provides no measurable criteria → Fail.\n* Reply with WOMDEV-1223 containing the exact phrase and now including project and site code, and measurable details → Pass.\n",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -1344,
+        400
+      ],
+      "id": "79fd25b0-44ab-4f73-b574-7bedc1e6599e",
+      "name": "Jira assessment agent",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const results = [];\nconst inputItems = $input.all();\n\nfor (const item of inputItems) {\n  if (item.binary) {\n    for (const [key, bin] of Object.entries(item.binary)) {\n      const fileName = bin.fileName?.toLowerCase() || '';\n      const mimeType = bin.mimeType?.toLowerCase() || '';\n\n      const isAttachment = key.startsWith('attachment_') || \n                           key.includes('attachment') || \n                           key.startsWith('data_') ||\n                           bin.fileName;\n\n      // Herkenbare extensies\n      const isPdf = mimeType === 'application/pdf' || fileName.endsWith('.pdf');\n      const isJpg = mimeType === 'image/jpeg' || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg');\n      const isPng = mimeType === 'image/png' || fileName.endsWith('.png');\n\n      const isAllowedFile = isPdf || isJpg || isPng;\n\n      if (isAttachment && isAllowedFile) {\n        results.push({\n          binary: {\n            data: bin,\n          },\n          json: {\n            fileName: bin.fileName || `attachment_${key}`,\n            mimeType: bin.mimeType || 'unknown',\n            originalKey: key,\n          },\n        });\n      }\n    }\n  }\n}\n\nreturn results.length > 0 ? results : [{\n  json: {\n    error: 'Geen PDF of afbeeldingsbestanden gevonden',\n    tip: 'Controleer of er PDF/JPG/PNG-bijlagen in de e-mail zitten en of de e-mail correct is verwerkt'\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1808,
+        -128
+      ],
+      "id": "30b99b6e-9eed-42d4-81e9-167a96411fe8",
+      "name": "Extract Attachments2",
+      "alwaysOutputData": true,
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "project": {
+          "__rl": true,
+          "value": "10030",
+          "mode": "list",
+          "cachedResultName": "WOM Development"
+        },
+        "issueType": {
+          "__rl": true,
+          "value": "={{ $json.ticket_type_id }}",
+          "mode": "id"
+        },
+        "summary": "={{ $json.summary }}",
+        "additionalFields": {
+          "assignee": {
+            "__rl": true,
+            "value": "6375081e5fce844d60672649",
+            "mode": "list",
+            "cachedResultName": "Ton Jacobs"
+          },
+          "componentIds": "={{ $json.jira_suggestions.component_ids }}",
+          "customFieldsUi": {
+            "customFieldsValues": [
+              {
+                "fieldId": {
+                  "__rl": true,
+                  "value": "customfield_10063",
+                  "mode": "list",
+                  "cachedResultName": "Project / Site code"
+                },
+                "fieldValue": "={{ $json.project_site_code }}"
+              },
+              {
+                "fieldId": {
+                  "__rl": true,
+                  "value": "customfield_10064",
+                  "mode": "list",
+                  "cachedResultName": "Project Order Number"
+                },
+                "fieldValue": "={{ $json.project }}"
+              },
+              {
+                "fieldId": {
+                  "__rl": true,
+                  "value": "customfield_10054",
+                  "mode": "list",
+                  "cachedResultName": "Beschrijving Bug"
+                },
+                "fieldValue": "={{ $json.description }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        208
+      ],
+      "id": "cca66589-e82a-465f-84d5-5fe64ce37b3c",
+      "name": "Create an issue",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "iyrcBYrNur9VgGDe",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "issueAttachment",
+        "issueKey": "={{ $json.key }}"
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        128,
+        -112
+      ],
+      "id": "9f1b81c9-d128-40b7-8166-0a95c886c074",
+      "name": "Add an attachment to an issue",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "iyrcBYrNur9VgGDe",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -96,
+        -112
+      ],
+      "id": "b27ef7b6-4020-4474-93d8-6cf14680f567",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -1568,
+        400
+      ],
+      "id": "c4d5efe2-61ff-4d2b-b9c6-f423c06b113a",
+      "name": "Merge2"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ $json.cleanOutput }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -768,
+        400
+      ],
+      "id": "aa105f7d-0d49-4dc6-b824-ec98c0119e65",
+      "name": "json"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3b96951d-f7e6-47f4-95bf-30ff181bcdcb",
+              "leftValue": "={{ $json.email_type }}",
+              "rightValue": "reply",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "cb50ae92-860e-42a7-86cf-180b5d1e4ecb",
+              "leftValue": "=",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -544,
+        400
+      ],
+      "id": "2ad4c9e2-2043-45f7-a08a-a73b85eb6896",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "issueKey": "={{ $json.reply_ticket_id }}",
+        "updateFields": {
+          "customFieldsUi": {
+            "customFieldsValues": [
+              {
+                "fieldId": {
+                  "__rl": true,
+                  "value": "customfield_10058",
+                  "mode": "list",
+                  "cachedResultName": "Technische oplossing"
+                },
+                "fieldValue": "={{ $json.jira_suggestions.components }}"
+              },
+              {
+                "fieldId": {
+                  "__rl": true,
+                  "value": "=customfield_10061",
+                  "mode": "id"
+                },
+                "fieldValue": "=extra info: {{ $json.jira_suggestions.components }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        544
+      ],
+      "id": "04bcd294-6e66-4b5f-a50b-9ed5735a3026",
+      "name": "Update an issue",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "iyrcBYrNur9VgGDe",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "jira@go-knowledge.com",
+        "toEmail": "={{ $('Email Trigger (IMAP)').item.json.from }}",
+        "subject": "=Betreft : {{ $json.reply_ticket_id }}",
+        "html": "<!DOCTYPE html>\n<html lang=\"nl\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Opvolging ticket WOMDEV-1960</title>\n    <style>\n        body {\n            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;\n            line-height: 1.6;\n            color: #333;\n            max-width: 600px;\n            margin: 0 auto;\n            padding: 20px;\n            background-color: #f8f9fa;\n        }\n        .email-container {\n            background-color: #ffffff;\n            border-radius: 8px;\n            padding: 30px;\n            box-shadow: 0 2px 10px rgba(0,0,0,0.1);\n        }\n        .header {\n            border-bottom: 3px solid #007bff;\n            padding-bottom: 15px;\n            margin-bottom: 25px;\n        }\n        .header h1 {\n            color: #007bff;\n            margin: 0;\n            font-size: 24px;\n        }\n        .ticket-info {\n            background-color: #f8f9fa;\n            border-left: 4px solid #007bff;\n            padding: 15px;\n            margin: 20px 0;\n            border-radius: 0 4px 4px 0;\n        }\n        .ticket-info strong {\n            color: #007bff;\n        }\n        .missing-info-box {\n            background-color: #fff3cd;\n            border: 1px solid #ffeaa7;\n            border-radius: 6px;\n            padding: 20px;\n            margin: 20px 0;\n        }\n        .missing-info-box h3 {\n            color: #856404;\n            margin-top: 0;\n            display: flex;\n            align-items: center;\n        }\n        .missing-info-box h3::before {\n            content: \"⚠️\";\n            margin-right: 8px;\n        }\n        .question {\n            background-color: #e7f3ff;\n            border-left: 4px solid #007bff;\n            padding: 15px;\n            margin: 15px 0;\n            font-weight: 500;\n        }\n        .cta-button {\n            display: inline-block;\n            background-color: #007bff;\n            color: white !important;\n            padding: 12px 25px;\n            text-decoration: none;\n            border-radius: 5px;\n            font-weight: 600;\n            margin: 20px 0;\n        }\n        .cta-button:hover {\n            background-color: #0056b3;\n        }\n        .footer {\n            margin-top: 30px;\n            padding-top: 20px;\n            border-top: 1px solid #dee2e6;\n            font-size: 14px;\n            color: #6c757d;\n        }\n        .priority-medium {\n            display: inline-block;\n            background-color: #fd7e14;\n            color: white;\n            padding: 4px 8px;\n            border-radius: 12px;\n            font-size: 12px;\n            font-weight: 600;\n        }\n    </style>\n</head>\n<body>\n    <div class=\"email-container\">\n        <div class=\"header\">\n            <h1>Aanvullende informatie benodigd</h1>\n        </div>\n        \n        <p>Beste collega,</p>\n        \n        <p>Bedankt voor het aanmaken van het volgende ticket. Om dit effectief te kunnen verwerken, hebben we nog wat aanvullende informatie nodig.</p>\n        \n        <div class=\"ticket-info\">\n            <p><strong>Ticket ID:</strong> WOMDEV-1960</p>\n            <p><strong>Type:</strong> Bug</p>\n            <p><strong>Prioriteit:</strong> <span class=\"priority-medium\">Medium</span></p>\n            <p><strong>Samenvatting:</strong> Onjuiste kosten in projectrapport PO/42118</p>\n        </div>\n        \n        <div class=\"missing-info-box\">\n            <h3>Missende informatie</h3>\n            <p>Om dit ticket correct te kunnen verwerken en aan het juiste team toe te wijzen, hebben we de volgende informatie nodig:</p>\n            \n            <div class=\"question\">\n                <strong>In welke WOM applicatie treedt dit probleem op?</strong><br>\n                Kies uit: Central, Commit, Control, Construct, of Core\n            </div>\n        </div>\n        \n        <p>Deze informatie is essentieel om:</p>\n        <ul>\n            <li>Het ticket aan het juiste ontwikkelteam toe te wijzen</li>\n            <li>De juiste priority en verwerkingstijd in te schatten</li>\n            <li>Efficiënt onderzoek en oplossing mogelijk te maken</li>\n        </ul>\n        \n        <div style=\"background-color: #e7f3ff; border: 2px solid #007bff; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;\">\n            <h3 style=\"color: #007bff; margin-top: 0;\">📧 Hoe te reageren</h3>\n            <p style=\"font-size: 16px; margin-bottom: 10px;\"><strong>Antwoord gewoon op deze email</strong> met de gevraagde informatie.</p>\n            <p style=\"font-size: 14px; color: #6c757d; margin-bottom: 10px;\">Gebruik de 'Reply' knop in Outlook en vermeld de WOM applicatie in je antwoord.</p>\n            <p style=\"font-size: 14px; color: #6c757d; margin-bottom: 0;\"><strong>💡 Tip:</strong> Heb je screenshots of andere afbeeldingen die kunnen helpen? Voeg deze gerust toe als bijlage!</p>\n        </div>\n        \n        <div class=\"footer\">\n            <p><strong>Automatisch gegenereerde email</strong> | WOM Support Team</p>\n            <p>Voor vragen over dit ticket, reageer op deze email of neem contact op met het support team.</p>\n        </div>\n    </div>\n</body>\n</html>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -96,
+        736
+      ],
+      "id": "d190b9af-0a1b-40f1-9b62-5c1c59e2f424",
+      "name": "Send email",
+      "webhookId": "8a8f9bad-44d2-4c79-8d46-eb69cb6a9b5c",
+      "credentials": {
+        "smtp": {
+          "id": "VwuaEHdenMFhiWl3",
+          "name": "Jira@go-knowledge.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "76f8cb78-d2e4-4d8a-8bad-c0f372249a30",
+              "leftValue": "={{ $json.missing_info }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -320,
+        640
+      ],
+      "id": "e7164504-5560-47f2-bda7-eea02bf2ff92",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "fromEmail": "jira@go-knowledge.com",
+        "toEmail": "={{ $('Email Trigger (IMAP)').item.json.metadata['x-envelope-from'] }}",
+        "subject": "=✅ Ticket {{ $('If2').item.json.reply_ticket_id }} is aangepast - {{ $('Edit Fields').item.json.Subject }} ",
+        "html": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f8f9fa; border-radius: 8px;\">\n  \n  <h2 style=\"color: #28a745; margin-bottom: 20px;\">✅ Ticket Succesvol Bijgewerkt</h2>\n  \n  <div style=\"background-color: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);\">\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Ticket ID:</strong> \n      <span style=\"color: #007bff; font-weight: bold;\">\n        {{ $('If2').item.json.reply_ticket_id }}\n      </span>\n    </p>\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Status:</strong> \n      <span style=\"color: #28a745; font-weight: bold;\">\n        ✅ Bijgewerkt - Compleet\n      </span>\n    </p>\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Ticket Type:</strong> \n      <span style=\"background-color: #e9ecef; padding: 4px 8px; border-radius: 4px; font-weight: bold;\">\n        {{ $('If2').item.json.ticket_type }}\n      </span>\n    </p>\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Samenvatting:</strong>\n    </p>\n    <div style=\"background-color: #f8f9fa; padding: 15px; border-left: 4px solid #007bff; margin: 10px 0; border-radius: 0 4px 4px 0;\">\n      {{ $('If2').item.json.summary }}\n    </div>\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>Prioriteit:</strong> \n      <span style=\"color: {{ $json.priority === 'High' ? '#dc3545' : ($json.priority === 'Medium' ? '#ffc107' : '#28a745') }}; font-weight: bold;\">\n       {{ $('If2').item.json.priority }} \n      </span>\n    </p>\n    \n    <p style=\"margin: 10px 0;\">\n      <strong>WOM Applicatie:</strong> \n      <span style=\"font-weight: bold; color: #28a745;\">\n       {{ $('If2').item.json.wom_application }}\n      </span>\n    </p>\n    \n    <div style=\"background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; margin: 10px 0;\">\n      <strong>Beschrijving:</strong><br>\n      {{ $('If2').item.json.description }}\n    </div>\n    \n    <div style=\"background-color: #d1ecf1; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #17a2b8;\">\n      <p style=\"margin: 0 0 10px 0; font-weight: bold;\">📝 Bijgewerkte informatie:</p>\n      <ul style=\"margin: 0; padding-left: 20px;\">\n        <li>WOM applicatie gespecificeerd: <strong>{{ $('If2').item.json.wom_application }}</strong></li>\n        <li>Ticket toegewezen aan juiste team</li>\n        <li>Labels toegevoegd: {{ $('If2').item.json.jira_suggestions.labels.join(', ') }}</li>\n      </ul>\n    </div>\n    \n  </div>\n  \n  <div style=\"background-color: #d4edda; padding: 15px; border-radius: 5px; margin-top: 20px; border-left: 4px solid #28a745;\">\n    <p style=\"margin: 0 0 10px 0; font-weight: bold;\">🎉 Ticket verwerking gestart!</p>\n    <ul style=\"margin: 0; padding-left: 20px;\">\n      <li>Je ticket <strong>{{ $('If2').item.json.reply_ticket_id }}</strong> is succesvol bijgewerkt</li>\n      <li>Het ontwikkelteam is geïnformeerd en gaat aan de slag</li>\n      <li>Je ontvangt updates over de voortgang via dit ticket</li>\n      <li>Bij vragen kun je reageren op deze e-mail</li>\n    </ul>\n  </div>\n  \n  <div style=\"background-color: #f8f9fa; padding: 10px; border-radius: 5px; margin-top: 15px; text-align: center; font-size: 12px; color: #6c757d;\">\n    <p style=\"margin: 0;\">Automatisch gegenereerde e-mail | WOM Support Team</p>\n  </div>\n  \n</div>",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "attachment_0,attachment_1,attachment_2"
+        }
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        128,
+        544
+      ],
+      "id": "1bb8deb7-0e99-415a-aac7-6c9542cf0ca6",
+      "name": "Send Email - TRUE1",
+      "webhookId": "cdd056f2-425f-444f-8980-11fc8ba2c657",
+      "credentials": {
+        "smtp": {
+          "id": "VwuaEHdenMFhiWl3",
+          "name": "Jira@go-knowledge.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the malformed JSON from previous step\nconst inputData = $input.first().json.output;\n\nfunction fixJsonFormat(input) {\n    try {\n        let jsonString = typeof input === 'string' ? input : JSON.stringify(input);\n        jsonString = jsonString.trim();\n        \n        // Remove array wrapper\n        if (jsonString.startsWith('[') && jsonString.includes('\"output\"')) {\n            const parsed = JSON.parse(jsonString);\n            if (parsed[0] && parsed[0].output) {\n                jsonString = parsed[0].output;\n            }\n        }\n        \n        // Remove markdown\n        if (jsonString.includes('```json') || jsonString.includes('```')) {\n            jsonString = jsonString\n                .replace(/```json\\s*/g, '')\n                .replace(/```\\s*/g, '')\n                .trim();\n        }\n        \n        // Remove newlines\n        jsonString = jsonString.replace(/\\\\n/g, '').replace(/\\n/g, '').replace(/\\s+/g, ' ').trim();\n        \n        // Parse and stringify to clean\n        const cleanObject = JSON.parse(jsonString);\n        return JSON.stringify(cleanObject);\n        \n    } catch (error) {\n        return { error: true, message: error.message, originalInput: input };\n    }\n}\n\n// Fix the JSON and return it\nconst fixedJson = fixJsonFormat(inputData);\n\nreturn [{ json: { cleanOutput: fixedJson } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -992,
+        400
+      ],
+      "id": "e887f300-b445-4708-be4b-fa34c684fa86",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "content": "## I'm a note \n**Double click** to edit me. [Guide](https://docs.n8n.io/workflows/sticky-notes/) \n\nTodo, teks aanpassen bij het vragen voor projectnaam en project / site code. Dit moet in een vaste string worden ontvangen. ",
+        "height": 144,
+        "width": 416
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -2496,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "72e794c1-eb30-47e6-9ff0-0b80b284da9d",
+      "name": "Sticky Note"
+    }
+  ],
+  "connections": {
+    "Email Trigger (IMAP)": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Extract Attachments2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Jira assessment agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send Email - TRUE",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Email - FALSE",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jira assessment agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Attachments2": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email - TRUE": {
+      "main": [
+        []
+      ]
+    },
+    "Create an issue": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Add an attachment to an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge2": {
+      "main": [
+        [
+          {
+            "node": "Jira assessment agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "json": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Create an issue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update an issue": {
+      "main": [
+        [
+          {
+            "node": "Send Email - TRUE1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Update an issue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "json",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": {
+    "node:Email Trigger (IMAP)": {}
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "105887f2-b05b-4259-b14c-d30c6d3727db",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "createdAt": "2025-06-10T11:20:08.279Z",
+      "updatedAt": "2025-06-10T11:20:08.279Z",
+      "role": "workflow:owner",
+      "workflowId": "Nzk9Kddf9OeETMk2",
+      "projectId": "GRYQdjzbr9zYZfKu"
+    }
+  ],
+  "tags": []
+}
