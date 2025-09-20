@@ -1,0 +1,451 @@
+{
+  "createdAt": "2025-09-01T07:01:32.357Z",
+  "updatedAt": "2025-09-02T08:58:27.000Z",
+  "id": "QOOHeysc53o7Vqq0",
+  "name": "Github flows backup",
+  "active": true,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 10
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "02a527bd-8f19-4325-8250-fe625c5da53d",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7f8c11ad-fbb1-401b-97c9-2e4535eb9ccd",
+              "name": "foldername",
+              "value": "=backup_{{ $now.format('dd-MM-yyyy') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "5f956d94-2266-4d66-b6ec-0169297017d5",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "86736e93-ddb1-49e5-b7f4-2adf802794f0",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cb0536c6-fe4d-47be-927f-6e7c1777dbbc",
+              "name": "nodes",
+              "value": "={{ JSON.stringify($json, null, 2) }}",
+              "type": "string"
+            },
+            {
+              "id": "895613af-9ca2-46cf-a580-4b9adf970810",
+              "name": "fileName",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        832,
+        96
+      ],
+      "id": "f4ae19ad-1ed1-438e-9597-40d90b165947",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "=nodes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        96
+      ],
+      "id": "a65e9e74-00ad-430c-9d32-2242f1f0502a",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "value": "ACNJacobs",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "N8N-Live-Backups",
+          "mode": "list",
+          "cachedResultName": "N8N-Live-Backups",
+          "cachedResultUrl": "https://github.com/ACNJacobs/N8N-Live-Backups"
+        },
+        "filePath": "={{ $('Edit Fields').item.json.foldername }}/{{ $('Edit Fields1').item.json.fileName }}",
+        "binaryData": true,
+        "commitMessage": "={{ $now.setZone('Europe/Amsterdam').format('dd-MM-yyyy T') }} Backup completed"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        1248,
+        96
+      ],
+      "id": "e40b5dcb-dc0a-47b2-9ab2-7e6f7b3ef19d",
+      "name": "Create a file",
+      "webhookId": "41ca4618-6690-45d2-9307-3b285415c279",
+      "credentials": {
+        "githubApi": {
+          "id": "IkTHtEH50ijiuehi",
+          "name": "GitHub account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "128UL1lfVHTE7iDrzEHuERcLTYybFyYaHmZ2tTyPP8c4",
+          "mode": "list",
+          "cachedResultName": "n8n backup errors",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/128UL1lfVHTE7iDrzEHuERcLTYybFyYaHmZ2tTyPP8c4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Blad1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/128UL1lfVHTE7iDrzEHuERcLTYybFyYaHmZ2tTyPP8c4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "DateTime": "={{ $now.setZone('Europe/Amsterdam').format('dd-MM-yyyy T') }}",
+            "Folder Name": "={{ $('Edit Fields').item.json.foldername }}",
+            "File Name": "={{ $('Edit Fields1').item.json.fileName }}",
+            "Error Message": "={{ $json.error }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "DateTime",
+              "displayName": "DateTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Folder Name",
+              "displayName": "Folder Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "File Name",
+              "displayName": "File Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Error Message",
+              "displayName": "Error Message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1456,
+        112
+      ],
+      "id": "5fac75ba-6cb6-451f-aa38-98f52af88271",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "O2jLhVd2WAQo9B1X",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "owner": {
+          "__rl": true,
+          "value": "ACNJacobs",
+          "mode": "name"
+        },
+        "repository": {
+          "__rl": true,
+          "value": "N8N-Live-Backups",
+          "mode": "list",
+          "cachedResultName": "N8N-Live-Backups",
+          "cachedResultUrl": "https://github.com/ACNJacobs/N8N-Live-Backups"
+        },
+        "filePath": "={{ $('Edit Fields').item.json.foldername }}/README.-{{ $now.setZone('Europe/Amsterdam').format('dd-MM-yyyy') }}.md",
+        "fileContent": "=# A new workflow backup - {{ $('Edit Fields').item.json.foldername }}\nThis folder contains the backup of all N8N workflows as of {{ $now.setZone('Europe/Amsterdam').format('dd-MM-yyyy') }}",
+        "commitMessage": "n8n workflow backup. {{ $now.setZone('Europe/Amsterdam').format('dd-MM-yyyy') }}"
+      },
+      "type": "n8n-nodes-base.github",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        -48
+      ],
+      "id": "b41371b8-d71d-401b-a407-fd5e3a3bedd2",
+      "name": "Create a file1",
+      "webhookId": "e239b8f3-f676-4e13-9ae2-6b6f1a5dc6a6",
+      "credentials": {
+        "githubApi": {
+          "id": "IkTHtEH50ijiuehi",
+          "name": "GitHub account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "filters": {},
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -32
+      ],
+      "id": "c42f1ec9-3ecd-4795-86a8-74da93da9f8b",
+      "name": "Get many workflows",
+      "credentials": {
+        "n8nApi": {
+          "id": "mb9WmQn2Uz1Nvj4S",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "ai@go-knowledge",
+        "toEmail": "ton.jacobs@altrad.com",
+        "subject": "N8N backups done",
+        "emailFormat": "text",
+        "text": "The N8N backups are done.\nYou can find them on GitHub.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        832,
+        -96
+      ],
+      "id": "cddb55a7-7204-4850-90cf-9e427d239255",
+      "name": "Send email",
+      "webhookId": "a6de247e-e153-4c8c-81a3-6f65643312cd",
+      "credentials": {
+        "smtp": {
+          "id": "yG4Ihfi7vhKZzG49",
+          "name": "ai@go-knowledge"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Get many workflows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Send email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Create a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a file": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many workflows": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Amsterdam",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": 1800
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "pinData": {},
+  "versionId": "a6b774d2-d8ca-44d8-b8f9-033579eac5da",
+  "triggerCount": 1,
+  "shared": [
+    {
+      "createdAt": "2025-09-01T07:01:32.361Z",
+      "updatedAt": "2025-09-01T07:01:32.361Z",
+      "role": "workflow:owner",
+      "workflowId": "QOOHeysc53o7Vqq0",
+      "projectId": "GRYQdjzbr9zYZfKu"
+    }
+  ],
+  "tags": [
+    {
+      "createdAt": "2025-09-01T09:28:53.335Z",
+      "updatedAt": "2025-09-01T09:28:53.335Z",
+      "id": "wFnTfsUomycrUwxv",
+      "name": "Schedule Tricker"
+    }
+  ]
+}
